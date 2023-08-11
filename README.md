@@ -9,7 +9,15 @@ TODO: Guide users through getting your code up and running on their own system. 
 4.	API references
 
 # Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+To create the makefile just run the following command:
+```
+cmake -DBoost_INCLUDE_DIRS=C:\code\lib\boost_1_82_0\ .
+```
+on linux run
+```
+cmake -DBoost_INCLUDE_DIRS=\usr\include\boost .
+```
+
 
 # Contribute
 TODO: Explain how other users and developers can contribute to make your code better. 
