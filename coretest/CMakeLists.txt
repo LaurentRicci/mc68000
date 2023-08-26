@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
-add_executable (coretest "coretest.cpp" "../core/core.h")
+add_executable (coretest "noopcputest.cpp" "asmtest.cpp" "../core/core.h" "../core/noopcpu.h")
 
 target_include_directories(coretest PUBLIC ${Boost_INCLUDE_DIRS}) 
 target_link_libraries(coretest PUBLIC core)
