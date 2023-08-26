@@ -5,8 +5,8 @@
 
 namespace mc68000
 {
-	core<NoOpCpu>::t_handler core<NoOpCpu>::handlers[] = {};
-	bool core<NoOpCpu>::initialized = false;
+	template<> core<NoOpCpu>::t_handler core<NoOpCpu>::handlers[] = {};
+	template<> bool core<NoOpCpu>::initialized = false;
 
 
 	unsigned short NoOpCpu::abcd(unsigned short)
