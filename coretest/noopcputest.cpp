@@ -17,12 +17,10 @@ namespace noopcputest
         auto actual = cpu(instruction);
 
         // Assert
-        std::wcerr << L"Validating " << instructionName << L"\n";
-
         BOOST_CHECK_EQUAL(expected, actual);
         BOOST_CHECK_EQUAL(instructions::names[actual], instructionName);
     }
-
+    
     BOOST_AUTO_TEST_CASE(abcd)
     {
         validateDecode(0b1100000100000000u, instructions::ABCD, L"ABCD");
@@ -316,6 +314,7 @@ namespace noopcputest
     {
         validateDecode(0b00'01'000'000'000'010u, instructions::MOVE, L"MOVE"); // MOVE.B D2,D0
         validateDecode(0b00'11'100'000'010'010u, instructions::MOVE, L"MOVE"); // MOVE.L (A2),D4
+        validateDecode(0b00'01'001'011'000'000u, instructions::MOVE, L"MOVE"); // MOVE.b d0,(a1)+
     }
 
     BOOST_AUTO_TEST_CASE(movea)
@@ -515,5 +514,5 @@ namespace noopcputest
     {
         validateDecode(0b0100'1110'0101'1'010u, instructions::UNLK, L"UNLK"); // UNLK A2
     }
-
+    
 }

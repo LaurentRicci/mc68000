@@ -1,11 +1,15 @@
 #pragma once
+#include <string>
+#include "core.h"
 
 namespace mc68000
 {
-	class NoOpCpu
+	class DisAsm_t
 	{
 	public:
-
+		DisAsm_t() : pc(nullptr), memory(nullptr)
+		{
+		}
 		unsigned short unknown(unsigned short);
 
 		unsigned short abcd(unsigned short);
@@ -143,5 +147,29 @@ namespace mc68000
 		unsigned short trapv(unsigned short);
 		unsigned short tst(unsigned short);
 		unsigned short unlk(unsigned short);
+	protected:
+		std::string disassembly;
+		void reset(const unsigned short* memory);
+		friend class DisAsm;
+
+	private:
+		unsigned short fetchNextWord();
+		std::string decodeEffectiveAddress(unsigned short ea, bool isLongOperation = false);
+		unsigned short disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
+		unsigned short disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
+
+		const unsigned short* pc;
+		const unsigned short* memory;
+
+	};
+
+	class DisAsm : core<DisAsm_t>
+	{
+	public:
+		DisAsm()
+		{
+		}
+
+		std::string disassemble(const unsigned short*);
 	};
 }

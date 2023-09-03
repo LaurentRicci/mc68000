@@ -1,10 +1,19 @@
 #pragma once
+#include <string>
+#include "core.h"
+#include "memory.h"
 
 namespace mc68000
 {
-	class NoOpCpu
+	class cpu_t
 	{
 	public:
+		cpu_t():
+			dRegisters{ 0 },
+			aRegisters{ 0 }
+
+		{
+		}
 
 		unsigned short unknown(unsigned short);
 
@@ -143,5 +152,60 @@ namespace mc68000
 		unsigned short trapv(unsigned short);
 		unsigned short tst(unsigned short);
 		unsigned short unlk(unsigned short);
+	protected:
+		unsigned int dRegisters[8];
+		unsigned int aRegisters[8];
+		uint32_t pc;
+		memory localMemory;
+
+		void reset();
+		void reset(const memory& memory);
+		void start(unsigned int startPc);
+		friend class cpu;
+	private:
+		unsigned char read_b(unsigned short sourceEffectiveAddress);
+		void move_b(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
+		void move_w(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
+		void move_l(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
+		void write_b(unsigned short  ea, unsigned char data);
+
+	};
+
+	class cpu : core<cpu_t>
+	{
+	public:
+		cpu(const memory& memory);
+		const unsigned int& d0;
+		const unsigned int& d1;
+		const unsigned int& d2;
+		const unsigned int& d3;
+		const unsigned int& d4;
+		const unsigned int& d5;
+		const unsigned int& d6;
+		const unsigned int& d7;
+
+		const unsigned int& a0;
+		const unsigned int& a1;
+		const unsigned int& a2;
+		const unsigned int& a3;
+		const unsigned int& a4;
+		const unsigned int& a5;
+		const unsigned int& a6;
+		const unsigned int& a7;
+
+		void reset()
+		{
+			this->operator*()->reset();
+		}
+		void reset(const memory& memory)
+		{
+			this->operator*()->reset(memory);
+		}
+
+		void start(unsigned int startPc)
+		{
+			this->operator*()->start(startPc);
+		}
+
 	};
 }

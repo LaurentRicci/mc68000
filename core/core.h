@@ -29,6 +29,11 @@ namespace mc68000
 			return (&instance->*handlers[opcode])(opcode);
 		}
 
+		T* operator*()
+		{
+			return &instance;
+		}
+
 		bool isValidAddressingMode(unsigned short ea, unsigned short acceptable)
 		{
 			static const unsigned masks[] = {
@@ -381,11 +386,15 @@ namespace mc68000
 				{
 					if (isValidAddressingMode(destination, 0b101111111000u))
 					{
+						// the destination is inverted: register - mode instead of mode - register
+						unsigned short destinationRegister = destination & 0b111u;
+						unsigned short destinationMode = destination >> 3;
+						unsigned short invertedDestination = (destinationRegister << 3) | destinationMode;
 						for (unsigned source = 0; source <= 0b111'111u; source++)
 						{
 							if (isValidAddressingMode(destination, 0b111111111111u))
 							{
-								handlers[(size << 12) + (destination << 6) + source] = &T::move;
+								handlers[(size << 12) + (invertedDestination << 6) + source] = &T::move;
 							}
 						}
 					}
