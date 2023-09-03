@@ -364,8 +364,8 @@ namespace mc68000
 			{
 			case 4:
 			{
-				uint16_t x = localMemory.getWord(pc++);
-				return x & 0xff;
+				uint8_t x = localMemory.get<uint8_t>(pc++);
+				return x;
 			}
 			default:
 				break;

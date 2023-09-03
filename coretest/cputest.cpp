@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(a_reset)
 	BOOST_CHECK_EQUAL(0, cpu.a7);
 }
 
-BOOST_AUTO_TEST_CASE(a_moveToD0)
+BOOST_AUTO_TEST_CASE(a_moveToD0_b)
 {
 	// Arrange
-	unsigned char code[] = { 0b0001'0000u, 0b0011'1100u, 0, 0x20 }; // move.w #$20,d0
+	unsigned char code[] = { 0b0001'0000u, 0b0011'1100u, 0, 0x20 }; // move.b #$20,d0
 	memory memory(256, 0, code, sizeof(code));
 	cpu cpu(memory);
 
@@ -56,4 +56,19 @@ BOOST_AUTO_TEST_CASE(a_moveToD0)
 
 }
 
+BOOST_AUTO_TEST_CASE(a_moveToD0_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'0000u, 0b0011'1100u, 0x12, 0x34 }; // move.w #$1234,d0
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x1234, cpu.d0);
+
+}
 BOOST_AUTO_TEST_SUITE_END()

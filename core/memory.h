@@ -84,6 +84,17 @@ namespace mc68000
 			return *this;
 		}
 
+		template<typename T> T get(uint32_t address)
+		{
+			return 0;
+		}
+
+		template<> uint8_t get<uint8_t>(uint32_t address)
+		{
+			uint8_t* p8 = rawMemory + (address - baseAddress);
+			return *(p8+1);
+		}
+
 		uint16_t getWord(uint32_t address)
 		{
 			uint8_t* p8 = rawMemory + (address - baseAddress);
