@@ -596,4 +596,6 @@ namespace mc68000
 
 		}
 	};
+	template<typename T>  bool core<T>::initialized;
+	template<typename T>  typename core<T>::t_handler core<T>::handlers[0x10000];
 }

@@ -372,3 +372,6 @@ CMakeCache.txt
 
 # local files
 mc68000.sln
+
+# linux specific
+*.a
