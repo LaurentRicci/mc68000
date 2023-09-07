@@ -89,11 +89,6 @@ namespace mc68000
 		{
 			return 0;
 		}
-		template<> uint8_t get<uint8_t>(uint32_t address);
-
-		template<> uint16_t get<uint16_t>(uint32_t address);
-
-		template<> uint32_t get<uint32_t>(uint32_t address);
 
 		uint16_t getWord(uint32_t address)
 		{
@@ -103,6 +98,7 @@ namespace mc68000
 
 			return word;
 		}
+
 		~memory()
 		{
 			delete[] rawMemory;
@@ -112,4 +108,9 @@ namespace mc68000
 		unsigned int size;
 		unsigned int baseAddress;
 	};
+
+	template<> uint8_t memory::get<uint8_t>(uint32_t address);
+	template<> uint16_t memory::get<uint16_t>(uint32_t address);
+	template<> uint32_t memory::get<uint32_t>(uint32_t address);
+
 }
