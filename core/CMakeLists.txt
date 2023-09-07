@@ -7,7 +7,7 @@ set (CMAKE_CXX_STANDARD 20)
 
 # Add source to this project's executable.
 add_library (core "noopcpu.cpp" "core.h" "noopcpu.h" "instructions.cpp" "instructions.h" "disasm.h" "disasm.cpp")
-target_sources(core PRIVATE "cpu.cpp" )
+target_sources(core PRIVATE "cpu.cpp" "memory.cpp")
 target_sources(core PUBLIC "cpu.h" "memory.h")
 
 # TODO: Add tests and install targets if needed.

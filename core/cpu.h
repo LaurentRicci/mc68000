@@ -163,12 +163,9 @@ namespace mc68000
 		void start(unsigned int startPc);
 		friend class cpu;
 	private:
-		unsigned char read_b(unsigned short sourceEffectiveAddress);
-		void move_b(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
-		void move_w(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
-		void move_l(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress);
-		void write_b(unsigned short  ea, unsigned char data);
-
+		template <typename T> T readAt(uint16_t ea);
+		template <typename T> void writeAt(uint16_t ea, T data);
+		template <typename T> void move(uint16_t from, uint16_t to);
 	};
 
 	class cpu : core<cpu_t>

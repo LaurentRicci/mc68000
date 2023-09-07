@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace mc68000
 {
@@ -84,6 +85,11 @@ namespace mc68000
 			return *this;
 		}
 
+		template<typename T> T get(uint32_t address)
+		{
+			return 0;
+		}
+
 		uint16_t getWord(uint32_t address)
 		{
 			uint8_t* p8 = rawMemory + (address - baseAddress);
@@ -92,6 +98,7 @@ namespace mc68000
 
 			return word;
 		}
+
 		~memory()
 		{
 			delete[] rawMemory;
@@ -101,4 +108,9 @@ namespace mc68000
 		unsigned int size;
 		unsigned int baseAddress;
 	};
+
+	template<> uint8_t memory::get<uint8_t>(uint32_t address);
+	template<> uint16_t memory::get<uint16_t>(uint32_t address);
+	template<> uint32_t memory::get<uint32_t>(uint32_t address);
+
 }

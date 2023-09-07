@@ -4,7 +4,7 @@
 
 using namespace mc68000;
 
-BOOST_AUTO_TEST_SUITE(Asm)
+BOOST_AUTO_TEST_SUITE(cpuSuite)
 
 BOOST_AUTO_TEST_CASE(a_asm)
 {
@@ -40,10 +40,9 @@ BOOST_AUTO_TEST_CASE(a_reset)
 	BOOST_CHECK_EQUAL(0, cpu.a7);
 }
 
-BOOST_AUTO_TEST_CASE(a_moveToD0)
+void verifyExecution(const uint8_t* code, size_t size, void (*asert)(const cpu& c))
 {
 	// Arrange
-	unsigned char code[] = { 0b0001'0000u, 0b0011'1100u, 0, 0x20 }; // move.w #$20,d0
 	memory memory(256, 0, code, sizeof(code));
 	cpu cpu(memory);
 
@@ -52,8 +51,34 @@ BOOST_AUTO_TEST_CASE(a_moveToD0)
 	cpu.start(0);
 
 	// Assert
-	BOOST_CHECK_EQUAL(0x20, cpu.d0);
+	asert(cpu);
+}
 
+BOOST_AUTO_TEST_CASE(a_moveToD0_b)
+{
+	// Arrange
+	unsigned char code[] = { 0b0001'0000u, 0b0011'1100u, 0, 0x20 }; // move.b #$20,d0
+
+	// Act
+	verifyExecution(code, sizeof(code), [](const cpu& cpu) { BOOST_CHECK_EQUAL(0x20, cpu.d0); });
+}
+
+BOOST_AUTO_TEST_CASE(a_moveToD0_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'0000u, 0b0011'1100u, 0x12, 0x34 }; // move.w #$1234,d0
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const cpu& cpu) { BOOST_CHECK_EQUAL(0x1234, cpu.d0); });
+}
+
+BOOST_AUTO_TEST_CASE(a_moveToD0_l)
+{
+	// Arrange
+	unsigned char code[] = { 0b0010'0000u, 0b0011'1100u, 0x12, 0x34, 0x56, 0x78 }; // move.w #$1234,d0
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const cpu& cpu) { BOOST_CHECK_EQUAL(0x12345678, cpu.d0); });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

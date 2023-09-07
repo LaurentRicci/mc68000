@@ -348,24 +348,24 @@ namespace mc68000
 		return instructions::LSR;
 	}
 
-	unsigned char cpu_t::read_b(unsigned short ea)
+	template <typename T> T cpu_t::readAt(uint16_t ea)
 	{
 		unsigned short eam = ea >> 3;
 		unsigned short reg = ea & 7u;
 		switch (eam)
 		{
 		case 0:
-			return dRegisters[reg] & 0xff;
+			return static_cast<T>(dRegisters[reg]);
 		case 1:
-			return aRegisters[reg] & 0xff;
+			return static_cast<T>(aRegisters[reg]);
 		case 7:
 		{
 			switch (reg)
 			{
 			case 4:
 			{
-				uint16_t x = localMemory.getWord(pc++);
-				return x & 0xff;
+				T x = localMemory.get<T>(pc++);
+				return x;
 			}
 			default:
 				break;
@@ -378,7 +378,7 @@ namespace mc68000
 		throw "incorrect addressing mode";
 	}
 
-	void cpu_t::write_b(unsigned short  ea, unsigned char data)
+	template <typename T> void cpu_t::writeAt(uint16_t  ea, T data)
 	{
 		unsigned short eam = ea >> 3;
 		unsigned short reg = ea & 7u;
@@ -395,18 +395,10 @@ namespace mc68000
 		}
 	}
 
-	void cpu_t::move_b(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress)
+	template<typename T> void cpu_t::move(uint16_t sourceEffectiveAddress, uint16_t  destinationEffectiveAddress)
 	{
-		unsigned char source = read_b(sourceEffectiveAddress);
-		write_b(destinationEffectiveAddress, source);
-	}
-	void cpu_t::move_w(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress)
-	{
-
-	}
-	void cpu_t::move_l(unsigned short sourceEffectiveAddress, unsigned short  destinationEffectiveAddress)
-	{
-
+		T source = readAt<T>(sourceEffectiveAddress);
+		writeAt<T>(destinationEffectiveAddress, source);
 	}
 
 	unsigned short cpu_t::move(unsigned short opcode)
@@ -423,13 +415,13 @@ namespace mc68000
 		switch (size)
 		{
 		case 1:
-			move_b(sourceEffectiveAddress, destinationEffectiveAddress);
-			break;
-		case 2:
-			move_w(sourceEffectiveAddress, destinationEffectiveAddress);
+			move<uint8_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 			break;
 		case 3:
-			move_l(sourceEffectiveAddress, destinationEffectiveAddress);
+			move<uint16_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+			break;
+		case 2:
+			move<uint32_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 			break;
 		default:
 			throw "invalid size";
