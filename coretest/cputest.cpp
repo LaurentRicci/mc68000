@@ -4,7 +4,7 @@
 
 using namespace mc68000;
 
-BOOST_AUTO_TEST_SUITE(Asm)
+BOOST_AUTO_TEST_SUITE(cpuSuite)
 
 BOOST_AUTO_TEST_CASE(a_asm)
 {

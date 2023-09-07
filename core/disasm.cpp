@@ -9,8 +9,6 @@
 
 namespace mc68000
 {
-	template<> core<DisAsm_t>::t_handler core<DisAsm_t>::handlers[] = {};
-	template<> bool core<DisAsm_t>::initialized = false;
 	const char* const dregisters[8] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7" };
 	const char* const aregisters[8] = { "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7" };
 	const char* const AddressRegisterIndirect[8] = { "(a0)", "(a1)", "(a2)", "(a3)", "(a4)", "(a5)", "(a6)", "(a7)" };
