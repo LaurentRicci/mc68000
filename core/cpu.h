@@ -5,6 +5,14 @@
 
 namespace mc68000
 {
+	struct sr_t
+	{
+		uint8_t c : 1;
+		uint8_t v : 1;
+		uint8_t z : 1;
+		uint8_t n : 1;
+		uint8_t x : 1;
+	};
 	class cpu_t
 	{
 	public:
@@ -155,8 +163,10 @@ namespace mc68000
 	protected:
 		unsigned int dRegisters[8];
 		unsigned int aRegisters[8];
+		sr_t sr;
 		uint32_t pc;
 		memory localMemory;
+		bool done;
 
 		void reset();
 		void reset(const memory& memory);
@@ -189,6 +199,7 @@ namespace mc68000
 		const unsigned int& a5;
 		const unsigned int& a6;
 		const unsigned int& a7;
+		const sr_t& sr;
 
 		void reset()
 		{
