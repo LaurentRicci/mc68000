@@ -408,9 +408,6 @@ namespace mc68000
 		sr.c = 0;
 		sr.v = 0;
 		sr.z = source == 0 ? 1 : 0;
-		//T mask = (1 << (sizeof(T) * 8 - 1));
-		//T masked = source & mask;
-		//sr.n = source & (1 << (sizeof(T) * 8 - 1)) ? 1 : 0;
 		sr.n = (source >> (sizeof(T) * 8 - 1)) ? 1 : 0;
 	}
 
