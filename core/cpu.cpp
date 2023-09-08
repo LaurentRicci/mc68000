@@ -25,7 +25,8 @@ namespace mc68000
 		a4(this->operator*()->aRegisters[4]),
 		a5(this->operator*()->aRegisters[5]),
 		a6(this->operator*()->aRegisters[6]),
-		a7(this->operator*()->aRegisters[7])
+		a7(this->operator*()->aRegisters[7]),
+		sr(this->operator*()->sr)
 	{
 		this->operator*()->localMemory = memory;
 	}
@@ -48,10 +49,14 @@ namespace mc68000
 
 	void cpu_t::start(unsigned int startPc)
 	{
+		done = false;
 		pc = startPc;
-		uint16_t x = localMemory.getWord(pc);
-		pc += 2;
-		(this->*core<cpu_t>::handlers[x])(x);
+		while (!done)
+		{
+			uint16_t x = localMemory.getWord(pc);
+			pc += 2;
+			(this->*core<cpu_t>::handlers[x])(x);
+		}
 	}
 
 	// =================================================================================================
@@ -364,7 +369,8 @@ namespace mc68000
 			{
 			case 4:
 			{
-				T x = localMemory.get<T>(pc++);
+				T x = localMemory.get<T>(pc);
+				pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
 				return x;
 			}
 			default:
@@ -399,6 +405,13 @@ namespace mc68000
 	{
 		T source = readAt<T>(sourceEffectiveAddress);
 		writeAt<T>(destinationEffectiveAddress, source);
+		sr.c = 0;
+		sr.v = 0;
+		sr.z = source == 0 ? 1 : 0;
+		//T mask = (1 << (sizeof(T) * 8 - 1));
+		//T masked = source & mask;
+		//sr.n = source & (1 << (sizeof(T) * 8 - 1)) ? 1 : 0;
+		sr.n = (source >> (sizeof(T) * 8 - 1)) ? 1 : 0;
 	}
 
 	unsigned short cpu_t::move(unsigned short opcode)
@@ -408,9 +421,9 @@ namespace mc68000
 
 		// the destination is inverted: register - mode instead of mode - register
 		unsigned short destination = (opcode >> 6) & 0b111111u;
-		unsigned short destinationRegister = destination & 0b111u;
-		unsigned short destinationMode = destination >> 3;
-		unsigned short destinationEffectiveAddress = (destinationRegister << 3) | destinationMode;
+		unsigned short destinationMode = destination & 0b111u;
+		unsigned short destinationRegister = destination >> 3;
+		unsigned short destinationEffectiveAddress = (destinationMode << 3) | destinationRegister;
 
 		switch (size)
 		{
@@ -424,7 +437,7 @@ namespace mc68000
 			move<uint32_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 			break;
 		default:
-			throw "invalid size";
+			throw "move invalid size";
 		}
 
 		return instructions::MOVE;
@@ -432,6 +445,32 @@ namespace mc68000
 
 	unsigned short cpu_t::movea(unsigned short opcode)
 	{
+		unsigned short size = opcode >> 12;
+		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+
+		// the destination is inverted: register - mode instead of mode - register
+		uint16_t destinationRegister = (opcode >> 9) & 0b111u;
+		uint16_t destinationEffectiveAddress = (1 << 3) | destinationRegister;
+
+		switch (size)
+		{
+			case 3: // Word operation; the source operand is sign-extended to a long operand and all 32 bits are loaded into the address register.
+			{
+				uint16_t source = readAt<uint16_t>(sourceEffectiveAddress);
+				int32_t extendedSource = (int16_t)source;
+				writeAt<uint32_t>(destinationEffectiveAddress, extendedSource);
+				break;
+			}
+			case 2:
+			{
+				uint32_t source = readAt<uint32_t>(sourceEffectiveAddress);
+				writeAt<uint32_t>(destinationEffectiveAddress, source);
+				break;
+			}
+			default:
+				throw "movea invalid size";
+		}
+
 		return instructions::MOVEA;
 	}
 
@@ -609,6 +648,7 @@ namespace mc68000
 
 	unsigned short cpu_t::trap(unsigned short)
 	{
+		done = true;
 		return instructions::TRAP;
 	}
 
