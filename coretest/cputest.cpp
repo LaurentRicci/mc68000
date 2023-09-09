@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(a_reset)
 void verifyExecution(const uint8_t* code, size_t size, void (*assertFunctor)(const cpu& c))
 {
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	memory memory(256, 0, code, size);
 	cpu cpu(memory);
 
 	// Act
@@ -146,6 +146,16 @@ BOOST_AUTO_TEST_CASE(a_addressMode_001)
 		{
 			BOOST_CHECK_EQUAL(0x1234, cpu.a4);
 			BOOST_CHECK_EQUAL(0x1234, cpu.a0);
+		});
+}
+BOOST_AUTO_TEST_CASE(a_addressMode_002)
+{
+	// movea.w #10,a4 ; movea.w (a4),a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x0A, 0b0011'0000u, 0b01'010'100u, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0xA, cpu.a4);
+			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
 		});
 }
 

@@ -363,6 +363,12 @@ namespace mc68000
 			return static_cast<T>(dRegisters[reg]);
 		case 1:
 			return static_cast<T>(aRegisters[reg]);
+		case 2:
+		{
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			return x;
+		}
 		case 7:
 		{
 			switch (reg)
