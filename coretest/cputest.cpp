@@ -138,6 +138,17 @@ BOOST_AUTO_TEST_CASE(a_addressMode_000)
 			BOOST_CHECK_EQUAL(0x1234, cpu.a0);
 		});
 }
+BOOST_AUTO_TEST_CASE(a_addressMode_001)
+{
+	// movea.w #$1234,a4 ; movea.w a4,a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x12, 0x34, 0b0011'0000u, 0b01'001'100u, 0x4e, 0x40 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1234, cpu.a4);
+			BOOST_CHECK_EQUAL(0x1234, cpu.a0);
+		});
+}
+
 
 
 

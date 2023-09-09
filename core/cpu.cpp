@@ -381,7 +381,7 @@ namespace mc68000
 		default:
 			break;
 		}
-		throw "incorrect addressing mode";
+		throw "readAt: incorrect addressing mode";
 	}
 
 	template <typename T> void cpu_t::writeAt(uint16_t  ea, T data)
