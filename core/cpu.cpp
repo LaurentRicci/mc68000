@@ -369,6 +369,31 @@ namespace mc68000
 			T x = localMemory.get<T>(address);
 			return x;
 		}
+		case 3:
+		{
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			aRegisters[reg] += sizeof(T); 
+			return x;
+		}
+		case 4:
+		{
+			aRegisters[reg] -= sizeof(T);
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			return x;
+		}
+		case 5:
+		{
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<T>(pc);
+			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+			int32_t offset = (int16_t)extension;
+
+			T x = localMemory.get<T>(address+offset);
+			return x;
+		}
 		case 7:
 		{
 			switch (reg)

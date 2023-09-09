@@ -148,19 +148,61 @@ BOOST_AUTO_TEST_CASE(a_addressMode_001)
 			BOOST_CHECK_EQUAL(0x1234, cpu.a0);
 		});
 }
-BOOST_AUTO_TEST_CASE(a_addressMode_002)
+
+BOOST_AUTO_TEST_CASE(a_addressMode_010)
 {
 	// movea.w #10,a4 ; movea.w (a4),a0 ; trap #0
 	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x0A, 0b0011'0000u, 0b01'010'100u, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
 	verifyExecution(code, sizeof(code), [](const cpu& cpu)
 		{
-			BOOST_CHECK_EQUAL(0xA, cpu.a4);
+			BOOST_CHECK_EQUAL(0x0A, cpu.a4);
 			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
 		});
 }
 
+BOOST_AUTO_TEST_CASE(a_addressMode_011)
+{
+	// movea.w #10,a4 ; movea.w (a4)+,a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x0A, 0b0011'0000u, 0b01'011'100u, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x0C, cpu.a4);
+			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
+		});
+}
 
+BOOST_AUTO_TEST_CASE(a_addressMode_100)
+{
+	// movea.w #12,a4 ; movea.w -(a4),a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x0C, 0b0011'0000u, 0b01'100'100u, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x0A, cpu.a4);
+			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
+		});
+}
 
+BOOST_AUTO_TEST_CASE(a_addressMode_101_positive)
+{
+	// movea.w #6,a4 ; movea.w 6(a4),a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x06, 0b0011'0000u, 0b01'101'100u, 0x00, 0x06, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x06, cpu.a4);
+			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_addressMode_101_negative)
+{
+	// movea.w #18,a4 ; movea.w -6(a4),a0 ; trap #0
+	unsigned char code[] = { 0x38, 0x7c, 0x00, 0x12, 0b0011'0000u, 0b01'101'100u, 0xff, 0xfa, 0x4e, 0x40, 0xff, 0xff, 0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x12, cpu.a4);
+			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
+		});
+}
 
 BOOST_AUTO_TEST_CASE(a_sr)
 {
