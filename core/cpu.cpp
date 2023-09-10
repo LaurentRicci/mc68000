@@ -394,6 +394,34 @@ namespace mc68000
 			T x = localMemory.get<T>(address+offset);
 			return x;
 		}
+		case 6:
+		{
+			const int Scales[4] = { 1,2,4,8 };
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+
+			// calculate the index
+			bool isAddressRegister = extension & 0x8000;
+			unsigned short extensionReg = (extension >> 12) & 7;
+			bool isLongIndexSize = (extension & 0x0800);
+			int32_t index;
+			if (isLongIndexSize)
+			{
+				index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+			}
+			else
+			{
+				index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+			}
+
+			// Calculate the displacement
+			int32_t displacement = (int16_t) (extension & 0xff);
+
+			T x = localMemory.get<T>(address + displacement + index);
+			return x;
+		}
 		case 7:
 		{
 			switch (reg)
