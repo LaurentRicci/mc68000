@@ -550,8 +550,13 @@ namespace mc68000
 		return instructions::MOVEP;
 	}
 
-	unsigned short cpu_t::moveq(unsigned short)
+	unsigned short cpu_t::moveq(unsigned short opcode)
 	{
+		uint16_t reg = (opcode >> 9) & 0x07;
+		int32_t data = (int8_t) (opcode & 0xff);
+
+		dRegisters[reg] = data;
+
 		return instructions::MOVEQ;
 	}
 
