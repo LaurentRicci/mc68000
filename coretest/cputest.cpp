@@ -53,6 +53,21 @@ void verifyExecution(const uint8_t* code, size_t size, void (*assertFunctor)(con
 	// Assert
 	assertFunctor(cpu);
 }
+
+void verifyExecution(const uint8_t* code, size_t size, uint32_t baseAddress, void (*assertFunctor)(const cpu& c))
+{
+	// Arrange
+	memory memory(256, baseAddress, code, size);
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(baseAddress);
+
+	// Assert
+	assertFunctor(cpu);
+}
+
 void validateSR(const cpu& cpu, int x, int n, int z, int v, int c)
 {
 	if (x != -1) BOOST_CHECK_EQUAL(x, cpu.sr.x);
@@ -240,6 +255,33 @@ BOOST_AUTO_TEST_CASE(a_addressMode_110_negative)
 			BOOST_CHECK_EQUAL(10, cpu.a4);
 			BOOST_CHECK_EQUAL(0xfffffffe, cpu.d2);
 			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_addressMode_111_000)
+{
+	unsigned char code[] = {
+		0x38, 0x78, 0x00, 0x0A,  // movea.w $10,a4 ;
+		0x4e, 0x40,              // trap #0
+		0xff, 0xff,
+		0xff, 0xff,
+		0x43, 0x21 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x4321, cpu.a4);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_addressMode_111_001)
+{
+	unsigned char code[] = {
+		0x38, 0x79, 0x00, 0x03, 0x20, 0x0A,  // movea.w $3200a,a4 ;
+		0x4e, 0x40,                          // trap #0
+		0xff, 0xff,
+		0x43, 0x21 };
+	verifyExecution(code, sizeof(code), 0x32000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x4321, cpu.a4);
 		});
 }
 
