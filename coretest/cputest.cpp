@@ -248,4 +248,21 @@ BOOST_AUTO_TEST_CASE(a_sr)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 
 }
+
+// =================================================================================================
+// Instructions specific tests
+// =================================================================================================
+BOOST_AUTO_TEST_CASE(a_moveq)
+{
+	unsigned char code[] = { 
+		0x74, 0xfe,    // moveq.l #-2,d2
+		0x76, 0x04,    // moveq.l #4,d3
+		0xff, 0xff};
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(-2, cpu.d2);
+			BOOST_CHECK_EQUAL(4, cpu.d3);
+		});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
