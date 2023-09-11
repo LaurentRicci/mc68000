@@ -396,7 +396,6 @@ namespace mc68000
 		}
 		case 6:
 		{
-			const int Scales[4] = { 1,2,4,8 };
 			uint32_t address = aRegisters[reg];
 
 			uint16_t extension = localMemory.get<uint16_t>(pc);
@@ -429,6 +428,7 @@ namespace mc68000
 				case 0:
 				{
 					uint16_t extension = localMemory.get<uint16_t>(pc);
+					pc += 2;
 					int32_t address = (int16_t)extension;
 
 					T x = localMemory.get<T>(address);
@@ -437,6 +437,16 @@ namespace mc68000
 				case 1:
 				{
 					uint32_t address = localMemory.get<uint32_t>(pc);
+					pc += 4;
+					T x = localMemory.get<T>(address);
+					return x;
+				}
+				case 2:
+				{
+					uint16_t extension = localMemory.get<uint16_t>(pc);
+					int32_t offset = (int16_t)extension;
+					uint32_t address = pc + offset;
+					pc += 2;
 					T x = localMemory.get<T>(address);
 					return x;
 				}
@@ -744,6 +754,7 @@ namespace mc68000
 
 	unsigned short cpu_t::unknown(unsigned short)
 	{
+		throw "unknown instruction";
 		return instructions::UNKNOWN;
 	}
 

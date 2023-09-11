@@ -285,6 +285,19 @@ BOOST_AUTO_TEST_CASE(a_addressMode_111_001)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(a_addressMode_111_010)
+{
+	unsigned char code[] = {
+		0x32, 0x3A, 0x00, 0x08,  // movea.w data,d1 ;
+		0x4e, 0x40,              // trap #0
+		0xff, 0xff,
+		0xff, 0xff,
+		0x43, 0x21 };            // data
+	verifyExecution(code, sizeof(code), 0x32000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x4321, cpu.d1);
+		});
+}
 BOOST_AUTO_TEST_CASE(a_sr)
 {
 	memory memory;
