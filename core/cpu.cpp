@@ -363,25 +363,137 @@ namespace mc68000
 			return static_cast<T>(dRegisters[reg]);
 		case 1:
 			return static_cast<T>(aRegisters[reg]);
+		case 2:
+		{
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			return x;
+		}
+		case 3:
+		{
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			aRegisters[reg] += sizeof(T); 
+			return x;
+		}
+		case 4:
+		{
+			aRegisters[reg] -= sizeof(T);
+			uint32_t address = aRegisters[reg];
+			T x = localMemory.get<T>(address);
+			return x;
+		}
+		case 5:
+		{
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<T>(pc);
+			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+			int32_t offset = (int16_t)extension;
+
+			T x = localMemory.get<T>(address+offset);
+			return x;
+		}
+		case 6:
+		{
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += 2;
+
+			// calculate the index
+			bool isAddressRegister = extension & 0x8000;
+			unsigned short extensionReg = (extension >> 12) & 7;
+			bool isLongIndexSize = (extension & 0x0800);
+			int32_t index;
+			if (isLongIndexSize)
+			{
+				index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+			}
+			else
+			{
+				index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+			}
+
+			// Calculate the displacement
+			int32_t displacement = (int16_t) (extension & 0xff);
+
+			T x = localMemory.get<T>(address + displacement + index);
+			return x;
+		}
 		case 7:
 		{
 			switch (reg)
 			{
-			case 4:
-			{
-				T x = localMemory.get<T>(pc);
-				pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
-				return x;
-			}
-			default:
-				break;
+				case 0:
+				{
+					uint16_t extension = localMemory.get<uint16_t>(pc);
+					pc += 2;
+					int32_t address = (int16_t)extension;
+
+					T x = localMemory.get<T>(address);
+					return x;
+				}
+				case 1:
+				{
+					uint32_t address = localMemory.get<uint32_t>(pc);
+					pc += 4;
+					T x = localMemory.get<T>(address);
+					return x;
+				}
+				case 2:
+				{
+					uint32_t address = pc;
+					uint16_t extension = localMemory.get<uint16_t>(pc);
+					pc += 2;
+					int32_t offset = (int16_t)extension;
+					address += offset;
+
+					T x = localMemory.get<T>(address);
+					return x;
+				}
+				case 3:
+				{
+					uint32_t address = pc;
+
+					uint16_t extension = localMemory.get<uint16_t>(pc);
+					pc += 2;
+
+					// calculate the index
+					bool isAddressRegister = extension & 0x8000;
+					unsigned short extensionReg = (extension >> 12) & 7;
+					bool isLongIndexSize = (extension & 0x0800);
+					int32_t index;
+					if (isLongIndexSize)
+					{
+						index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+					}
+					else
+					{
+						index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+					}
+
+					// Calculate the displacement
+					int32_t displacement = (int16_t)(extension & 0xff);
+
+					T x = localMemory.get<T>(address + displacement + index);
+					return x;
+				}
+				case 4:
+				{
+					T x = localMemory.get<T>(pc);
+					pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+					return x;
+				}
+				default:
+					break;
 			}
 			break;
 		}
 		default:
 			break;
 		}
-		throw "incorrect addressing mode";
+		throw "readAt: incorrect addressing mode";
 	}
 
 	template <typename T> void cpu_t::writeAt(uint16_t  ea, T data)
@@ -491,8 +603,13 @@ namespace mc68000
 		return instructions::MOVEP;
 	}
 
-	unsigned short cpu_t::moveq(unsigned short)
+	unsigned short cpu_t::moveq(unsigned short opcode)
 	{
+		uint16_t reg = (opcode >> 9) & 0x07;
+		int32_t data = (int8_t) (opcode & 0xff);
+
+		dRegisters[reg] = data;
+
 		return instructions::MOVEQ;
 	}
 
@@ -666,6 +783,7 @@ namespace mc68000
 
 	unsigned short cpu_t::unknown(unsigned short)
 	{
+		throw "unknown instruction";
 		return instructions::UNKNOWN;
 	}
 

@@ -6,7 +6,7 @@ namespace mc68000
 	class memory
 	{
 	public:
-		memory(unsigned int size, unsigned int baseAddress) :
+		memory(uint32_t size, uint32_t baseAddress) :
 			size(size),
 			baseAddress(baseAddress)
 		{
@@ -17,7 +17,7 @@ namespace mc68000
 				*p1++ = 0;
 			}
 		}
-		memory(unsigned int size, unsigned int baseAddress, const unsigned char* content, unsigned int contentSize) :
+		memory(uint32_t size, uint32_t baseAddress, const uint8_t* content, uint32_t contentSize) :
 			size(size),
 			baseAddress(baseAddress)
 		{
