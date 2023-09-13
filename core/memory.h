@@ -85,9 +85,13 @@ namespace mc68000
 			return *this;
 		}
 
-		template<typename T> T get(uint32_t address)
+		template<typename T> T get(uint32_t address) const
 		{
 			return 0;
+		}
+
+		template<typename T> void set(uint32_t address, T data) 
+		{
 		}
 
 		uint16_t getWord(uint32_t address)
@@ -109,8 +113,12 @@ namespace mc68000
 		unsigned int baseAddress;
 	};
 
-	template<> uint8_t memory::get<uint8_t>(uint32_t address);
-	template<> uint16_t memory::get<uint16_t>(uint32_t address);
-	template<> uint32_t memory::get<uint32_t>(uint32_t address);
+	template<> uint8_t memory::get<uint8_t>(uint32_t address) const;
+	template<> uint16_t memory::get<uint16_t>(uint32_t address) const;
+	template<> uint32_t memory::get<uint32_t>(uint32_t address) const;
+
+	template<> void memory::set<uint8_t>(uint32_t address, uint8_t data);
+	template<> void memory::set<uint16_t>(uint32_t address, uint16_t data);
+	template<> void memory::set<uint32_t>(uint32_t address, uint32_t data);
 
 }

@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(a_moveNegativeToA2_w)
 }
 
 // =================================================================================================
-// Addressing mode tests
+// Addressing mode tests - Read
 // =================================================================================================
 
 
@@ -316,7 +316,39 @@ BOOST_AUTO_TEST_CASE(a_addressMode_111_011)
 		});
 }
 
+// =================================================================================================
+// Addressing mode tests - Write
+// =================================================================================================
 
+BOOST_AUTO_TEST_CASE(a_addressMode_w000)
+{
+	unsigned char code[] = 
+	{ 
+		0x70, 0x21,    // moveq #$21, d0
+		0x32, 0x00,    // move d0, d1
+		0x4e, 0x40 };  // trap #0
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x21, cpu.d0);
+			BOOST_CHECK_EQUAL(0x21, cpu.d1);
+		});
+}
+BOOST_AUTO_TEST_CASE(a_addressMode_w001)
+{
+	unsigned char code[] =
+	{
+		0x70, 0x21,             // moveq #$21, d0
+		0x32, 0x7c, 0x00, 0x0A, // movea #10, a1
+		0x32, 0x80,             // movea d0, (a1)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x21, cpu.d0);
+			BOOST_CHECK_EQUAL(10, cpu.a1);
+			BOOST_CHECK_EQUAL(0x21, cpu.mem.get<uint16_t>(10));
+		});
+}
 
 BOOST_AUTO_TEST_CASE(a_sr)
 {

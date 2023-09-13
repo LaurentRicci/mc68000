@@ -26,7 +26,8 @@ namespace mc68000
 		a5(this->operator*()->aRegisters[5]),
 		a6(this->operator*()->aRegisters[6]),
 		a7(this->operator*()->aRegisters[7]),
-		sr(this->operator*()->sr)
+		sr(this->operator*()->sr),
+		mem(this->operator*()->localMemory)
 	{
 		this->operator*()->localMemory = memory;
 	}
@@ -508,8 +509,14 @@ namespace mc68000
 		case 1:
 			aRegisters[reg] = data;
 			break;
-		default:
+		case 2:
+		{
+			uint32_t address = aRegisters[reg];
+			localMemory.set<T>(address, data);
 			break;
+		}
+		default:
+			throw "writeAt: incorrect addressing mode";
 		}
 	}
 
