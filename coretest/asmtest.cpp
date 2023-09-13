@@ -8,7 +8,6 @@ BOOST_AUTO_TEST_SUITE(Asm)
 BOOST_AUTO_TEST_CASE(toto)
 {
     BOOST_CHECK_EQUAL(1, 1);
-
 }
 
 void verifyDisassembly(unsigned short memory, const std::string& expected)
