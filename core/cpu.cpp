@@ -374,12 +374,28 @@ namespace mc68000
 		{
 			uint32_t address = aRegisters[reg];
 			T x = localMemory.get<T>(address);
-			aRegisters[reg] += sizeof(T); 
+			if (reg != 7)
+			{
+				aRegisters[reg] += sizeof(T);
+			}
+			else
+			{
+				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
+				aRegisters[reg] += 1 ? 2 : sizeof(T);
+			}
 			return x;
 		}
 		case 4:
 		{
-			aRegisters[reg] -= sizeof(T);
+			if (reg != 7)
+			{
+				aRegisters[reg] -= sizeof(T);
+			}
+			else
+			{
+				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
+				aRegisters[reg] -= 1 ? 2 : sizeof(T);
+			}
 			uint32_t address = aRegisters[reg];
 			T x = localMemory.get<T>(address);
 			return x;
@@ -515,6 +531,75 @@ namespace mc68000
 			localMemory.set<T>(address, data);
 			break;
 		}
+		case 3:
+		{
+			uint32_t address = aRegisters[reg];
+			localMemory.set<T>(address, data);
+			if (reg != 7)
+			{
+				aRegisters[reg] += sizeof(T);
+			}
+			else
+			{
+				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
+				aRegisters[reg] += 1 ? 2 : sizeof(T); 
+			}
+			break;
+		}
+		case 4:
+		{
+			if (reg != 7)
+			{
+				aRegisters[reg] -= sizeof(T);
+			}
+			else
+			{
+				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
+				aRegisters[reg] -= 1 ? 2 : sizeof(T);
+			}
+			uint32_t address = aRegisters[reg];
+			localMemory.set<T>(address, data);
+			break;
+		}
+		case 5:
+		{
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<T>(pc);
+			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+			int32_t offset = (int16_t)extension;
+
+			localMemory.set<T>(address + offset, data);
+			break;
+		}
+		case 6:
+		{
+			uint32_t address = aRegisters[reg];
+
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += 2;
+
+			// calculate the index
+			bool isAddressRegister = extension & 0x8000;
+			unsigned short extensionReg = (extension >> 12) & 7;
+			bool isLongIndexSize = (extension & 0x0800);
+			int32_t index;
+			if (isLongIndexSize)
+			{
+				index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+			}
+			else
+			{
+				index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+			}
+
+			// Calculate the displacement
+			int32_t displacement = (int16_t)(extension & 0xff);
+
+			localMemory.set<T>(address + displacement + index, data);
+			break;
+		}
+
 		default:
 			throw "writeAt: incorrect addressing mode";
 		}
