@@ -457,6 +457,36 @@ BOOST_AUTO_TEST_CASE(a_addressMode_w110_n)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(a_addressMode_w111_000)
+{
+	unsigned char code[] = {
+		0x70, 0x21,             // moveq #$21, d0
+		0x31, 0xC0, 0x00, 0x0a, // move  d0, $10.w
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff,
+		0xff, 0xff,
+		0xff, 0xff };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x21, cpu.d0);
+			BOOST_CHECK_EQUAL(0x21, cpu.mem.get<uint16_t>(10));
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_addressMode_w111_001)
+{
+	unsigned char code[] = {
+		0x70, 0x21,                          // moveq #$21, d0
+		0x33, 0xC0, 0x00, 0x03, 0x20, 0x0A,  // movea.w d0,$3200a
+		0x4e, 0x40,                          // trap #0
+		0xff, 0xff,
+		0x43, 0x21 };
+	verifyExecution(code, sizeof(code), 0x32000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x21, cpu.d0);
+			BOOST_CHECK_EQUAL(0x21, cpu.mem.get<uint16_t>(0x3200a));
+		});
+}
 BOOST_AUTO_TEST_CASE(a_sr)
 {
 	memory memory;

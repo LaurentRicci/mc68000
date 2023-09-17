@@ -599,7 +599,30 @@ namespace mc68000
 			localMemory.set<T>(address + displacement + index, data);
 			break;
 		}
+		case 7:
+		{
+			switch (reg)
+			{
+				case 0:
+				{
+					uint16_t extension = localMemory.get<uint16_t>(pc);
+					pc += 2;
+					int32_t address = (int16_t)extension;
 
+					localMemory.set<T>(address, data);
+					break;
+				}
+				case 1:
+				{
+					uint32_t address = localMemory.get<uint32_t>(pc);
+					pc += 4;
+					localMemory.set<T>(address, data);
+					break;
+				}
+
+			}
+			break;
+		}
 		default:
 			throw "writeAt: incorrect addressing mode";
 		}

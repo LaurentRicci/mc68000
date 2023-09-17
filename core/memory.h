@@ -107,6 +107,15 @@ namespace mc68000
 		{
 			delete[] rawMemory;
 		}
+
+	private:
+		void verifyAddress(uint32_t address, size_t size) const
+		{
+			if (address < baseAddress || (address + size) >(baseAddress + this->size))
+			{
+				throw "illegal address";
+			}
+		}
 	private:
 		unsigned char* rawMemory;
 		unsigned int size;
