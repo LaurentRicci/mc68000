@@ -199,7 +199,8 @@ namespace mc68000
 		const unsigned int& a5;
 		const unsigned int& a6;
 		const unsigned int& a7;
-		const sr_t& sr;
+		const sr_t&         sr;
+		const memory&       mem;
 
 		void reset()
 		{
