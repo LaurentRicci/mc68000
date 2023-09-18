@@ -132,12 +132,36 @@ namespace mc68000
 		return instructions::ASR;
 	}
 
+	uint32_t cpu_t::getTargetAddress(uint16_t opcode)
+	{
+		uint32_t address = pc;
+		int32_t offset;
+		uint8_t byteOffset = opcode & 0xff;
+		if (byteOffset != 0)
+		{
+			offset = (int8_t)byteOffset;
+		}
+		else
+		{
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += 2;
+			offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
+		}
+		address += offset;
+		return address;
+	}
+
 	unsigned short cpu_t::bra(unsigned short)
 	{
 		return instructions::BRA;
 	}
 	unsigned short cpu_t::bhi(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!sr.c && !sr.z)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BHI;
 	}
 	unsigned short cpu_t::bls(unsigned short opcode)
@@ -146,18 +170,38 @@ namespace mc68000
 	}
 	unsigned short cpu_t::bcc(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!sr.c)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BCC;
 	}
 	unsigned short cpu_t::bcs(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.c)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BCS;
 	}
 	unsigned short cpu_t::bne(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!sr.z)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BNE;
 	}
 	unsigned short cpu_t::beq(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.z)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BEQ;
 	}
 	unsigned short cpu_t::bvc(unsigned short opcode)
@@ -404,9 +448,9 @@ namespace mc68000
 		{
 			uint32_t address = aRegisters[reg];
 
-			uint16_t extension = localMemory.get<T>(pc);
-			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
-			int32_t offset = (int16_t)extension;
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += 2;
+			int32_t offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
 
 			T x = localMemory.get<T>(address+offset);
 			return x;
@@ -701,6 +745,15 @@ namespace mc68000
 
 	unsigned short cpu_t::move2ccr(unsigned short)
 	{
+		uint16_t extension = localMemory.get<uint16_t>(pc);
+		pc += 2;
+
+		sr.c = extension & 0x1;
+		sr.v = (extension & 0x2) >> 1;
+		sr.z = (extension & 0x4) >> 2;
+		sr.n = (extension & 0x8) >> 3;
+		sr.x = (extension & 0x10) >> 4;
+
 		return instructions::MOVE2CCR;
 	}
 

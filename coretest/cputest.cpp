@@ -219,11 +219,11 @@ BOOST_AUTO_TEST_CASE(a_addressMode_101_positive)
 
 BOOST_AUTO_TEST_CASE(a_addressMode_101_negative)
 {
-	unsigned char code[] = { 
+	unsigned char code[] = {
 		0x38, 0x7c, 0x00, 0x12,                  // movea.w #18,a4
 		0b0011'0000u, 0b01'101'100u, 0xff, 0xfa, // movea.w -6(a4),a0
 		0x4e, 0x40,                              // trap #0
-		0xff, 0xff, 
+		0xff, 0xff,
 		0x43, 0x21 };
 	verifyExecution(code, sizeof(code), [](const cpu& cpu)
 		{
@@ -231,6 +231,22 @@ BOOST_AUTO_TEST_CASE(a_addressMode_101_negative)
 			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
 		});
 }
+
+BOOST_AUTO_TEST_CASE(a_addressMode_101_long)
+{
+	unsigned char code[] = { 
+		0x38, 0x7c, 0x00, 0x06,                  // movea.w #6,a4
+		0x20, 0x6c, 0x00, 0x06,                  // movea.l 6(a4),a0
+		0x4e, 0x40,                              // trap #0
+		0xff, 0xff, 
+		0x43, 0x21, 0x12, 0x34 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x6, cpu.a4);
+			BOOST_CHECK_EQUAL(0x43211234, cpu.a0);
+		});
+}
+
 
 BOOST_AUTO_TEST_CASE(a_addressMode_110_positive)
 {
@@ -562,6 +578,51 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 // =================================================================================================
 // Instructions specific tests
 // =================================================================================================
+
+void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
+{
+	//uint8_t ccr = 24;
+	//uint8_t bccOp = 64;
+
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, ccr,    //       move #24,ccr
+		bccOp, 0x00, 0x00, 0x04,    //       bcc pass
+		0x4e, 0x40,                //       trap #0
+		0x70, 0x2a,                // pass: moveq #42,d0
+		0x4e, 0x40,                //       trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(42, cpu.d0);
+		});
+}
+BOOST_AUTO_TEST_CASE(a_bcc)
+{
+	verifyBccExecution(0x24, 0x64); // C=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bcs)
+{
+	verifyBccExecution(0x19, 0x65); // C=1
+}
+
+BOOST_AUTO_TEST_CASE(a_beq)
+{
+	verifyBccExecution(0x04, 0x67); // Z=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bne)
+{
+	verifyBccExecution(0x08, 0x66); // Z=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bhi)
+{
+	verifyBccExecution(0x18, 0x62);
+}
+
+
 BOOST_AUTO_TEST_CASE(a_moveq)
 {
 	unsigned char code[] = { 
@@ -576,4 +637,37 @@ BOOST_AUTO_TEST_CASE(a_moveq)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(a_move2ccr_1)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x15,    // move #21, CCR
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_move2ccr_2)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x0a,    // move #12, CCR
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()

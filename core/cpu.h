@@ -176,6 +176,7 @@ namespace mc68000
 		template <typename T> T readAt(uint16_t ea);
 		template <typename T> void writeAt(uint16_t ea, T data);
 		template <typename T> void move(uint16_t from, uint16_t to);
+		uint32_t getTargetAddress(uint16_t opcode);
 	};
 
 	class cpu : core<cpu_t>
