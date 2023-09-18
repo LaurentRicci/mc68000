@@ -40,6 +40,15 @@ BOOST_AUTO_TEST_CASE(a_reset)
 	BOOST_CHECK_EQUAL(0, cpu.a7);
 }
 
+BOOST_AUTO_TEST_CASE(a_sr)
+{
+	memory memory;
+	cpu cpu(memory);
+
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+
+}
+
 void verifyExecution(const uint8_t* code, size_t size, void (*assertFunctor)(const cpu& c))
 {
 	// Arrange
@@ -487,14 +496,68 @@ BOOST_AUTO_TEST_CASE(a_addressMode_w111_001)
 			BOOST_CHECK_EQUAL(0x21, cpu.mem.get<uint16_t>(0x3200a));
 		});
 }
-BOOST_AUTO_TEST_CASE(a_sr)
+/*=================================================================================================
+									org     $00100000       ;Start at 00100000
+					strtolower      public
+00100000  4E56 0000                     link    a6,#0           ;Set up stack frame
+00100004  306E 0008                     movea   8(a6),a0        ;A0 = src, from stack
+00100008  326E 000C                     movea   12(a6),a1       ;A1 = dst, from stack
+0010000C  1018          loop            move.b  (a0)+,d0        ;Load D0 from (src), incr src
+0010000E  0C40 0041                     cmpi    #'A',d0         ;If D0 < 'A',
+00100012  6500 000E                     blo     copy            ;skip
+00100016  0C40 005A                     cmpi    #'Z',d0         ;If D0 > 'Z',
+0010001A  6200 0006                     bhi     copy            ;skip
+0010001E  0640 0020                     addi    #'a'-'A',d0     ;D0 = lowercase(D0)
+00100022  12C0          copy            move.b  d0,(a1)+        ;Store D0 to (dst), incr dst
+00100024  66E6                          bne     loop            ;Repeat while D0 <> NUL
+00100026  4E5E                          unlk    a6              ;Restore stack frame
+00100028  4E75                          rts                     ;Return
+0010002A                                end
+
+=================================================================================================*/
+BOOST_AUTO_TEST_CASE(a_toLowerCase)
 {
-	memory memory;
+	unsigned char code[] = {     //             org     $00100000      ; Start at 00100000
+		0x4E, 0x56, 0x00, 0x00,  //             link    a6,#0          ; Set up stack frame
+		0x20, 0x6E, 0x00, 0x08,  //             movea.l   8(a6),a0       ; A0 = src, from stack
+		0x22, 0x6E, 0x00, 0x0C,  //             movea.l   12(a6),a1      ; A1 = dst, from stack
+		0x10, 0x18,              //  loop       move.b(a0) + ,d0       ; Load D0 from(src), incr src
+		0x0C, 0x40, 0x00, 0x41,  //             cmpi    #'A',d0        ; If D0 < 'A',
+		0x65, 0x00, 0x00, 0x0E,  //             blo     copy           ; skip
+		0x0C, 0x40, 0x00, 0x5A,  //             cmpi    #'Z',d0        ; If D0 > 'Z',
+		0x62, 0x00, 0x00, 0x06,  //             bhi     copy           ; skip
+		0x06, 0x40, 0x00, 0x20,  //             addi    #'a' - 'A',d0  ; D0 = lowercase(D0)
+		0x12, 0xC0,              //  copy       move.b  d0,(a1)+       ; Store D0 to(dst), incr dst
+		0x66, 0xE6,              //             bne     loop           ; Repeat while D0 <> NUL
+		0x4E, 0x5E,              //             unlk    a6             ; Restore stack frame
+		0x4E, 0x75,              //             rts                    ; Return
+		0x4e, 0x40,              //             trap #0
+		0xff, 0xff,
+		'L', 'A', 'U', 'R', 0x00 };
+
+
+	uint32_t src = 46;
+	uint32_t dst = 56;
+	uint32_t a6 = 100;
+	// Arrange
+	BOOST_CHECK_EQUAL('L', code[src]);
+
+	uint32_t base = 0x00100000;
+	memory memory(1024, base, code, sizeof(code));
+	memory.set<uint32_t>(base + a6 + 8, base + src);
+	memory.set<uint32_t>(base + a6 + 12, base + dst);
+
 	cpu cpu(memory);
 
-	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	// Act
+	cpu.reset();
+	cpu.setARegister(6, base + a6);
+	cpu.start(base);
+
+	// Assert
 
 }
+
 
 // =================================================================================================
 // Instructions specific tests

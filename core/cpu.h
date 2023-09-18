@@ -216,5 +216,9 @@ namespace mc68000
 			this->operator*()->start(startPc);
 		}
 
+		void setARegister(int reg, uint32_t value)
+		{
+			(**this)->aRegisters[reg] = value;
+		}
 	};
 }
