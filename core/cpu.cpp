@@ -151,8 +151,9 @@ namespace mc68000
 		return address;
 	}
 
-	unsigned short cpu_t::bra(unsigned short)
+	unsigned short cpu_t::bra(unsigned short opcode)
 	{
+		pc = getTargetAddress(opcode);
 		return instructions::BRA;
 	}
 	unsigned short cpu_t::bhi(unsigned short opcode)
@@ -166,6 +167,11 @@ namespace mc68000
 	}
 	unsigned short cpu_t::bls(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.c | sr.z)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BLS;
 	}
 	unsigned short cpu_t::bcc(unsigned short opcode)
@@ -206,34 +212,74 @@ namespace mc68000
 	}
 	unsigned short cpu_t::bvc(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!sr.v)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BVC;
 	}
 	unsigned short cpu_t::bvs(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.v)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BVS;
 	}
 	unsigned short cpu_t::bpl(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!sr.n)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BPL;
 	}
 	unsigned short cpu_t::bmi(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.n)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BMI;
 	}
 	unsigned short cpu_t::bge(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!(sr.n & sr.v))
+		{
+			pc = targetAddress;
+		}
 		return instructions::BGE;
 	}
 	unsigned short cpu_t::blt(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.n & sr.v)
+		{
+			pc = targetAddress;
+		}
 		return instructions::BLT;
 	}
 	unsigned short cpu_t::bgt(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (!(sr.z | (sr.n & sr.v)))
+		{
+			pc = targetAddress;
+		}
 		return instructions::BGT;
 	}
 	unsigned short cpu_t::ble(unsigned short opcode)
 	{
+		auto targetAddress = getTargetAddress(opcode);
+		if (sr.z | (sr.n & sr.v))
+		{
+			pc = targetAddress;
+		}
 		return instructions::BLE;
 	}
 
