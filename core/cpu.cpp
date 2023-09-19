@@ -663,7 +663,9 @@ namespace mc68000
 					localMemory.set<T>(address, data);
 					break;
 				}
-				case 2,3,4:
+				case 2:
+				case 3:
+				case 4:
 					throw "writeAt: non alterable addressing mode";
 			}
 			break;
