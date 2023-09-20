@@ -40,6 +40,15 @@ BOOST_AUTO_TEST_CASE(a_reset)
 	BOOST_CHECK_EQUAL(0, cpu.a7);
 }
 
+BOOST_AUTO_TEST_CASE(a_sr)
+{
+	memory memory;
+	cpu cpu(memory);
+
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+
+}
+
 void verifyExecution(const uint8_t* code, size_t size, void (*assertFunctor)(const cpu& c))
 {
 	// Arrange
@@ -210,11 +219,11 @@ BOOST_AUTO_TEST_CASE(a_addressMode_101_positive)
 
 BOOST_AUTO_TEST_CASE(a_addressMode_101_negative)
 {
-	unsigned char code[] = { 
+	unsigned char code[] = {
 		0x38, 0x7c, 0x00, 0x12,                  // movea.w #18,a4
 		0b0011'0000u, 0b01'101'100u, 0xff, 0xfa, // movea.w -6(a4),a0
 		0x4e, 0x40,                              // trap #0
-		0xff, 0xff, 
+		0xff, 0xff,
 		0x43, 0x21 };
 	verifyExecution(code, sizeof(code), [](const cpu& cpu)
 		{
@@ -222,6 +231,22 @@ BOOST_AUTO_TEST_CASE(a_addressMode_101_negative)
 			BOOST_CHECK_EQUAL(0x4321, cpu.a0);
 		});
 }
+
+BOOST_AUTO_TEST_CASE(a_addressMode_101_long)
+{
+	unsigned char code[] = { 
+		0x38, 0x7c, 0x00, 0x06,                  // movea.w #6,a4
+		0x20, 0x6c, 0x00, 0x06,                  // movea.l 6(a4),a0
+		0x4e, 0x40,                              // trap #0
+		0xff, 0xff, 
+		0x43, 0x21, 0x12, 0x34 };
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x6, cpu.a4);
+			BOOST_CHECK_EQUAL(0x43211234, cpu.a0);
+		});
+}
+
 
 BOOST_AUTO_TEST_CASE(a_addressMode_110_positive)
 {
@@ -487,18 +512,162 @@ BOOST_AUTO_TEST_CASE(a_addressMode_w111_001)
 			BOOST_CHECK_EQUAL(0x21, cpu.mem.get<uint16_t>(0x3200a));
 		});
 }
-BOOST_AUTO_TEST_CASE(a_sr)
+/*=================================================================================================
+									org     $00100000       ;Start at 00100000
+					strtolower      public
+00100000  4E56 0000                     link    a6,#0           ;Set up stack frame
+00100004  306E 0008                     movea   8(a6),a0        ;A0 = src, from stack
+00100008  326E 000C                     movea   12(a6),a1       ;A1 = dst, from stack
+0010000C  1018          loop            move.b  (a0)+,d0        ;Load D0 from (src), incr src
+0010000E  0C40 0041                     cmpi    #'A',d0         ;If D0 < 'A',
+00100012  6500 000E                     blo     copy            ;skip
+00100016  0C40 005A                     cmpi    #'Z',d0         ;If D0 > 'Z',
+0010001A  6200 0006                     bhi     copy            ;skip
+0010001E  0640 0020                     addi    #'a'-'A',d0     ;D0 = lowercase(D0)
+00100022  12C0          copy            move.b  d0,(a1)+        ;Store D0 to (dst), incr dst
+00100024  66E6                          bne     loop            ;Repeat while D0 <> NUL
+00100026  4E5E                          unlk    a6              ;Restore stack frame
+00100028  4E75                          rts                     ;Return
+0010002A                                end
+
+=================================================================================================*/
+BOOST_AUTO_TEST_CASE(a_toLowerCase)
 {
-	memory memory;
+	unsigned char code[] = {     //             org     $00100000      ; Start at 00100000
+		0x4E, 0x56, 0x00, 0x00,  //             link    a6,#0          ; Set up stack frame
+		0x20, 0x6E, 0x00, 0x08,  //             movea.l   8(a6),a0       ; A0 = src, from stack
+		0x22, 0x6E, 0x00, 0x0C,  //             movea.l   12(a6),a1      ; A1 = dst, from stack
+		0x10, 0x18,              //  loop       move.b(a0) + ,d0       ; Load D0 from(src), incr src
+		0x0C, 0x40, 0x00, 0x41,  //             cmpi    #'A',d0        ; If D0 < 'A',
+		0x65, 0x00, 0x00, 0x0E,  //             blo     copy           ; skip
+		0x0C, 0x40, 0x00, 0x5A,  //             cmpi    #'Z',d0        ; If D0 > 'Z',
+		0x62, 0x00, 0x00, 0x06,  //             bhi     copy           ; skip
+		0x06, 0x40, 0x00, 0x20,  //             addi    #'a' - 'A',d0  ; D0 = lowercase(D0)
+		0x12, 0xC0,              //  copy       move.b  d0,(a1)+       ; Store D0 to(dst), incr dst
+		0x66, 0xE6,              //             bne     loop           ; Repeat while D0 <> NUL
+		0x4E, 0x5E,              //             unlk    a6             ; Restore stack frame
+		0x4E, 0x75,              //             rts                    ; Return
+		0x4e, 0x40,              //             trap #0
+		0xff, 0xff,
+		'L', 'A', 'U', 'R', 0x00 };
+
+
+	uint32_t src = 46;
+	uint32_t dst = 56;
+	uint32_t a6 = 100;
+	// Arrange
+	BOOST_CHECK_EQUAL('L', code[src]);
+
+	uint32_t base = 0x00100000;
+	memory memory(1024, base, code, sizeof(code));
+	memory.set<uint32_t>(base + a6 + 8, base + src);
+	memory.set<uint32_t>(base + a6 + 12, base + dst);
+
 	cpu cpu(memory);
 
-	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	// Act
+	cpu.reset();
+	cpu.setARegister(6, base + a6);
+	cpu.start(base);
 
+	// Assert
+	// TODO: add missing assert
 }
+
 
 // =================================================================================================
 // Instructions specific tests
 // =================================================================================================
+
+void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
+{
+	//uint8_t ccr = 24;
+	//uint8_t bccOp = 64;
+
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, ccr,     //       move #24,ccr
+		bccOp, 0x00, 0x00, 0x04,   //       bcc pass
+		0x4e, 0x40,                //       trap #0
+		0x70, 0x2a,                // pass: moveq #42,d0
+		0x4e, 0x40,                //       trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(42, cpu.d0);
+		});
+}
+BOOST_AUTO_TEST_CASE(a_bcc)
+{
+	verifyBccExecution(0x24, 0x64); // C=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bcs)
+{
+	verifyBccExecution(0x19, 0x65); // C=1
+}
+
+BOOST_AUTO_TEST_CASE(a_beq)
+{
+	verifyBccExecution(0x04, 0x67); // Z=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bne)
+{
+	verifyBccExecution(0x08, 0x66); // Z=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bge)
+{
+	verifyBccExecution(0x02, 0x6c); // N=0 V=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bgt)
+{
+	verifyBccExecution(0x08, 0x6e); // N=1 Z=0 V=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bhi)
+{
+	verifyBccExecution(0x18, 0x62); // C=0 Z=0
+}
+
+BOOST_AUTO_TEST_CASE(a_ble)
+{
+	verifyBccExecution(0x0a, 0x6f);  // N=1 Z=0 V=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bls)
+{
+	verifyBccExecution(0x01, 0x63); // Z=0 C=1
+}
+
+BOOST_AUTO_TEST_CASE(a_blt)
+{
+	verifyBccExecution(0x0b, 0x6d); // N=1 V=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bmi)
+{
+	verifyBccExecution(0x08, 0x6b); // N=1
+}
+
+BOOST_AUTO_TEST_CASE(a_bpl)
+{
+	verifyBccExecution(0x07, 0x6a); // N=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bvc)
+{
+	verifyBccExecution(0x05, 0x68); // V=0
+}
+
+BOOST_AUTO_TEST_CASE(a_bvs)
+{
+	verifyBccExecution(0x07, 0x69); // V=1
+}
+
+
 BOOST_AUTO_TEST_CASE(a_moveq)
 {
 	unsigned char code[] = { 
@@ -513,4 +682,37 @@ BOOST_AUTO_TEST_CASE(a_moveq)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(a_move2ccr_1)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x15,    // move #21, CCR
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(a_move2ccr_2)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x0a,    // move #12, CCR
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()

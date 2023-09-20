@@ -114,7 +114,7 @@ namespace mc68000
 		{
 			if (address < baseAddress || (address + size) >(baseAddress + this->size))
 			{
-				throw "illegal address";
+				throw "memory:verifyAddress: illegal address";
 			}
 		}
 	private:
