@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 	cpu.start(base);
 
 	// Assert
-
+	// TODO: add missing assert
 }
 
 
@@ -585,8 +585,8 @@ void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
 	//uint8_t bccOp = 64;
 
 	unsigned char code[] = {
-		0x44, 0xfc, 0x00, ccr,    //       move #24,ccr
-		bccOp, 0x00, 0x00, 0x04,    //       bcc pass
+		0x44, 0xfc, 0x00, ccr,     //       move #24,ccr
+		bccOp, 0x00, 0x00, 0x04,   //       bcc pass
 		0x4e, 0x40,                //       trap #0
 		0x70, 0x2a,                // pass: moveq #42,d0
 		0x4e, 0x40,                //       trap #0
@@ -619,52 +619,52 @@ BOOST_AUTO_TEST_CASE(a_bne)
 
 BOOST_AUTO_TEST_CASE(a_bge)
 {
-	verifyBccExecution(0x02, 0x6c);
+	verifyBccExecution(0x02, 0x6c); // N=0 V=1
 }
 
 BOOST_AUTO_TEST_CASE(a_bgt)
 {
-	verifyBccExecution(0x08, 0x6e);
+	verifyBccExecution(0x08, 0x6e); // N=1 Z=0 V=0
 }
 
 BOOST_AUTO_TEST_CASE(a_bhi)
 {
-	verifyBccExecution(0x18, 0x62);
+	verifyBccExecution(0x18, 0x62); // C=0 Z=0
 }
 
 BOOST_AUTO_TEST_CASE(a_ble)
 {
-	verifyBccExecution(0x0a, 0x6f);
+	verifyBccExecution(0x0a, 0x6f);  // N=1 Z=0 V=1
 }
 
 BOOST_AUTO_TEST_CASE(a_bls)
 {
-	verifyBccExecution(0x01, 0x63);
+	verifyBccExecution(0x01, 0x63); // Z=0 C=1
 }
 
 BOOST_AUTO_TEST_CASE(a_blt)
 {
-	verifyBccExecution(0x0b, 0x6d);
+	verifyBccExecution(0x0b, 0x6d); // N=1 V=1
 }
 
 BOOST_AUTO_TEST_CASE(a_bmi)
 {
-	verifyBccExecution(0x08, 0x6b);
+	verifyBccExecution(0x08, 0x6b); // N=1
 }
 
 BOOST_AUTO_TEST_CASE(a_bpl)
 {
-	verifyBccExecution(0x07, 0x6a);
+	verifyBccExecution(0x07, 0x6a); // N=0
 }
 
 BOOST_AUTO_TEST_CASE(a_bvc)
 {
-	verifyBccExecution(0x05, 0x68); // V = 0
+	verifyBccExecution(0x05, 0x68); // V=0
 }
 
 BOOST_AUTO_TEST_CASE(a_bvs)
 {
-	verifyBccExecution(0x07, 0x69); // V = 1
+	verifyBccExecution(0x07, 0x69); // V=1
 }
 
 
