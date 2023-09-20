@@ -617,9 +617,54 @@ BOOST_AUTO_TEST_CASE(a_bne)
 	verifyBccExecution(0x08, 0x66); // Z=0
 }
 
+BOOST_AUTO_TEST_CASE(a_bge)
+{
+	verifyBccExecution(0x02, 0x6c);
+}
+
+BOOST_AUTO_TEST_CASE(a_bgt)
+{
+	verifyBccExecution(0x08, 0x6e);
+}
+
 BOOST_AUTO_TEST_CASE(a_bhi)
 {
 	verifyBccExecution(0x18, 0x62);
+}
+
+BOOST_AUTO_TEST_CASE(a_ble)
+{
+	verifyBccExecution(0x0a, 0x6f);
+}
+
+BOOST_AUTO_TEST_CASE(a_bls)
+{
+	verifyBccExecution(0x01, 0x63);
+}
+
+BOOST_AUTO_TEST_CASE(a_blt)
+{
+	verifyBccExecution(0x0b, 0x6d);
+}
+
+BOOST_AUTO_TEST_CASE(a_bmi)
+{
+	verifyBccExecution(0x08, 0x6b);
+}
+
+BOOST_AUTO_TEST_CASE(a_bpl)
+{
+	verifyBccExecution(0x07, 0x6a);
+}
+
+BOOST_AUTO_TEST_CASE(a_bvc)
+{
+	verifyBccExecution(0x05, 0x68); // V = 0
+}
+
+BOOST_AUTO_TEST_CASE(a_bvs)
+{
+	verifyBccExecution(0x07, 0x69); // V = 1
 }
 
 
