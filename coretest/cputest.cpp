@@ -578,6 +578,71 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 // =================================================================================================
 // Instructions specific tests
 // =================================================================================================
+void verifyAbcdExecution(uint8_t op1, uint8_t op2, uint8_t expected, uint8_t carry, uint8_t zero)
+{
+	unsigned char code[] = {
+	0x70, op1,     // moveq.l #op1,d0
+	0x72, op2,     // moveq.l #op2,d1
+	0xc3, 0x00,    // abcd d0,d1
+	0x4e, 0x40,    // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(op1, cpu.d0);
+	BOOST_CHECK_EQUAL(expected, cpu.d1);
+	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
+	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
+}
+
+void verifyAbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t expected, uint8_t carry, uint8_t zero)
+{
+	unsigned char code[] = {
+		0x32, 0x7c, 0x00,0x11,  // move op1+1, A1
+		0x34, 0x7c, 0x00,0x12,  // move op2+1, A2
+		0xc5, 0x09,             // abcd -(A1), -(A2)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff,
+		0xff, 0xff,
+		op1,
+		op2
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x10, cpu.a1);
+	BOOST_CHECK_EQUAL(0x11, cpu.a2);
+	BOOST_CHECK_EQUAL(expected, cpu.mem.get<uint8_t>(0x11));
+	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
+	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
+}
+
+BOOST_AUTO_TEST_CASE(a_abcd_register)
+{
+	verifyAbcdExecution(0x42, 0x31, 0x73, 0, 0);
+	verifyAbcdExecution(0x48, 0x34, 0x82, 0, 0);
+	verifyAbcdExecution(0x48, 0x62, 0x10, 1, 0);
+}
+BOOST_AUTO_TEST_CASE(a_abcd_memory)
+{
+	verifyAbcdExecutionMemory(0x42, 0x31, 0x73, 0, 0);
+	verifyAbcdExecutionMemory(0x48, 0x34, 0x82, 0, 0);
+	verifyAbcdExecutionMemory(0x48, 0x62, 0x10, 1, 0);
+}
 
 void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
 {

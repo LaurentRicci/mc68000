@@ -6,7 +6,7 @@ namespace mc68000
 	{
 		verifyAddress(address, sizeof(uint8_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
-		return *(p8 + 1);
+		return *(p8 + 0); // TODO: why was it +1
 	}
 
 	template<> uint16_t memory::get<uint16_t>(uint32_t address) const

@@ -64,8 +64,55 @@ namespace mc68000
 	// cpu instruction handlers
 	// =================================================================================================
 
-	unsigned short cpu_t::abcd(unsigned short)
+	unsigned short cpu_t::abcd(unsigned short opcode)
 	{
+		uint8_t register1 = opcode & 0b111;
+		uint8_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+
+		uint8_t op1;
+		uint8_t op2;
+		if (useAddressRegister)
+		{
+			op1 = readAt<uint8_t>(0b100'000u | register1);
+			op2 = readAt<uint8_t>(0b100'000u | register2);
+		}
+		else
+		{
+			op1 = dRegisters[register1];
+			op2 = dRegisters[register2];
+		}
+		uint16_t m1 = (op1 & 0x0f) + (op2 & 0x0f);
+		uint16_t m2 = (op1 & 0xf0) + (op2 & 0xf0);
+		uint16_t result = m2 + m1;
+		if (m1 >= 10)
+		{
+			result += 0x6; // in hexadecimal : 8 + 2 = A ; A + 6 = 10 ; in BCD 08 + 02 = 10
+		}
+		if ((result & 0xfff0) > 0x90)
+		{
+			sr.c = 1;
+			sr.x = 1;
+			result += 0x60;
+		}
+		else
+		{
+			sr.c = 0;
+			sr.x = 0;
+		}
+		if (result != 0)
+		{
+			sr.z = 0;
+		}
+		if (useAddressRegister)
+		{
+			writeAt<uint8_t>(0b010'000u | register2, result);
+		}
+		else
+		{
+			dRegisters[register2] = (dRegisters[register2] & 0xffffff00) | (result & 0xff);
+		}
+
 		return instructions::ABCD;
 	}
 
@@ -588,8 +635,17 @@ namespace mc68000
 				}
 				case 4:
 				{
-					T x = localMemory.get<T>(pc);
-					pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
+					T x;
+					if (sizeof(T) == 1)
+					{
+						x = localMemory.get<T>(pc + 1);
+						return x;
+					}
+					else
+					{
+						x = localMemory.get<T>(pc);
+					}
+					pc += 2;
 					return x;
 				}
 				default:
