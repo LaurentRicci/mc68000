@@ -110,7 +110,7 @@ namespace mc68000
 		}
 
 	private:
-		void verifyAddress(uint32_t address, size_t size) const
+		void verifyAddress(uint32_t address, uint32_t size) const
 		{
 			if (address < baseAddress || (address + size) >(baseAddress + this->size))
 			{
@@ -118,9 +118,9 @@ namespace mc68000
 			}
 		}
 	private:
-		unsigned char* rawMemory;
-		unsigned int size;
-		unsigned int baseAddress;
+		uint8_t* rawMemory;
+		uint32_t size;
+		uint32_t baseAddress;
 	};
 
 	template<> uint8_t memory::get<uint8_t>(uint32_t address) const;

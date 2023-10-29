@@ -106,7 +106,7 @@ namespace mc68000
 		}
 		if (useAddressRegister)
 		{
-			writeAt<uint8_t>(0b010'000u | register2, result);
+			writeAt<uint8_t>(0b010'000u | register2, static_cast<uint8_t>(result));
 		}
 		else
 		{
