@@ -116,8 +116,23 @@ namespace mc68000
 		return instructions::ABCD;
 	}
 
-	unsigned short cpu_t::adda(unsigned short)
+	unsigned short cpu_t::adda(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+
+		bool isLongOperation = (opcode & 0x100) == 0x100;
+		if (isLongOperation)
+		{
+			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress);
+			aRegisters[reg] += operand;
+		}
+		else
+		{
+			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress);
+			uint32_t extended = (int16_t) operand;
+			aRegisters[reg] += extended;
+		}
 		return instructions::ADDA;
 	}
 

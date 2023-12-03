@@ -19,7 +19,7 @@ steps:
 - task: CMake@1
   inputs:
     workingDirectory: '.'
-    cmakeArgs: '-DBoost_INCLUDE_DIRS=/usr/include/boost -DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
+    cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
 - task: CMake@1
   inputs:
     workingDirectory: '.'

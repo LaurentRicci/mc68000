@@ -1,0 +1,31 @@
+{
+    "version":"2.0.0",
+    "tasks": [
+        {
+            "label": "mybuild",
+            "command": "cmake",
+            "type": "process",
+            "args": [
+                "--build",
+                "${workspaceFolder}"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "mytest",
+            "command": "coretest.exe",
+            "type": "process",
+            "args": [
+                "--show-progress"
+            ],
+            "isTestCommand": true,
+            "options": {
+                "cwd": "${workspaceFolder}/coretest/debug"
+            }
+        }
+    ]
+}
