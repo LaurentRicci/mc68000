@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 20)
 project ("mc68000")
 
 if (WIN32)
-    set(Boost_INCLUDE_DIRS "C:/code/lib/boost_1_82_0")
+    set(Boost_INCLUDE_DIRS "C:/code/lib/boost")
 else()
     set(Boost_INCLUDE_DIRS "/usr/include/boost")
 endif()
