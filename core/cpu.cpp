@@ -654,13 +654,13 @@ namespace mc68000
 					if (sizeof(T) == 1)
 					{
 						x = localMemory.get<T>(pc + 1);
-						return x;
+						pc += 2;
 					}
 					else
 					{
 						x = localMemory.get<T>(pc);
+						pc += sizeof(T);
 					}
-					pc += 2;
 					return x;
 				}
 				default:

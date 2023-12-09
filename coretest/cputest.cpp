@@ -669,13 +669,13 @@ BOOST_AUTO_TEST_CASE(a_abcd_memory)
 	verifyAbcdExecutionMemory(0x48, 0x62, 0x10, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_1)
+BOOST_AUTO_TEST_CASE(a_adda_1)
 {
 	unsigned char code[] = {
 	0x30, 0x7c, 0x00, 0x64,     // move #100,a0
 	0xd0, 0xfc, 0x00, 0x20,     // add  #32,a0
 	0x32, 0x7c, 0x00, 0xc8,     // move #200,a1
-	0xd2, 0xfc, 0xff, 0xe0,      // add  #-32,a1
+	0xd2, 0xfc, 0xff, 0xe0,     // add  #-32,a1
 	0x4e, 0x40,                 // trap #0
 	0xff, 0xff };
 
@@ -690,6 +690,30 @@ BOOST_AUTO_TEST_CASE(a_add_1)
 	// Assert
 	BOOST_CHECK_EQUAL(132, cpu.a0);
 	BOOST_CHECK_EQUAL(168, cpu.a1);
+}
+
+BOOST_AUTO_TEST_CASE(a_adda_2)
+{
+	unsigned char code[] = {
+	0x30, 0x7c, 0x01, 0x00,             // move   #$100,a0
+	0xd1, 0xfc, 0x12, 0x34, 0x12, 0x34, // add.l  #$12341234,a0
+	0x32, 0x7c, 0x02, 0x00,		        // move   #$200,a1
+	0x22, 0x3c, 0x12, 0x34, 0x00, 0x00, // move.l #$1234000,d1
+	0xd3, 0xc1,                         // add.l  d1,a1
+	0x4e, 0x40,                         // trap   #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12341334, cpu.a0);
+	BOOST_CHECK_EQUAL(0x12340200, cpu.a1);
 }
 void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
 {
