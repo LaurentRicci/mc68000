@@ -17,14 +17,19 @@
         },
         {
             "label": "mytest",
-            "command": "coretest.exe",
+            "windows": {
+                "command": "coretest/debug/coretest.exe",
+            },
+            "linux": {
+                "command": "coretest/coretest",
+            },
             "type": "process",
             "args": [
                 "--show-progress"
             ],
             "isTestCommand": true,
             "options": {
-                "cwd": "${workspaceFolder}/coretest/debug"
+                "cwd": "${workspaceFolder}"
             }
         }
     ]
