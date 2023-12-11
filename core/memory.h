@@ -99,7 +99,7 @@ namespace mc68000
 		{
 			uint8_t* p8 = rawMemory + (address - baseAddress);
 
-			uint16_t word = (*p8++ << 8) | *p8;
+			uint16_t word = (*p8 << 8) | *(p8 + 1);
 
 			return word;
 		}
