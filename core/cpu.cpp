@@ -445,11 +445,6 @@ namespace mc68000
 		return instructions::CMPA;
 	}
 
-	template<typename T> void foo();
-	template<uint8_t> void foo() {}
-	template<uint16_t> void foo() {}
-
-
 	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value)  { return static_cast<int8_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
@@ -729,7 +724,7 @@ namespace mc68000
 					if (sizeof(T) == 1)
 					{
 						x = localMemory.get<T>(pc + 1);
-						pc += 2;
+						pc += 2; // pc must be aligned on a word boundary
 					}
 					else
 					{
