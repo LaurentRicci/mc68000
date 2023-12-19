@@ -2,20 +2,19 @@
 TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
-
+If you are running on windows, make sure that the boost library is installed in \code\lib\boost. if a specific version is in place like \code\lib\boost_1_82_0 you can do
+```
+push-location C:\code\lib
+New-Item -Name boost -ItemType SymbolicLink -Value .\boost_1_82_0\
+```
 # Build and Test
 To create the makefile just run the following command:
 ```
-cmake -DBoost_INCLUDE_DIRS=C:\code\lib\boost_1_82_0\ .
+cmake .
 ```
 on linux run
 ```
-cmake -DBoost_INCLUDE_DIRS=/usr/include/boost .
+cmake .
 ```
 
 
