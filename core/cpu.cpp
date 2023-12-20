@@ -434,18 +434,7 @@ namespace mc68000
 		return instructions::CLR;
 	}
 
-
-	unsigned short cpu_t::cmp(unsigned short)
-	{
-		return instructions::CMP;
-	}
-
-	unsigned short cpu_t::cmpa(unsigned short)
-	{
-		return instructions::CMPA;
-	}
-
-	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value)  { return static_cast<int8_t>(value); }
+	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
 
@@ -453,7 +442,7 @@ namespace mc68000
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
 		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint64_t result = destination - source;
+		uint64_t result = (uint64_t)destination - (uint64_t)source;
 
 		sr.n = signed_cast<T>(result) < 0;
 		sr.z = static_cast<T>(result) == 0;
@@ -461,6 +450,50 @@ namespace mc68000
 		sr.v = signed_cast<T>((source ^ destination) & (destination ^ result)) < 0;
 	}
 
+	unsigned short cpu_t::cmp(unsigned short opcode)
+	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			cmp<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		default:
+			throw "cmp: invalid size";
+		}
+
+		return instructions::CMP;
+	}
+
+	unsigned short cpu_t::cmpa(unsigned short opcode)
+	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
+		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 3:
+			cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 7:
+			cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		default:
+			throw "cmpa: invalid size";
+		}
+
+		return instructions::CMPA;
+	}
 
 	unsigned short cpu_t::cmpi(unsigned short opcode)
 	{
