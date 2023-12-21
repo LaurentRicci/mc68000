@@ -858,6 +858,37 @@ BOOST_AUTO_TEST_CASE(a_bvs)
 	verifyBccExecution(0x07, 0x69); // V=1
 }
 
+BOOST_AUTO_TEST_CASE(a_clr)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    // move.l #$12345678,d0
+		0x42, 0x00,                            // clr.b  d0
+		0x22, 0x3c, 0x23, 0x45, 0x67, 0x89,    // move.l #$23456789,d1
+		0x42, 0x41,                            // clr.w  d1
+		0x24, 0x3c, 0x34, 0x56, 0x78, 0x9A,    // move.l #$3456789A,d2
+		0x42, 0x82,                            // clr.l  d2
+		0x4e, 0x40,                            // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12345600, cpu.d0);
+	BOOST_CHECK_EQUAL(0x23450000, cpu.d1);
+	BOOST_CHECK_EQUAL(0x00000000, cpu.d2);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+
+}
+
 void verifyCmpiExecution_b(uint8_t d0, uint8_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {

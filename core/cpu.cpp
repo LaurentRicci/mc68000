@@ -429,9 +429,29 @@ namespace mc68000
 		return instructions::CHK;
 	}
 
-	unsigned short cpu_t::clr(unsigned short)
+	unsigned short cpu_t::clr(unsigned short opcode)
 	{
-		return instructions::CLR;
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			writeAt<uint8_t>(destinationEffectiveAddress, 0);
+			break;
+		case 1:
+			writeAt<uint16_t>(destinationEffectiveAddress, 0);
+			break;
+		case 2:
+			writeAt<uint32_t>(destinationEffectiveAddress, 0);
+			break;
+		default:
+			throw "clr: invalid size";
+		}
+		sr.n = 0;
+		sr.z = 1;
+		sr.c = 0;
+		sr.v = 0;
 	}
 
 	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
