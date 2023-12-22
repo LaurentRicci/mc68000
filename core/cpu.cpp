@@ -141,6 +141,20 @@ namespace mc68000
 		return instructions::ADD;
 	}
 
+	template <typename T> void cpu_t::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint64_t result = (uint64_t)destination + (uint64_t)source;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+
+		sr.n = signed_cast<T>(result) < 0;
+		sr.z = static_cast<T>(result) == 0;
+		sr.c = signed_cast<T>(result >> 1) < 0;
+		sr.x = sr.c;
+		sr.v = signed_cast<T>((source ^ result) & (destination ^ result)) < 0;
+	}
+		
 	unsigned short cpu_t::addi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
@@ -151,26 +165,17 @@ namespace mc68000
 		{
 			case 0:
 			{
-				uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
-				uint8_t destination = readAt<uint8_t>(destinationEffectiveAdress);
-				uint16_t result = source + destination;
-				writeAt<uint8_t>(destinationEffectiveAdress, result & 0xff);
+				add<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			case 1:
 			{
-				uint16_t source = readAt<uint16_t>(sourceEffectiveAddress);
-				uint16_t destination = readAt<uint16_t>(destinationEffectiveAdress);
-				uint32_t result = source + destination;
-				writeAt<uint16_t>(destinationEffectiveAdress, result & 0xffff);
+				add<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			case 2:
 			{
-				uint32_t source = readAt<uint32_t>(sourceEffectiveAddress);
-				uint32_t destination = readAt<uint32_t>(destinationEffectiveAdress);
-				uint64_t result = source + destination;
-				writeAt<uint32_t>(destinationEffectiveAdress, result & 0xffffffff);
+				add<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			default:
@@ -452,6 +457,8 @@ namespace mc68000
 		sr.z = 1;
 		sr.c = 0;
 		sr.v = 0;
+
+		return instructions::CLR;
 	}
 
 	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
