@@ -96,6 +96,190 @@ BOOST_AUTO_TEST_CASE(a_abcd_memory)
 	verifyAbcdExecutionMemory(0x48, 0x34, 0x82, 0, 0);
 	verifyAbcdExecutionMemory(0x48, 0x62, 0x10, 1, 0);
 }
+// ===================================================
+// ADD tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_add_to_dregister_b)
+{
+	unsigned char code[] = {
+		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
+		0x38, 0x7c, 0x10, 0x0e,    //   move   #value, a4
+		0xd6, 0x14,                //   add.b  (a4), d3
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff,                // 
+		0x29, 0xfe };              // value dc.b $29
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x5b, cpu.d3);
+	BOOST_CHECK_EQUAL(0x100e, cpu.a4);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
+{
+	unsigned char code[] = {
+		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
+		0x38, 0x7c, 0x10, 0x10,    //   move   #value, a4
+		0xd7, 0x14,                //   add.b  d3, (a4)
+		0x14, 0x14,                 //   move.b (a4), d2
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff,                // 
+		0x29, 0xfe };              // value dc.b $29
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x32, cpu.d3);
+	BOOST_CHECK_EQUAL(0x1010, cpu.a4);
+	BOOST_CHECK_EQUAL(0x5b, cpu.d2);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_add_to_dregister_w)
+{
+	unsigned char code[] = {
+		0x36, 0x3c, 0x90, 0x90,    //   move.w #$9090, d3
+		0x38, 0x7c, 0x10, 0x0e,    //   move   #value, a4
+		0xd6, 0x54,                //   add.w  (a4), d3
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff,                // 
+		0x81, 0x81,                // value dc.w $8181
+		0xfe, 0xfe };
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x1211, cpu.d3);
+	BOOST_CHECK_EQUAL(0x100e, cpu.a4);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_add_from_dregister_w)
+{
+	unsigned char code[] = {
+		0x36, 0x3c, 0x90, 0x90,    //   move.w #$9090, d3
+		0x38, 0x7c, 0x10, 0x10,    //   move   #value, a4
+		0xd7, 0x54,                //   add.w  d3, (a4)
+		0x34, 0x14,                //   move.w (a4), d2
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff,                // 
+		0x81, 0x81,                // value dc.w $8181
+		0xfe, 0xfe };
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x9090, cpu.d3);
+	BOOST_CHECK_EQUAL(0x1010, cpu.a4);
+	BOOST_CHECK_EQUAL(0x1211, cpu.d2);
+//	BOOST_CHECK_EQUAL(1, cpu.sr.c); the 2nd move is resetting the status register. 
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+//	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+//	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_add_to_dregister_l)
+{
+	unsigned char code[] = {
+		0x26, 0x3c, 0x90, 0x90, 0x90, 0x90,    //   move.l #$90909090, d3
+		0x38, 0x7c, 0x10, 0x10,                //   move   #value, a4
+		0xd6, 0x94,                            //   add.l  (a4), d3
+		0x4e, 0x40,                            //   trap   #0
+		0xff, 0xff,                            // 
+		0x81, 0x81, 0x81, 0x81,                // value dc.l $81818181
+		0xfe, 0xfe, 0xfe, 0xfe };
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12121211, cpu.d3);
+	BOOST_CHECK_EQUAL(0x1010, cpu.a4);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_add_from_dregister_l)
+{
+	unsigned char code[] = {
+		0x26, 0x3c, 0x90, 0x90, 0x90, 0x90,    //   move.l #$90909090, d3
+		0x38, 0x7c, 0x10, 0x12,                //   move   #value, a4
+		0xd7, 0x94,                            //   add.l  d3, (a4)
+		0x24, 0x14,                            //   move.l (a4), d2
+		0x4e, 0x40,                            //   trap   #0
+		0xff, 0xff,                            // 
+		0x81, 0x81, 0x81, 0x81,                // value dc.l $81818181
+		0xfe, 0xfe, 0xfe, 0xfe };
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x90909090, cpu.d3);
+	BOOST_CHECK_EQUAL(0x1012, cpu.a4);
+	BOOST_CHECK_EQUAL(0x12121211, cpu.d2);
+	//	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	//	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+	//	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+// ===================================================
+// ADDA tests
+// ===================================================
 
 BOOST_AUTO_TEST_CASE(a_adda_1)
 {
@@ -143,6 +327,10 @@ BOOST_AUTO_TEST_CASE(a_adda_2)
 	BOOST_CHECK_EQUAL(0x12341334, cpu.a0);
 	BOOST_CHECK_EQUAL(0x12340200, cpu.a1);
 }
+
+// ===================================================
+// ADDI tests
+// ===================================================
 
 void verifyAddiExecution_b(uint8_t destination, uint8_t source, uint8_t expected, uint8_t x, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {

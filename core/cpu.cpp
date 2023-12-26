@@ -118,26 +118,54 @@ namespace mc68000
 
 	unsigned short cpu_t::adda(unsigned short opcode)
 	{
-		uint8_t reg = (opcode >> 9) & 0b111;
-		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+		// The Condition Codes are unaffected so the template add<> method can't be used
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
 
 		bool isLongOperation = (opcode & 0x100) == 0x100;
 		if (isLongOperation)
 		{
 			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress);
-			aRegisters[reg] += operand;
+			aRegisters[destinationRegister] += operand;
 		}
 		else
 		{
 			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress);
 			uint32_t extended = (int16_t) operand;
-			aRegisters[reg] += extended;
+			aRegisters[destinationRegister] += extended;
 		}
 		return instructions::ADDA;
 	}
 
-	unsigned short cpu_t::add(unsigned short)
+	unsigned short cpu_t::add(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b111;
+		switch (size)
+		{
+		case 0:
+			add<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			add<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			add<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 4:
+			add<uint8_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 5:
+			add<uint16_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 6:
+			add<uint32_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		default:
+			throw "add: invalid size";
+		}
 		return instructions::ADD;
 	}
 
