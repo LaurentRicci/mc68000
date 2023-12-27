@@ -604,171 +604,6 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 // =================================================================================================
 // Instructions specific tests
 // =================================================================================================
-void verifyAbcdExecution(uint8_t op1, uint8_t op2, uint8_t expected, uint8_t carry, uint8_t zero)
-{
-	unsigned char code[] = {
-	0x70, op1,     // moveq.l #op1,d0
-	0x72, op2,     // moveq.l #op2,d1
-	0xc3, 0x00,    // abcd d0,d1
-	0x4e, 0x40,    // trap #0
-	0xff, 0xff };
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(op1, cpu.d0);
-	BOOST_CHECK_EQUAL(expected, cpu.d1);
-	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
-	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
-}
-
-void verifyAbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t expected, uint8_t carry, uint8_t zero)
-{
-	unsigned char code[] = {
-		0x32, 0x7c, 0x00,0x11,  // move op1+1, A1
-		0x34, 0x7c, 0x00,0x12,  // move op2+1, A2
-		0xc5, 0x09,             // abcd -(A1), -(A2)
-		0x4e, 0x40,             // trap #0
-		0xff, 0xff,
-		0xff, 0xff,
-		op1,
-		op2
-	};
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(0x10, cpu.a1);
-	BOOST_CHECK_EQUAL(0x11, cpu.a2);
-	BOOST_CHECK_EQUAL(expected, cpu.mem.get<uint8_t>(0x11));
-	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
-	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
-}
-
-BOOST_AUTO_TEST_CASE(a_abcd_register)
-{
-	verifyAbcdExecution(0x42, 0x31, 0x73, 0, 0);
-	verifyAbcdExecution(0x48, 0x34, 0x82, 0, 0);
-	verifyAbcdExecution(0x48, 0x62, 0x10, 1, 0);
-}
-
-BOOST_AUTO_TEST_CASE(a_abcd_overflow)
-{
-	unsigned char code[] = {
-	0x30, 0x3c, 0x00, 0x48,     // move #$48,d0
-	0x32, 0x3c, 0xff, 0x62,     // move #$ff62,d1
-	0xc3, 0x00,                 // abcd d0,d1
-	0x4e, 0x40,                 // trap #0
-	0xff, 0xff };
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(0x48, cpu.d0);
-	BOOST_CHECK_EQUAL(0xff10, cpu.d1);
-	BOOST_CHECK_EQUAL(1, cpu.sr.c);
-	BOOST_CHECK_EQUAL(0, cpu.sr.z);
-}
-
-BOOST_AUTO_TEST_CASE(a_abcd_memory)
-{
-	verifyAbcdExecutionMemory(0x42, 0x31, 0x73, 0, 0);
-	verifyAbcdExecutionMemory(0x48, 0x34, 0x82, 0, 0);
-	verifyAbcdExecutionMemory(0x48, 0x62, 0x10, 1, 0);
-}
-
-BOOST_AUTO_TEST_CASE(a_adda_1)
-{
-	unsigned char code[] = {
-	0x30, 0x7c, 0x00, 0x64,     // move #100,a0
-	0xd0, 0xfc, 0x00, 0x20,     // add  #32,a0
-	0x32, 0x7c, 0x00, 0xc8,     // move #200,a1
-	0xd2, 0xfc, 0xff, 0xe0,     // add  #-32,a1
-	0x4e, 0x40,                 // trap #0
-	0xff, 0xff };
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(132, cpu.a0);
-	BOOST_CHECK_EQUAL(168, cpu.a1);
-}
-
-BOOST_AUTO_TEST_CASE(a_adda_2)
-{
-	unsigned char code[] = {
-	0x30, 0x7c, 0x01, 0x00,             // move   #$100,a0
-	0xd1, 0xfc, 0x12, 0x34, 0x12, 0x34, // add.l  #$12341234,a0
-	0x32, 0x7c, 0x02, 0x00,		        // move   #$200,a1
-	0x22, 0x3c, 0x12, 0x34, 0x00, 0x00, // move.l #$1234000,d1
-	0xd3, 0xc1,                         // add.l  d1,a1
-	0x4e, 0x40,                         // trap   #0
-	0xff, 0xff };
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(0x12341334, cpu.a0);
-	BOOST_CHECK_EQUAL(0x12340200, cpu.a1);
-}
-
-BOOST_AUTO_TEST_CASE(a_addi_b)
-{
-	unsigned char code[] = {
-		0x30, 0x3C, 0x10, 0x10,              // move    #$1010,     d0
-		0x22, 0x3C, 0x00, 0x01, 0x20, 0x20,  // move.l  #$12020,    d1
-		0x24, 0x3C, 0x10, 0x20, 0x30, 0x40,  // move.l  #$10203040, d2
-
-		0x06, 0x00, 0x00, 0x42,              // add.b   #$42,       d0
-		0x06, 0x41, 0x42, 0x42,              // add.w   #$4242,     d1
-		0x06, 0x82, 0x42, 0x42, 0x42, 0x42,  // add.l   #$42424242, d2
-
-		0x4E, 0x40,                          // trap #0
-		0xFF, 0xFF };
-
-	// Arrange
-	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	BOOST_CHECK_EQUAL(0x1052, cpu.d0);
-	BOOST_CHECK_EQUAL(0x16262, cpu.d1);
-	BOOST_CHECK_EQUAL(0x52627282, cpu.d2);
-}
 
 void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
 {
@@ -858,11 +693,42 @@ BOOST_AUTO_TEST_CASE(a_bvs)
 	verifyBccExecution(0x07, 0x69); // V=1
 }
 
-void verifyCmpiExecution(uint8_t d0, uint8_t d1, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
+BOOST_AUTO_TEST_CASE(a_clr)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    // move.l #$12345678,d0
+		0x42, 0x00,                            // clr.b  d0
+		0x22, 0x3c, 0x23, 0x45, 0x67, 0x89,    // move.l #$23456789,d1
+		0x42, 0x41,                            // clr.w  d1
+		0x24, 0x3c, 0x34, 0x56, 0x78, 0x9A,    // move.l #$3456789A,d2
+		0x42, 0x82,                            // clr.l  d2
+		0x4e, 0x40,                            // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12345600, cpu.d0);
+	BOOST_CHECK_EQUAL(0x23450000, cpu.d1);
+	BOOST_CHECK_EQUAL(0x00000000, cpu.d2);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+
+}
+
+void verifyCmpiExecution_b(uint8_t d0, uint8_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
 		0x10, 0x3c, 0x00, d0,    // move.b #10,d0
-		0x0c, 0x00, 0x00, d1,    // cmpi.b #5, d0
+		0x0c, 0x00, 0x00, cmp,   // cmpi.b #5, d0
 		0x4e, 0x40,              // trap #0
 		0xff, 0xff };
 
@@ -882,13 +748,127 @@ void verifyCmpiExecution(uint8_t d0, uint8_t d1, uint8_t n, uint8_t z, uint8_t v
 
 }
 
-BOOST_AUTO_TEST_CASE(a_cmpi)
+void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
-	verifyCmpiExecution(10, 5, 0, 0, 0, 0);
-	verifyCmpiExecution(5,  5, 0, 1, 0, 0);
-	verifyCmpiExecution(5, 10, 1, 0, 0, 1);
-	verifyCmpiExecution(0x70, 0x81, 1, 0, 1, 1);
+	unsigned char code[] = {
+		0x10, 0x3c,  d0 >> 8, d0 & 0xff,    // move.w #10,d0
+		0x0c, 0x00, cmp >> 8, cmp &0xff,    // cmpi.w #5, d0
+		0x4e, 0x40,                         // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(c, cpu.sr.c);
+	BOOST_CHECK_EQUAL(z, cpu.sr.z);
+	BOOST_CHECK_EQUAL(n, cpu.sr.n);
+	BOOST_CHECK_EQUAL(v, cpu.sr.v);
+
 }
+
+void verifyCmpiExecution_l(uint32_t d0, uint32_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
+{
+	unsigned char code[] = {
+		0x20, 0x3c,  d0 >> 24,  (d0 >> 16) & 0xff,  (d0 >> 8) & 0xff,  d0 & 0xff,    // move.l #10,d0
+		0x0c, 0x80, cmp >> 24, (cmp >> 16) & 0xff, (cmp >> 8) & 0xff, cmp & 0xff,    // cmpi.l #5, d0
+		0x4e, 0x40,                                                                  // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(c, cpu.sr.c);
+	BOOST_CHECK_EQUAL(z, cpu.sr.z);
+	BOOST_CHECK_EQUAL(n, cpu.sr.n);
+	BOOST_CHECK_EQUAL(v, cpu.sr.v);
+
+}
+BOOST_AUTO_TEST_CASE(a_cmpi_b)
+{
+	verifyCmpiExecution_b(10, 5, 0, 0, 0, 0);
+	verifyCmpiExecution_b(5,  5, 0, 1, 0, 0);
+	verifyCmpiExecution_b(5, 10, 1, 0, 0, 1);
+	verifyCmpiExecution_b(0x70, 0x81, 1, 0, 1, 1);
+}
+
+BOOST_AUTO_TEST_CASE(a_cmpi_w)
+{
+	verifyCmpiExecution_w(0x1010, 0x0505, 0, 0, 0, 0);
+	verifyCmpiExecution_w(0x0505, 0x0505, 0, 1, 0, 0);
+	verifyCmpiExecution_w(0x0505, 0x1010, 1, 0, 0, 1);
+	verifyCmpiExecution_w(0x7070, 0x8181, 1, 0, 1, 1);
+}
+
+BOOST_AUTO_TEST_CASE(a_cmpi_l)
+{
+	verifyCmpiExecution_l(0x10101010, 0x05050505, 0, 0, 0, 0);
+	verifyCmpiExecution_l(0x05050505, 0x05050505, 0, 1, 0, 0);
+	verifyCmpiExecution_l(0x05050505, 0x10101010, 1, 0, 0, 1);
+	verifyCmpiExecution_l(0x70707070, 0x81818181, 1, 0, 1, 1);
+}
+
+BOOST_AUTO_TEST_CASE(a_cmp)
+{
+	unsigned char code[] = {
+		0x36, 0x3c,  0x70, 0x70,    // move.w #$7070,d3
+		0x32, 0x3c,  0x81, 0x81,    // move.w #$8181,d1
+		0xb6, 0x41,                 // cmp.w d1, d3
+		0x4e, 0x40,                 // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 100, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(100);
+
+	// Assert
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+
+}
+
+BOOST_AUTO_TEST_CASE(a_cmpa)
+{
+	unsigned char code[] = {
+		0x30, 0x7c,  0x70, 0x70,    // move.w #$7070,a0
+		0x32, 0x3c,  0x81, 0x81,    // move.w #$8181,d1
+		0xb0, 0xc1,                 // cmpa.w d1, a0
+		0x4e, 0x40,                 // trap #0
+		0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 100, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(100);
+
+	// Assert
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+
+}
+
 
 BOOST_AUTO_TEST_CASE(a_moveq)
 {

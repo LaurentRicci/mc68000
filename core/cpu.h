@@ -178,6 +178,7 @@ namespace mc68000
 		template <typename T> void move(uint16_t from, uint16_t to);
 		uint32_t getTargetAddress(uint16_t opcode);
 
+		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> int32_t signed_cast(uint64_t value);
 	};

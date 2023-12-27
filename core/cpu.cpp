@@ -118,29 +118,71 @@ namespace mc68000
 
 	unsigned short cpu_t::adda(unsigned short opcode)
 	{
-		uint8_t reg = (opcode >> 9) & 0b111;
-		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+		// The Condition Codes are unaffected so the template add<> method can't be used
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
 
 		bool isLongOperation = (opcode & 0x100) == 0x100;
 		if (isLongOperation)
 		{
 			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress);
-			aRegisters[reg] += operand;
+			aRegisters[destinationRegister] += operand;
 		}
 		else
 		{
 			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress);
 			uint32_t extended = (int16_t) operand;
-			aRegisters[reg] += extended;
+			aRegisters[destinationRegister] += extended;
 		}
 		return instructions::ADDA;
 	}
 
-	unsigned short cpu_t::add(unsigned short)
+	unsigned short cpu_t::add(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b111;
+		switch (size)
+		{
+		case 0:
+			add<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			add<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			add<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 4:
+			add<uint8_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 5:
+			add<uint16_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 6:
+			add<uint32_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		default:
+			throw "add: invalid size";
+		}
 		return instructions::ADD;
 	}
 
+	template <typename T> void cpu_t::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint64_t result = (uint64_t)destination + (uint64_t)source;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+
+		sr.n = signed_cast<T>(result) < 0;
+		sr.z = static_cast<T>(result) == 0;
+		sr.c = signed_cast<T>(result >> 1) < 0;
+		sr.x = sr.c;
+		sr.v = signed_cast<T>((source ^ result) & (destination ^ result)) < 0;
+	}
+		
 	unsigned short cpu_t::addi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
@@ -151,26 +193,17 @@ namespace mc68000
 		{
 			case 0:
 			{
-				uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
-				uint8_t destination = readAt<uint8_t>(destinationEffectiveAdress);
-				uint16_t result = source + destination;
-				writeAt<uint8_t>(destinationEffectiveAdress, result & 0xff);
+				add<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			case 1:
 			{
-				uint16_t source = readAt<uint16_t>(sourceEffectiveAddress);
-				uint16_t destination = readAt<uint16_t>(destinationEffectiveAdress);
-				uint32_t result = source + destination;
-				writeAt<uint16_t>(destinationEffectiveAdress, result & 0xffff);
+				add<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			case 2:
 			{
-				uint32_t source = readAt<uint32_t>(sourceEffectiveAddress);
-				uint32_t destination = readAt<uint32_t>(destinationEffectiveAdress);
-				uint64_t result = source + destination;
-				writeAt<uint32_t>(destinationEffectiveAdress, result & 0xffffffff);
+				add<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
 				break;
 			}
 			default:
@@ -429,23 +462,34 @@ namespace mc68000
 		return instructions::CHK;
 	}
 
-	unsigned short cpu_t::clr(unsigned short)
+	unsigned short cpu_t::clr(unsigned short opcode)
 	{
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			writeAt<uint8_t>(destinationEffectiveAddress, 0);
+			break;
+		case 1:
+			writeAt<uint16_t>(destinationEffectiveAddress, 0);
+			break;
+		case 2:
+			writeAt<uint32_t>(destinationEffectiveAddress, 0);
+			break;
+		default:
+			throw "clr: invalid size";
+		}
+		sr.n = 0;
+		sr.z = 1;
+		sr.c = 0;
+		sr.v = 0;
+
 		return instructions::CLR;
 	}
 
-
-	unsigned short cpu_t::cmp(unsigned short)
-	{
-		return instructions::CMP;
-	}
-
-	unsigned short cpu_t::cmpa(unsigned short)
-	{
-		return instructions::CMPA;
-	}
-
-	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value)  { return static_cast<int8_t>(value); }
+	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
 
@@ -453,7 +497,7 @@ namespace mc68000
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
 		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint64_t result = destination - source;
+		uint64_t result = (uint64_t)destination - (uint64_t)source;
 
 		sr.n = signed_cast<T>(result) < 0;
 		sr.z = static_cast<T>(result) == 0;
@@ -461,6 +505,50 @@ namespace mc68000
 		sr.v = signed_cast<T>((source ^ destination) & (destination ^ result)) < 0;
 	}
 
+	unsigned short cpu_t::cmp(unsigned short opcode)
+	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			cmp<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		default:
+			throw "cmp: invalid size";
+		}
+
+		return instructions::CMP;
+	}
+
+	unsigned short cpu_t::cmpa(unsigned short opcode)
+	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
+		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 3:
+			cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 7:
+			cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		default:
+			throw "cmpa: invalid size";
+		}
+
+		return instructions::CMPA;
+	}
 
 	unsigned short cpu_t::cmpi(unsigned short opcode)
 	{
