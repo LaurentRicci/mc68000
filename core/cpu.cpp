@@ -64,6 +64,10 @@ namespace mc68000
 	// cpu instruction handlers
 	// =================================================================================================
 
+	// ==========
+	// ABCD
+	// ==========
+
 	unsigned short cpu_t::abcd(unsigned short opcode)
 	{
 		uint8_t register1 = opcode & 0b111;
@@ -116,6 +120,9 @@ namespace mc68000
 		return instructions::ABCD;
 	}
 
+	// ==========
+	// ADDA
+	// ==========
 	unsigned short cpu_t::adda(unsigned short opcode)
 	{
 		// The Condition Codes are unaffected so the template add<> method can't be used
@@ -137,6 +144,9 @@ namespace mc68000
 		return instructions::ADDA;
 	}
 
+	// ==========
+	// ADD
+	// ==========
 	unsigned short cpu_t::add(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
@@ -183,6 +193,9 @@ namespace mc68000
 		sr.v = signed_cast<T>((source ^ result) & (destination ^ result)) < 0;
 	}
 		
+	// ==========
+	// ADDI
+	// ==========
 	unsigned short cpu_t::addi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
@@ -213,8 +226,61 @@ namespace mc68000
 		return instructions::ADDI;
 	}
 
-	unsigned short cpu_t::addq(unsigned short)
+	// ==========
+	// ADDQ
+	// ==========
+	template <typename T> void cpu_t::addq(uint32_t data, uint16_t destinationEffectiveAdress)
 	{
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint64_t result = (uint64_t)destination + (uint64_t)data;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+
+		// When adding to address registers, the condition codes are not altered, and the entire destination address
+		// register is used regardless of the operation size.
+		if ((destinationEffectiveAdress & 0b111'000) != 0b001'000)
+		{
+			sr.n = signed_cast<T>(result) < 0;
+			sr.z = static_cast<T>(result) == 0;
+			sr.c = signed_cast<T>(result >> 1) < 0;
+			sr.x = sr.c;
+			sr.v = signed_cast<T>((data ^ result) & (destination ^ result)) < 0;
+		}
+	}
+
+	unsigned short cpu_t::addq(unsigned short opcode)
+	{
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint32_t source = (opcode >> 9) & 0b111;
+
+		if (isAddressRegister)
+		{
+			// When adding to address registers, the condition codes are not altered, and the entire destination address
+			// register is used regardless of the operation size.
+			if (size == 0)
+			{
+				throw "addq: invalid size";
+			}
+			addq<uint32_t>(source, destinationEffectiveAdress);
+		}
+		else
+		{
+			switch (size)
+			{
+				case 0:
+					addq<uint8_t>(source, destinationEffectiveAdress);
+					break;
+				case 1:
+					addq<uint16_t>(source, destinationEffectiveAdress);
+					break;
+				case 2:
+					addq<uint32_t>(source, destinationEffectiveAdress);
+					break;
+				default:
+					throw "addq: invalid size";
+			}
+		}
 		return instructions::ADDQ;
 	}
 
