@@ -868,7 +868,31 @@ BOOST_AUTO_TEST_CASE(a_cmpa)
 	BOOST_CHECK_EQUAL(1, cpu.sr.v);
 
 }
+// ===================================================
+// ADDI tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_lea)
+{
+	unsigned char code[] = {
+		0x41, 0xf9, 0x00, 0x00, 0x10, 0x1c,    // lea data, a0
+		0x43, 0xf8, 0x10, 0x1c,                // lea data.w, a1
+		0x45, 0xd1,                            // lea (a1), a2
+		0x47, 0xea, 0x00, 0x04,                // lea 4(a2), a3
+		0x76, 0x08,                            // moveq #8, d3
+		0x49, 0xf2, 0x30, 0x04,                // lea 4(a2,d3), a4
+		0x4e, 0x40,                            // trap #0
+		0xff, 0xff, 0xff, 0xff,
+	    0x10, 0x00 };                          // data dc.b $1000    
 
+	verifyExecution(code, sizeof(code), 0x1000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x101c, cpu.a0);
+			BOOST_CHECK_EQUAL(0x101c, cpu.a1);
+			BOOST_CHECK_EQUAL(0x101c, cpu.a2);
+			BOOST_CHECK_EQUAL(0x1020, cpu.a3);
+			BOOST_CHECK_EQUAL(0x1028, cpu.a4);
+		});
+}
 
 BOOST_AUTO_TEST_CASE(a_moveq)
 {
