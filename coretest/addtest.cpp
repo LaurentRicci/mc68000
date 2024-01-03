@@ -439,4 +439,92 @@ BOOST_AUTO_TEST_CASE(a_addi_l)
 	verifyAddiExecution_l(0x90909090, 0x81818181, 0x12121211, 1, 0, 0, 1, 1);
 }
 
+// ===================================================
+// ADDQ tests
+// ===================================================
+
+BOOST_AUTO_TEST_CASE(a_addq_dataRegister_b)
+{
+	unsigned char code[] = {
+	0x10, 0x3c, 0x00, 0xfe,    // move.b #21, d0
+	0x5c, 0x00,                // addq.b #6, d3
+	0x4e, 0x40,                // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(4, cpu.d0);
+
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(a_addq_dataRegister_wl)
+{
+	unsigned char code[] = {
+	0x20, 0x3c, 0x12, 0x34, 0xff, 0xfe,    // move.l #$1234fffe, d0
+	0x22, 0x3c, 0x12, 0x34, 0xff, 0xfe,    // move.l #$1234fffe, d1
+	0x5c, 0x40,                            // addq.w #6, d0
+	0x5c, 0x81,                            // addq.w #6, d1
+	0x4e, 0x40,                            // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12340004, cpu.d0);
+	BOOST_CHECK_EQUAL(0x12350004, cpu.d1);
+}
+BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
+{
+	unsigned char code[] = {
+	0x22, 0x7c, 0xff, 0xff, 0xff, 0xfe,    // move.l #fffffffe, a1
+	0x24, 0x7c, 0xff, 0xff, 0xff, 0xfe,    // move.l #fffffffe, a2
+	0x26, 0x7c, 0x00, 0x00, 0xff, 0xfe,    // move.l #fffe, a3
+	0x28, 0x7c, 0x00, 0x00, 0xff, 0xfe,    // move.l #fffe, a4
+
+	0x5c, 0x49,                // addq.w #6, a1
+	0x5c, 0x8a,                // addq.l #6, a2
+	0x5c, 0x4b,                // addq.w #6, a3
+	0x5c, 0x8c,                // addq.l #6, a1
+	0x4e, 0x40,                // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x4, cpu.a1);
+	BOOST_CHECK_EQUAL(0x4, cpu.a2);
+	BOOST_CHECK_EQUAL(0x10004, cpu.a3);
+	BOOST_CHECK_EQUAL(0x10004, cpu.a4);
+
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

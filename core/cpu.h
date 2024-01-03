@@ -12,6 +12,10 @@ namespace mc68000
 		uint8_t z : 1;
 		uint8_t n : 1;
 		uint8_t x : 1;
+		sr_t()
+		{
+			c = v = z = n = x = 0;
+		}
 	};
 	class cpu_t
 	{
@@ -179,6 +183,7 @@ namespace mc68000
 		uint32_t getTargetAddress(uint16_t opcode);
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
+		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> int32_t signed_cast(uint64_t value);
 	};

@@ -64,6 +64,10 @@ namespace mc68000
 	// cpu instruction handlers
 	// =================================================================================================
 
+	// ==========
+	// ABCD
+	// ==========
+
 	unsigned short cpu_t::abcd(unsigned short opcode)
 	{
 		uint8_t register1 = opcode & 0b111;
@@ -116,6 +120,9 @@ namespace mc68000
 		return instructions::ABCD;
 	}
 
+	// ==========
+	// ADDA
+	// ==========
 	unsigned short cpu_t::adda(unsigned short opcode)
 	{
 		// The Condition Codes are unaffected so the template add<> method can't be used
@@ -137,6 +144,9 @@ namespace mc68000
 		return instructions::ADDA;
 	}
 
+	// ==========
+	// ADD
+	// ==========
 	unsigned short cpu_t::add(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
@@ -183,6 +193,9 @@ namespace mc68000
 		sr.v = signed_cast<T>((source ^ result) & (destination ^ result)) < 0;
 	}
 		
+	// ==========
+	// ADDI
+	// ==========
 	unsigned short cpu_t::addi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
@@ -213,8 +226,61 @@ namespace mc68000
 		return instructions::ADDI;
 	}
 
-	unsigned short cpu_t::addq(unsigned short)
+	// ==========
+	// ADDQ
+	// ==========
+	template <typename T> void cpu_t::addq(uint32_t data, uint16_t destinationEffectiveAdress)
 	{
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint64_t result = (uint64_t)destination + (uint64_t)data;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+
+		// When adding to address registers, the condition codes are not altered, and the entire destination address
+		// register is used regardless of the operation size.
+		if ((destinationEffectiveAdress & 0b111'000) != 0b001'000)
+		{
+			sr.n = signed_cast<T>(result) < 0;
+			sr.z = static_cast<T>(result) == 0;
+			sr.c = signed_cast<T>(result >> 1) < 0;
+			sr.x = sr.c;
+			sr.v = signed_cast<T>((data ^ result) & (destination ^ result)) < 0;
+		}
+	}
+
+	unsigned short cpu_t::addq(unsigned short opcode)
+	{
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint32_t source = (opcode >> 9) & 0b111;
+
+		if (isAddressRegister)
+		{
+			// When adding to address registers, the condition codes are not altered, and the entire destination address
+			// register is used regardless of the operation size.
+			if (size == 0)
+			{
+				throw "addq: invalid size";
+			}
+			addq<uint32_t>(source, destinationEffectiveAdress);
+		}
+		else
+		{
+			switch (size)
+			{
+				case 0:
+					addq<uint8_t>(source, destinationEffectiveAdress);
+					break;
+				case 1:
+					addq<uint16_t>(source, destinationEffectiveAdress);
+					break;
+				case 2:
+					addq<uint32_t>(source, destinationEffectiveAdress);
+					break;
+				default:
+					throw "addq: invalid size";
+			}
+		}
 		return instructions::ADDQ;
 	}
 
@@ -261,6 +327,9 @@ namespace mc68000
 		return instructions::ASR;
 	}
 
+	// ==========
+	// Bcc
+	// ==========
 	uint32_t cpu_t::getTargetAddress(uint16_t opcode)
 	{
 		uint32_t address = pc;
@@ -489,6 +558,9 @@ namespace mc68000
 		return instructions::CLR;
 	}
 
+	// ==========
+	// CMP
+	// ==========
 	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t cpu_t::signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
@@ -634,8 +706,127 @@ namespace mc68000
 		return instructions::JSR;
 	}
 
-	unsigned short cpu_t::lea(unsigned short)
+	// ==========
+	// LEA
+	// ==========
+	unsigned short cpu_t::lea(unsigned short opcode)
 	{
+		unsigned short eam = (opcode >> 3) & 0b111;
+		unsigned short reg = opcode & 0b111;
+		uint32_t address;
+
+		switch (eam)
+		{
+			case 2:
+			{
+				address = aRegisters[reg];
+				break;
+			}
+			case 5:
+			{
+				uint32_t baseAddress = aRegisters[reg];
+
+				uint16_t extension = localMemory.get<uint16_t>(pc);
+				pc += 2;
+				int32_t offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
+
+				address = (baseAddress + offset);
+				break;
+			}
+			case 6:
+			{
+				uint32_t baseAddress = aRegisters[reg];
+
+				uint16_t extension = localMemory.get<uint16_t>(pc);
+				pc += 2;
+
+				// calculate the index
+				bool isAddressRegister = extension & 0x8000;
+				unsigned short extensionReg = (extension >> 12) & 7;
+				bool isLongIndexSize = (extension & 0x0800);
+				int32_t index;
+				if (isLongIndexSize)
+				{
+					index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+				}
+				else
+				{
+					index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+				}
+
+				// Calculate the displacement
+				int32_t displacement = (int16_t)(extension & 0xff);
+
+				address = baseAddress + displacement + index;
+				break;
+			}
+			case 7:
+			{
+				switch (reg)
+				{
+					case 0:
+					{
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+						address = (int16_t)extension;
+						break;
+					}
+					case 1:
+					{
+						address = localMemory.get<uint32_t>(pc);
+						pc += 4;
+						break;
+					}
+					case 2:
+					{
+						uint32_t baseAddress = pc;
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+						int32_t offset = (int16_t)extension;
+						address = baseAddress + offset;
+						break;
+					}
+					case 3:
+					{
+						uint32_t baseAddress = pc;
+
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+
+						// calculate the index
+						bool isAddressRegister = extension & 0x8000;
+						unsigned short extensionReg = (extension >> 12) & 7;
+						bool isLongIndexSize = (extension & 0x0800);
+						int32_t index;
+						if (isLongIndexSize)
+						{
+							index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+						}
+						else
+						{
+							index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+						}
+
+						// Calculate the displacement
+						int32_t displacement = (int16_t)(extension & 0xff);
+
+						address = baseAddress + displacement + index;
+						break;
+					}
+					default:
+						throw "lea: incorrect addressing mode";
+						break;
+				}
+				break;
+			}
+			default:
+				throw "lea: incorrect addressing mode";
+				break;
+		}
+
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
+		aRegisters[destinationRegister] = address;
+
 		return instructions::LEA;
 	}
 

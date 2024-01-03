@@ -1,0 +1,18 @@
+* -------------
+* LEA
+* -------------
+	ORG    $1000
+start:
+	lea data, a0
+	lea data.w, a1
+	lea (a1), a2
+	lea 4(a2), a3
+	moveq #8, d3
+	lea 4(a2,d3), a4
+	lea data(pc), a5
+	lea data(pc,d3), a6
+	trap #0
+	SIMHALT
+data:
+	dc.w $1000
+	END    start 
