@@ -112,7 +112,7 @@ namespace mc68000
 	private:
 		void verifyAddress(uint32_t address, uint32_t size) const
 		{
-			if (address < baseAddress || (address + size) >(baseAddress + this->size))
+			if (address < baseAddress || address > (baseAddress + this->size) || (address + size) >(baseAddress + this->size))
 			{
 				throw "memory:verifyAddress: illegal address";
 			}

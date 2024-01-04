@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 	cpu.setARegister(6, base + a6);
 
 	// Act
-	cpu.start(base);
+	cpu.start(base, base+1024);
 
 	// Assert
 	auto result = cpu.mem.get<uint8_t>(base + dst);
