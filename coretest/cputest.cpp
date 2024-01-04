@@ -747,13 +747,14 @@ void verifyCmpiExecution_b(uint8_t d0, uint8_t cmp, uint8_t n, uint8_t z, uint8_
 	BOOST_CHECK_EQUAL(v, cpu.sr.v);
 
 }
+inline uint8_t u8(uint16_t val) { return static_cast<uint8_t>(val); }
 
 void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x10, 0x3c,  d0 >> 8, d0 & 0xff,    // move.w #10,d0
-		0x0c, 0x00, cmp >> 8, cmp &0xff,    // cmpi.w #5, d0
-		0x4e, 0x40,                         // trap #0
+		0x10, 0x3c, u8(d0 >> 8),  u8(d0 & 0xff),    // move.w #10,d0
+		0x0c, 0x00, u8(cmp >> 8), u8(cmp &0xff),    // cmpi.w #5, d0
+		0x4e, 0x40,                                 // trap #0
 		0xff, 0xff };
 
 	// Arrange
@@ -775,9 +776,9 @@ void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint
 void verifyCmpiExecution_l(uint32_t d0, uint32_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x20, 0x3c,  d0 >> 24,  (d0 >> 16) & 0xff,  (d0 >> 8) & 0xff,  d0 & 0xff,    // move.l #10,d0
-		0x0c, 0x80, cmp >> 24, (cmp >> 16) & 0xff, (cmp >> 8) & 0xff, cmp & 0xff,    // cmpi.l #5, d0
-		0x4e, 0x40,                                                                  // trap #0
+		0x20, 0x3c,  u8(d0 >> 24),  u8((d0 >> 16) & 0xff),  u8((d0 >> 8) & 0xff),  u8(d0 & 0xff),    // move.l #10,d0
+		0x0c, 0x80,  u8(cmp >> 24), u8((cmp >> 16) & 0xff), u8((cmp >> 8) & 0xff), u8(cmp & 0xff),   // cmpi.l #5, d0
+		0x4e, 0x40,                                                                                  // trap #0
 		0xff, 0xff };
 
 	// Arrange
