@@ -830,8 +830,21 @@ namespace mc68000
 		return instructions::LEA;
 	}
 
+	// ==========
+	// LINK
+	// ==========
 	unsigned short cpu_t::link(unsigned short opcode)
 	{
+		uint8_t reg = opcode & 0b111;
+		int16_t displacement = static_cast<int16_t>(localMemory.get<uint16_t>(pc));
+		pc += 2;
+
+		uint32_t& sp = aRegisters[7];
+		sp -= 4;
+		localMemory.set(sp, aRegisters[reg]);
+		aRegisters[reg] = sp;
+		sp += displacement;
+
 		return instructions::LINK;
 	}
 

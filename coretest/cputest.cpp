@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(a_cmpa)
 
 }
 // ===================================================
-// ADDI tests
+// LEA tests
 // ===================================================
 BOOST_AUTO_TEST_CASE(a_lea)
 {
@@ -895,6 +895,38 @@ BOOST_AUTO_TEST_CASE(a_lea)
 			BOOST_CHECK_EQUAL(0x1030, cpu.a4);
 			BOOST_CHECK_EQUAL(0x1024, cpu.a5);
 			BOOST_CHECK_EQUAL(0x102C, cpu.a6);
+		});
+}
+
+// ===================================================
+// LINK tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_link)
+{
+	unsigned char code[] = {
+		0x4f, 0xf9, 0x00, 0x00, 0x10, 0x44, // lea stack,a7
+		0x3c, 0x7c, 0x12, 0x34,             // move #$1234, a6
+		0x3a, 0x7c, 0x56, 0x78,             // move #$5678, a5
+		0x38, 0x7c, 0x9a, 0xbc,             // move #$9abc, a4
+
+		0x4e, 0x56, 0x00, 0x00,             // link a6,#0
+		0x4e, 0x55, 0xff, 0xf8,             // link a5,#-8
+		0x4e, 0x54, 0x00, 0x08,             // link a4,#8
+
+		0x4e, 0x40,                         // trap #0
+		0xff, 0xff, 0xff, 0xff,
+		0xee, 0xee, 0xee, 0xee,             // ds.w 16
+	};                                      // stack:
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1030, cpu.a4);
+			BOOST_CHECK_EQUAL(0x103c, cpu.a5);
+			BOOST_CHECK_EQUAL(0x1040, cpu.a6);
+			BOOST_CHECK_EQUAL(0x1038, cpu.a7);
+			BOOST_CHECK_EQUAL(0x1234, cpu.mem.get<uint32_t>(cpu.a6));
+			BOOST_CHECK_EQUAL(0x5678, cpu.mem.get<uint32_t>(cpu.a5));
+			BOOST_CHECK_EQUAL(0xffff9abc, cpu.mem.get<uint32_t>(cpu.a4));
 		});
 }
 

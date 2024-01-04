@@ -16,3 +16,22 @@ start:
 data:
 	dc.w $1000
 	END    start 
+
+* -------------
+* LINK
+* -------------
+	ORG    $1000
+start:
+	lea stack,a7
+	move #$1234, a6
+	move #$5678, a5
+	move #$9abc, a4
+	link a6,#0
+	link a5,#-8
+	link a4,#8
+	trap #0
+	SIMHALT
+data:
+	ds.w 16
+stack:
+	END    start 
