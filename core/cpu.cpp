@@ -48,10 +48,11 @@ namespace mc68000
 		localMemory = memory;
 	}
 
-	void cpu_t::start(unsigned int startPc)
+	void cpu_t::start(uint32_t startPc, uint32_t startSP)
 	{
 		done = false;
 		pc = startPc;
+		aRegisters[7] = startSP;
 		while (!done)
 		{
 			uint16_t x = localMemory.getWord(pc);
@@ -830,8 +831,21 @@ namespace mc68000
 		return instructions::LEA;
 	}
 
+	// ==========
+	// LINK
+	// ==========
 	unsigned short cpu_t::link(unsigned short opcode)
 	{
+		uint8_t reg = opcode & 0b111;
+		int16_t displacement = static_cast<int16_t>(localMemory.get<uint16_t>(pc));
+		pc += 2;
+
+		uint32_t& sp = aRegisters[7];
+		sp -= 4;
+		localMemory.set(sp, aRegisters[reg]);
+		aRegisters[reg] = sp;
+		sp += displacement;
+
 		return instructions::LINK;
 	}
 

@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 	cpu.setARegister(6, base + a6);
 
 	// Act
-	cpu.start(base);
+	cpu.start(base, base+1024);
 
 	// Assert
 	auto result = cpu.mem.get<uint8_t>(base + dst);
@@ -747,13 +747,14 @@ void verifyCmpiExecution_b(uint8_t d0, uint8_t cmp, uint8_t n, uint8_t z, uint8_
 	BOOST_CHECK_EQUAL(v, cpu.sr.v);
 
 }
+inline uint8_t u8(uint16_t val) { return static_cast<uint8_t>(val); }
 
 void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x10, 0x3c,  d0 >> 8, d0 & 0xff,    // move.w #10,d0
-		0x0c, 0x00, cmp >> 8, cmp &0xff,    // cmpi.w #5, d0
-		0x4e, 0x40,                         // trap #0
+		0x10, 0x3c, u8(d0 >> 8),  u8(d0 & 0xff),    // move.w #10,d0
+		0x0c, 0x00, u8(cmp >> 8), u8(cmp &0xff),    // cmpi.w #5, d0
+		0x4e, 0x40,                                 // trap #0
 		0xff, 0xff };
 
 	// Arrange
@@ -775,9 +776,9 @@ void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint
 void verifyCmpiExecution_l(uint32_t d0, uint32_t cmp, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x20, 0x3c,  d0 >> 24,  (d0 >> 16) & 0xff,  (d0 >> 8) & 0xff,  d0 & 0xff,    // move.l #10,d0
-		0x0c, 0x80, cmp >> 24, (cmp >> 16) & 0xff, (cmp >> 8) & 0xff, cmp & 0xff,    // cmpi.l #5, d0
-		0x4e, 0x40,                                                                  // trap #0
+		0x20, 0x3c,  u8(d0 >> 24),  u8((d0 >> 16) & 0xff),  u8((d0 >> 8) & 0xff),  u8(d0 & 0xff),    // move.l #10,d0
+		0x0c, 0x80,  u8(cmp >> 24), u8((cmp >> 16) & 0xff), u8((cmp >> 8) & 0xff), u8(cmp & 0xff),   // cmpi.l #5, d0
+		0x4e, 0x40,                                                                                  // trap #0
 		0xff, 0xff };
 
 	// Arrange
@@ -869,7 +870,7 @@ BOOST_AUTO_TEST_CASE(a_cmpa)
 
 }
 // ===================================================
-// ADDI tests
+// LEA tests
 // ===================================================
 BOOST_AUTO_TEST_CASE(a_lea)
 {
@@ -895,6 +896,38 @@ BOOST_AUTO_TEST_CASE(a_lea)
 			BOOST_CHECK_EQUAL(0x1030, cpu.a4);
 			BOOST_CHECK_EQUAL(0x1024, cpu.a5);
 			BOOST_CHECK_EQUAL(0x102C, cpu.a6);
+		});
+}
+
+// ===================================================
+// LINK tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_link)
+{
+	unsigned char code[] = {
+		0x4f, 0xf9, 0x00, 0x00, 0x10, 0x44, // lea stack,a7
+		0x3c, 0x7c, 0x12, 0x34,             // move #$1234, a6
+		0x3a, 0x7c, 0x56, 0x78,             // move #$5678, a5
+		0x38, 0x7c, 0x9a, 0xbc,             // move #$9abc, a4
+
+		0x4e, 0x56, 0x00, 0x00,             // link a6,#0
+		0x4e, 0x55, 0xff, 0xf8,             // link a5,#-8
+		0x4e, 0x54, 0x00, 0x08,             // link a4,#8
+
+		0x4e, 0x40,                         // trap #0
+		0xff, 0xff, 0xff, 0xff,
+		0xee, 0xee, 0xee, 0xee,             // ds.w 16
+	};                                      // stack:
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1030, cpu.a4);
+			BOOST_CHECK_EQUAL(0x103c, cpu.a5);
+			BOOST_CHECK_EQUAL(0x1040, cpu.a6);
+			BOOST_CHECK_EQUAL(0x1038, cpu.a7);
+			BOOST_CHECK_EQUAL(0x1234, cpu.mem.get<uint32_t>(cpu.a6));
+			BOOST_CHECK_EQUAL(0x5678, cpu.mem.get<uint32_t>(cpu.a5));
+			BOOST_CHECK_EQUAL(0xffff9abc, cpu.mem.get<uint32_t>(cpu.a4));
 		});
 }
 

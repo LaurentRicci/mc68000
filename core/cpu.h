@@ -174,7 +174,7 @@ namespace mc68000
 
 		void reset();
 		void reset(const memory& memory);
-		void start(unsigned int startPc);
+		void start(uint32_t startPc, uint32_t startSP);
 		friend class cpu;
 	private:
 		template <typename T> T readAt(uint16_t ea);
@@ -221,9 +221,9 @@ namespace mc68000
 			this->operator*()->reset(memory);
 		}
 
-		void start(unsigned int startPc)
+		void start(uint32_t startPc, uint32_t startSP = 0)
 		{
-			this->operator*()->start(startPc);
+			this->operator*()->start(startPc, startSP);
 		}
 
 		void setARegister(int reg, uint32_t value)
