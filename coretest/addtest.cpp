@@ -359,12 +359,15 @@ void verifyAddiExecution_b(uint8_t destination, uint8_t source, uint8_t expected
 
 }
 
+inline uint8_t u8(uint16_t val) { return static_cast<uint8_t>(val); }
+//inline uint8_t u8(uint32_t val) { return static_cast<uint8_t>(val); }
+
 void verifyAddiExecution_w(uint16_t destination, uint16_t source, uint16_t expected, uint8_t x, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x36, 0x3c, destination >> 8, destination & 0xff,    // move.w #destination, d3
-		0x06, 0x43, source >> 8 , source & 0xff,             // addi.w #source, d3
-		0x4e, 0x40,                                          // trap #0
+		0x36, 0x3c, u8(destination >> 8), u8(destination & 0xff),    // move.w #destination, d3
+		0x06, 0x43, u8(source >> 8) , u8(source & 0xff),             // addi.w #source, d3
+		0x4e, 0x40,                                                  // trap #0
 		0xff, 0xff };
 
 	// Arrange
@@ -389,9 +392,9 @@ void verifyAddiExecution_w(uint16_t destination, uint16_t source, uint16_t expec
 void verifyAddiExecution_l(uint32_t destination, uint32_t source, uint32_t expected, uint8_t x, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
 	unsigned char code[] = {
-		0x26, 0x3c, (destination >> 24), (destination >> 16) & 0xff, (destination >> 8) & 0xff, destination & 0xff,    // move.l #destination, d3
-		0x06, 0x83, (source >> 24), (source >> 16) & 0xff, (source >> 8) & 0xff, source & 0xff,                        // addi.l #source, d3
-		0x4e, 0x40,                                                                                                    // trap #0
+		0x26, 0x3c, u8(destination >> 24), u8((destination >> 16) & 0xff), u8((destination >> 8) & 0xff), u8(destination & 0xff),    // move.l #destination, d3
+		0x06, 0x83, u8(source >> 24), u8((source >> 16) & 0xff), u8((source >> 8) & 0xff), u8(source & 0xff),                        // addi.l #source, d3
+		0x4e, 0x40,                                                                                                                   // trap #0
 		0xff, 0xff };
 
 	// Arrange
