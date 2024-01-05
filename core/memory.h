@@ -18,6 +18,7 @@ namespace mc68000
 				*p1++ = 0;
 			}
 		}
+
 		memory(uint32_t size, uint32_t baseAddress, const uint8_t* content, uint32_t contentSize) :
 			size(size),
 			baseAddress(baseAddress)
@@ -39,6 +40,7 @@ namespace mc68000
 				*p1++ = 0;
 			}
 		}
+
 		memory() :
 			rawMemory(nullptr),
 			size(0),

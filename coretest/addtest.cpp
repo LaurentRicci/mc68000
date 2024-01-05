@@ -17,7 +17,7 @@ void verifyAbcdExecution(uint8_t op1, uint8_t op2, uint8_t expected, uint8_t car
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -45,7 +45,7 @@ void verifyAbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t expected, uint8
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(a_abcd_overflow)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_b)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_w)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_w)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_l)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_l)
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(a_adda_1)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(a_adda_2)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -342,7 +342,7 @@ void verifyAddiExecution_b(uint8_t destination, uint8_t source, uint8_t expected
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -372,7 +372,7 @@ void verifyAddiExecution_w(uint16_t destination, uint16_t source, uint16_t expec
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -399,7 +399,7 @@ void verifyAddiExecution_l(uint32_t destination, uint32_t source, uint32_t expec
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(a_addq_dataRegister_b)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(a_addq_dataRegister_wl)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
 
 	// Arrange
 	memory memory(256, 0, code, sizeof(code));
-	cpu cpu(memory);
+	Cpu cpu(memory);
 
 	// Act
 	cpu.reset();

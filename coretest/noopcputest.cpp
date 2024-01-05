@@ -11,7 +11,7 @@ namespace noopcputest
     void validateDecode(unsigned short int instruction, int expected, const wchar_t* instructionName)
     {
         // Arrange
-        core<NoOpCpu> cpu;
+        NoOpCpu cpu;
 
         // act
         auto actual = cpu(instruction);
@@ -20,7 +20,7 @@ namespace noopcputest
         BOOST_CHECK_EQUAL(expected, actual);
         BOOST_CHECK_EQUAL(instructions::names[actual], instructionName);
     }
-    
+
     BOOST_AUTO_TEST_CASE(abcd)
     {
         validateDecode(0b1100000100000000u, instructions::ABCD, L"ABCD");

@@ -1,11 +1,11 @@
 #pragma once
+#include "core.h"
 
 namespace mc68000
 {
 	class NoOpCpu
 	{
-	public:
-
+	private:
 		unsigned short unknown(unsigned short);
 
 		unsigned short abcd(unsigned short);
@@ -143,5 +143,26 @@ namespace mc68000
 		unsigned short trapv(unsigned short);
 		unsigned short tst(unsigned short);
 		unsigned short unlk(unsigned short);
+
+		using t_handler = unsigned short (NoOpCpu::*)(unsigned short);
+		friend t_handler* setup<NoOpCpu>();
+
+		t_handler* handlers;
+	public:
+		NoOpCpu()
+		{
+			handlers = setup<NoOpCpu>();
+		}
+
+		~NoOpCpu()
+		{
+			delete handlers;
+		}
+
+		int operator()(unsigned short opcode)
+		{
+			return (this->*handlers[opcode])(opcode);
+		}
+
 	};
 }

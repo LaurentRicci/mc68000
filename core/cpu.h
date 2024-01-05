@@ -1,32 +1,25 @@
 #pragma once
-#include <string>
 #include "core.h"
 #include "memory.h"
 
 namespace mc68000
 {
-	struct sr_t
+	struct StatusRegister
 	{
 		uint8_t c : 1;
 		uint8_t v : 1;
 		uint8_t z : 1;
 		uint8_t n : 1;
 		uint8_t x : 1;
-		sr_t()
+		StatusRegister()
 		{
 			c = v = z = n = x = 0;
 		}
 	};
-	class cpu_t
+
+	class Cpu
 	{
-	public:
-		cpu_t():
-			dRegisters{ 0 },
-			aRegisters{ 0 }
-
-		{
-		}
-
+	private:
 		unsigned short unknown(unsigned short);
 
 		unsigned short abcd(unsigned short);
@@ -164,18 +157,12 @@ namespace mc68000
 		unsigned short trapv(unsigned short);
 		unsigned short tst(unsigned short);
 		unsigned short unlk(unsigned short);
-	protected:
-		unsigned int dRegisters[8];
-		unsigned int aRegisters[8];
-		sr_t sr;
-		uint32_t pc;
-		memory localMemory;
-		bool done;
 
-		void reset();
-		void reset(const memory& memory);
-		void start(uint32_t startPc, uint32_t startSP);
-		friend class cpu;
+		using t_handler = unsigned short (Cpu::*)(unsigned short);
+		friend t_handler* setup<Cpu>();
+
+		t_handler* handlers;
+
 	private:
 		template <typename T> T readAt(uint16_t ea);
 		template <typename T> void writeAt(uint16_t ea, T data);
@@ -185,13 +172,25 @@ namespace mc68000
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
-		template <typename T> int32_t signed_cast(uint64_t value);
-	};
 
-	class cpu : core<cpu_t>
-	{
+	private:
+		unsigned int dRegisters[8];
+		unsigned int aRegisters[8];
+		StatusRegister statusRegister;
+		uint32_t pc;
+		memory localMemory;
+		bool done;
+
 	public:
-		cpu(const memory& memory);
+		Cpu(const memory& memory);
+		~Cpu();
+
+		void reset();
+		void reset(const memory& memory);
+		void start(uint32_t startPc, uint32_t startSP = 0);
+		void setARegister(int reg, uint32_t value);
+
+	public:
 		const unsigned int& d0;
 		const unsigned int& d1;
 		const unsigned int& d2;
@@ -209,26 +208,7 @@ namespace mc68000
 		const unsigned int& a5;
 		const unsigned int& a6;
 		const unsigned int& a7;
-		const sr_t&         sr;
-		const memory&       mem;
-
-		void reset()
-		{
-			this->operator*()->reset();
-		}
-		void reset(const memory& memory)
-		{
-			this->operator*()->reset(memory);
-		}
-
-		void start(uint32_t startPc, uint32_t startSP = 0)
-		{
-			this->operator*()->start(startPc, startSP);
-		}
-
-		void setARegister(int reg, uint32_t value)
-		{
-			(**this)->aRegisters[reg] = value;
-		}
+		const StatusRegister& sr;
+		const memory& mem;
 	};
 }
