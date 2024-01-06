@@ -4,12 +4,9 @@
 
 namespace mc68000
 {
-	class DisAsm_t
+	class DisAsm
 	{
-	public:
-		DisAsm_t() : pc(nullptr), memory(nullptr)
-		{
-		}
+	private:
 		unsigned short unknown(unsigned short);
 
 		unsigned short abcd(unsigned short);
@@ -147,29 +144,27 @@ namespace mc68000
 		unsigned short trapv(unsigned short);
 		unsigned short tst(unsigned short);
 		unsigned short unlk(unsigned short);
-	protected:
-		std::string disassembly;
-		void reset(const unsigned short* memory);
-		friend class DisAsm;
+
+		using t_handler = unsigned short (DisAsm::*)(unsigned short);
+		friend t_handler* setup<DisAsm>();
+
+		t_handler* handlers;
 
 	private:
 		unsigned short fetchNextWord();
 		std::string decodeEffectiveAddress(unsigned short ea, bool isLongOperation = false);
 		unsigned short disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
 		unsigned short disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
+		void reset(const unsigned short* memory);
 
+	private:
 		const unsigned short* pc;
 		const unsigned short* memory;
+		std::string disassembly;
 
-	};
-
-	class DisAsm : core<DisAsm_t>
-	{
 	public:
-		DisAsm()
-		{
-		}
-
+		DisAsm();
+		~DisAsm();
 		std::string disassemble(const unsigned short*);
 	};
 }

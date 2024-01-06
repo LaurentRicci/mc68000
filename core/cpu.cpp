@@ -5,34 +5,40 @@
 
 namespace mc68000
 {
-	template<> core<cpu_t>::t_handler core<cpu_t>::handlers[] = {};
-	template<> bool core<cpu_t>::initialized = false;
+	Cpu::Cpu(const memory& memory) :
+		dRegisters{ 0 },
+		aRegisters{ 0 },
+		d0(dRegisters[0]),
+		d1(dRegisters[1]),
+		d2(dRegisters[2]),
+		d3(dRegisters[3]),
+		d4(dRegisters[4]),
+		d5(dRegisters[5]),
+		d6(dRegisters[6]),
+		d7(dRegisters[7]),
 
-	cpu::cpu(const memory& memory) :
-		d0(this->operator*()->dRegisters[0]),
-		d1(this->operator*()->dRegisters[1]),
-		d2(this->operator*()->dRegisters[2]),
-		d3(this->operator*()->dRegisters[3]),
-		d4(this->operator*()->dRegisters[4]),
-		d5(this->operator*()->dRegisters[5]),
-		d6(this->operator*()->dRegisters[6]),
-		d7(this->operator*()->dRegisters[7]),
+		a0(aRegisters[0]),
+		a1(aRegisters[1]),
+		a2(aRegisters[2]),
+		a3(aRegisters[3]),
+		a4(aRegisters[4]),
+		a5(aRegisters[5]),
+		a6(aRegisters[6]),
+		a7(aRegisters[7]),
 
-		a0(this->operator*()->aRegisters[0]),
-		a1(this->operator*()->aRegisters[1]),
-		a2(this->operator*()->aRegisters[2]),
-		a3(this->operator*()->aRegisters[3]),
-		a4(this->operator*()->aRegisters[4]),
-		a5(this->operator*()->aRegisters[5]),
-		a6(this->operator*()->aRegisters[6]),
-		a7(this->operator*()->aRegisters[7]),
-		sr(this->operator*()->sr),
-		mem(this->operator*()->localMemory)
+		mem(localMemory),
+		sr(statusRegister)
 	{
-		this->operator*()->localMemory = memory;
+		localMemory = memory;
+		handlers = setup<Cpu>();
 	}
 
-	void cpu_t::reset()
+	Cpu::~Cpu()
+	{
+		delete handlers;
+	}
+
+	void Cpu::reset()
 	{
 		for (auto& dRegister : dRegisters)
 			dRegister = 0;
@@ -42,13 +48,13 @@ namespace mc68000
 		pc = 0;
 	}
 
-	void cpu_t::reset(const memory& memory)
+	void Cpu::reset(const memory& memory)
 	{
 		reset();
 		localMemory = memory;
 	}
 
-	void cpu_t::start(uint32_t startPc, uint32_t startSP)
+	void Cpu::start(uint32_t startPc, uint32_t startSP)
 	{
 		done = false;
 		pc = startPc;
@@ -57,8 +63,13 @@ namespace mc68000
 		{
 			uint16_t x = localMemory.getWord(pc);
 			pc += 2;
-			(this->*core<cpu_t>::handlers[x])(x);
+			(this->*handlers[x])(x);
 		}
+	}
+
+	void Cpu::setARegister(int reg, uint32_t value)
+	{
+		aRegisters[reg] = value;
 	}
 
 	// =================================================================================================
@@ -69,7 +80,7 @@ namespace mc68000
 	// ABCD
 	// ==========
 
-	unsigned short cpu_t::abcd(unsigned short opcode)
+	unsigned short Cpu::abcd(unsigned short opcode)
 	{
 		uint8_t register1 = opcode & 0b111;
 		uint8_t register2 = (opcode >> 9) & 0b111;
@@ -96,18 +107,18 @@ namespace mc68000
 		}
 		if ((result & 0xfff0) > 0x90)
 		{
-			sr.c = 1;
-			sr.x = 1;
+			statusRegister.c = 1;
+			statusRegister.x = 1;
 			result += 0x60;
 		}
 		else
 		{
-			sr.c = 0;
-			sr.x = 0;
+			statusRegister.c = 0;
+			statusRegister.x = 0;
 		}
 		if (result != 0)
 		{
-			sr.z = 0;
+			statusRegister.z = 0;
 		}
 		if (useAddressRegister)
 		{
@@ -124,7 +135,7 @@ namespace mc68000
 	// ==========
 	// ADDA
 	// ==========
-	unsigned short cpu_t::adda(unsigned short opcode)
+	unsigned short Cpu::adda(unsigned short opcode)
 	{
 		// The Condition Codes are unaffected so the template add<> method can't be used
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
@@ -148,7 +159,7 @@ namespace mc68000
 	// ==========
 	// ADD
 	// ==========
-	unsigned short cpu_t::add(unsigned short opcode)
+	unsigned short Cpu::add(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
 		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
@@ -179,25 +190,11 @@ namespace mc68000
 		}
 		return instructions::ADD;
 	}
-
-	template <typename T> void cpu_t::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
-	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint64_t result = (uint64_t)destination + (uint64_t)source;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
-
-		sr.n = signed_cast<T>(result) < 0;
-		sr.z = static_cast<T>(result) == 0;
-		sr.c = signed_cast<T>(result >> 1) < 0;
-		sr.x = sr.c;
-		sr.v = signed_cast<T>((source ^ result) & (destination ^ result)) < 0;
-	}
-		
+	
 	// ==========
 	// ADDI
 	// ==========
-	unsigned short cpu_t::addi(unsigned short opcode)
+	unsigned short Cpu::addi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
@@ -230,25 +227,8 @@ namespace mc68000
 	// ==========
 	// ADDQ
 	// ==========
-	template <typename T> void cpu_t::addq(uint32_t data, uint16_t destinationEffectiveAdress)
-	{
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint64_t result = (uint64_t)destination + (uint64_t)data;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
 
-		// When adding to address registers, the condition codes are not altered, and the entire destination address
-		// register is used regardless of the operation size.
-		if ((destinationEffectiveAdress & 0b111'000) != 0b001'000)
-		{
-			sr.n = signed_cast<T>(result) < 0;
-			sr.z = static_cast<T>(result) == 0;
-			sr.c = signed_cast<T>(result >> 1) < 0;
-			sr.x = sr.c;
-			sr.v = signed_cast<T>((data ^ result) & (destination ^ result)) < 0;
-		}
-	}
-
-	unsigned short cpu_t::addq(unsigned short opcode)
+	unsigned short Cpu::addq(unsigned short opcode)
 	{
 		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
 		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
@@ -285,45 +265,45 @@ namespace mc68000
 		return instructions::ADDQ;
 	}
 
-	unsigned short cpu_t::addx(unsigned short)
+	unsigned short Cpu::addx(unsigned short)
 	{
 		return instructions::ADDX;
 	}
 
-	unsigned short cpu_t::and_(unsigned short)
+	unsigned short Cpu::and_(unsigned short)
 	{
 		return instructions::AND;
 	}
 
-	unsigned short cpu_t::andi(unsigned short)
+	unsigned short Cpu::andi(unsigned short)
 	{
 		return instructions::ANDI;
 	}
 
-	unsigned short cpu_t::andi2ccr(unsigned short)
+	unsigned short Cpu::andi2ccr(unsigned short)
 	{
 		return instructions::ANDI2CCR;
 	}
-	unsigned short cpu_t::andi2sr(unsigned short)
+	unsigned short Cpu::andi2sr(unsigned short)
 	{
 		return instructions::ANDI2SR;
 	}
-	unsigned short cpu_t::asl_memory(unsigned short)
+	unsigned short Cpu::asl_memory(unsigned short)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short cpu_t::asl_register(unsigned short)
+	unsigned short Cpu::asl_register(unsigned short)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short cpu_t::asr_memory(unsigned short)
+	unsigned short Cpu::asr_memory(unsigned short)
 	{
 		return instructions::ASR;
 	}
 
-	unsigned short cpu_t::asr_register(unsigned short)
+	unsigned short Cpu::asr_register(unsigned short)
 	{
 		return instructions::ASR;
 	}
@@ -331,208 +311,205 @@ namespace mc68000
 	// ==========
 	// Bcc
 	// ==========
-	uint32_t cpu_t::getTargetAddress(uint16_t opcode)
-	{
-		uint32_t address = pc;
-		int32_t offset;
-		uint8_t byteOffset = opcode & 0xff;
-		if (byteOffset != 0)
-		{
-			offset = (int8_t)byteOffset;
-		}
-		else
-		{
-			uint16_t extension = localMemory.get<uint16_t>(pc);
-			pc += 2;
-			offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
-		}
-		address += offset;
-		return address;
-	}
-
-	unsigned short cpu_t::bra(unsigned short opcode)
+	unsigned short Cpu::bra(unsigned short opcode)
 	{
 		pc = getTargetAddress(opcode);
 		return instructions::BRA;
 	}
-	unsigned short cpu_t::bhi(unsigned short opcode)
+
+	unsigned short Cpu::bhi(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!sr.c && !sr.z)
+		if (!statusRegister.c && !statusRegister.z)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BHI;
 	}
-	unsigned short cpu_t::bls(unsigned short opcode)
+
+	unsigned short Cpu::bls(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.c | sr.z)
+		if (statusRegister.c | statusRegister.z)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BLS;
 	}
-	unsigned short cpu_t::bcc(unsigned short opcode)
+
+	unsigned short Cpu::bcc(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!sr.c)
+		if (!statusRegister.c)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BCC;
 	}
-	unsigned short cpu_t::bcs(unsigned short opcode)
+
+	unsigned short Cpu::bcs(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.c)
+		if (statusRegister.c)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BCS;
+	
 	}
-	unsigned short cpu_t::bne(unsigned short opcode)
+	unsigned short Cpu::bne(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!sr.z)
+		if (!statusRegister.z)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BNE;
 	}
-	unsigned short cpu_t::beq(unsigned short opcode)
+
+	unsigned short Cpu::beq(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.z)
+		if (statusRegister.z)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BEQ;
 	}
-	unsigned short cpu_t::bvc(unsigned short opcode)
+
+	unsigned short Cpu::bvc(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!sr.v)
+		if (!statusRegister.v)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BVC;
 	}
-	unsigned short cpu_t::bvs(unsigned short opcode)
+
+	unsigned short Cpu::bvs(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.v)
+		if (statusRegister.v)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BVS;
 	}
-	unsigned short cpu_t::bpl(unsigned short opcode)
+
+	unsigned short Cpu::bpl(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!sr.n)
+		if (!statusRegister.n)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BPL;
 	}
-	unsigned short cpu_t::bmi(unsigned short opcode)
+
+	unsigned short Cpu::bmi(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.n)
+		if (statusRegister.n)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BMI;
 	}
-	unsigned short cpu_t::bge(unsigned short opcode)
+
+	unsigned short Cpu::bge(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!(sr.n & sr.v))
+		if (!(statusRegister.n & statusRegister.v))
 		{
 			pc = targetAddress;
 		}
 		return instructions::BGE;
 	}
-	unsigned short cpu_t::blt(unsigned short opcode)
+
+	unsigned short Cpu::blt(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.n & sr.v)
+		if (statusRegister.n & statusRegister.v)
 		{
 			pc = targetAddress;
 		}
 		return instructions::BLT;
 	}
-	unsigned short cpu_t::bgt(unsigned short opcode)
+
+	unsigned short Cpu::bgt(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!(sr.z | (sr.n & sr.v)))
+		if (!(statusRegister.z | (statusRegister.n & statusRegister.v)))
 		{
 			pc = targetAddress;
 		}
 		return instructions::BGT;
 	}
-	unsigned short cpu_t::ble(unsigned short opcode)
+
+	unsigned short Cpu::ble(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (sr.z | (sr.n & sr.v))
+		if (statusRegister.z | (statusRegister.n & statusRegister.v))
 		{
 			pc = targetAddress;
 		}
 		return instructions::BLE;
 	}
 
-	unsigned short cpu_t::bchg_r(unsigned short)
+	unsigned short Cpu::bchg_r(unsigned short)
 	{
 		return instructions::BCHG_R;
 	}
 
-	unsigned short cpu_t::bchg_i(unsigned short)
+	unsigned short Cpu::bchg_i(unsigned short)
 	{
 		return instructions::BCHG_I;
 	}
 
-	unsigned short cpu_t::bclr_r(unsigned short)
+	unsigned short Cpu::bclr_r(unsigned short)
 	{
 		return instructions::BCLR_R;
 	}
 
-	unsigned short cpu_t::bclr_i(unsigned short)
+	unsigned short Cpu::bclr_i(unsigned short)
 	{
 		return instructions::BCLR_I;
 	}
 
-	unsigned short cpu_t::bset_r(unsigned short)
+	unsigned short Cpu::bset_r(unsigned short)
 	{
 		return instructions::BSET_R;
 	}
 
-	unsigned short cpu_t::bset_i(unsigned short)
+	unsigned short Cpu::bset_i(unsigned short)
 	{
 		return instructions::BSET_I;
 	}
 
-	unsigned short cpu_t::bsr(unsigned short)
+	unsigned short Cpu::bsr(unsigned short)
 	{
 		return instructions::BSR;
 	}
 
-	unsigned short cpu_t::btst_r(unsigned short)
+	unsigned short Cpu::btst_r(unsigned short)
 	{
 		return instructions::BTST_R;
 	}
 
-	unsigned short cpu_t::btst_i(unsigned short)
+	unsigned short Cpu::btst_i(unsigned short)
 	{
 		return instructions::BTST_I;
 	}
 
-	unsigned short cpu_t::chk(unsigned short)
+	unsigned short Cpu::chk(unsigned short)
 	{
 		return instructions::CHK;
 	}
-
-	unsigned short cpu_t::clr(unsigned short opcode)
+	// ==========
+	// CLR
+	// ==========
+	unsigned short Cpu::clr(unsigned short opcode)
 	{
 		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
 
@@ -551,10 +528,10 @@ namespace mc68000
 		default:
 			throw "clr: invalid size";
 		}
-		sr.n = 0;
-		sr.z = 1;
-		sr.c = 0;
-		sr.v = 0;
+		statusRegister.n = 0;
+		statusRegister.z = 1;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
 
 		return instructions::CLR;
 	}
@@ -562,23 +539,7 @@ namespace mc68000
 	// ==========
 	// CMP
 	// ==========
-	template <> int32_t cpu_t::signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
-	template <> int32_t cpu_t::signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
-	template <> int32_t cpu_t::signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
-
-	template <typename T> void cpu_t::cmp(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
-	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint64_t result = (uint64_t)destination - (uint64_t)source;
-
-		sr.n = signed_cast<T>(result) < 0;
-		sr.z = static_cast<T>(result) == 0;
-		sr.c = signed_cast<T>(result >> 1) < 0;
-		sr.v = signed_cast<T>((source ^ destination) & (destination ^ result)) < 0;
-	}
-
-	unsigned short cpu_t::cmp(unsigned short opcode)
+	unsigned short Cpu::cmp(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
@@ -602,7 +563,10 @@ namespace mc68000
 		return instructions::CMP;
 	}
 
-	unsigned short cpu_t::cmpa(unsigned short opcode)
+	// ==========
+	// CMPA
+	// ==========
+	unsigned short Cpu::cmpa(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
@@ -623,7 +587,10 @@ namespace mc68000
 		return instructions::CMPA;
 	}
 
-	unsigned short cpu_t::cmpi(unsigned short opcode)
+	// ==========
+	// CMPI
+	// ==========
+	unsigned short Cpu::cmpi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
@@ -647,62 +614,62 @@ namespace mc68000
 		return instructions::CMPI;
 	}
 
-	unsigned short cpu_t::cmpm(unsigned short)
+	unsigned short Cpu::cmpm(unsigned short)
 	{
 		return instructions::CMPM;
 	}
 
-	unsigned short cpu_t::dbcc(unsigned short)
+	unsigned short Cpu::dbcc(unsigned short)
 	{
 		return instructions::DBCC;
 	}
 
-	unsigned short cpu_t::divs(unsigned short)
+	unsigned short Cpu::divs(unsigned short)
 	{
 		return instructions::DIVS;
 	}
 
-	unsigned short cpu_t::divu(unsigned short)
+	unsigned short Cpu::divu(unsigned short)
 	{
 		return instructions::DIVU;
 	}
 
-	unsigned short cpu_t::eor(unsigned short)
+	unsigned short Cpu::eor(unsigned short)
 	{
 		return instructions::EOR;
 	}
 
-	unsigned short cpu_t::eori(unsigned short)
+	unsigned short Cpu::eori(unsigned short)
 	{
 		return instructions::EORI;
 	}
 
-	unsigned short cpu_t::eori2ccr(unsigned short)
+	unsigned short Cpu::eori2ccr(unsigned short)
 	{
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short cpu_t::exg(unsigned short)
+	unsigned short Cpu::exg(unsigned short)
 	{
 		return instructions::EXG;
 	}
 
-	unsigned short cpu_t::ext(unsigned short)
+	unsigned short Cpu::ext(unsigned short)
 	{
 		return instructions::EXT;
 	}
 
-	unsigned short cpu_t::illegal(unsigned short)
+	unsigned short Cpu::illegal(unsigned short)
 	{
 		return instructions::ILLEGAL;
 	}
 
-	unsigned short cpu_t::jmp(unsigned short)
+	unsigned short Cpu::jmp(unsigned short)
 	{
 		return instructions::JMP;
 	}
 
-	unsigned short cpu_t::jsr(unsigned short)
+	unsigned short Cpu::jsr(unsigned short)
 	{
 		return instructions::JSR;
 	}
@@ -710,7 +677,7 @@ namespace mc68000
 	// ==========
 	// LEA
 	// ==========
-	unsigned short cpu_t::lea(unsigned short opcode)
+	unsigned short Cpu::lea(unsigned short opcode)
 	{
 		unsigned short eam = (opcode >> 3) & 0b111;
 		unsigned short reg = opcode & 0b111;
@@ -834,7 +801,7 @@ namespace mc68000
 	// ==========
 	// LINK
 	// ==========
-	unsigned short cpu_t::link(unsigned short opcode)
+	unsigned short Cpu::link(unsigned short opcode)
 	{
 		uint8_t reg = opcode & 0b111;
 		int16_t displacement = static_cast<int16_t>(localMemory.get<uint16_t>(pc));
@@ -849,339 +816,30 @@ namespace mc68000
 		return instructions::LINK;
 	}
 
-	unsigned short cpu_t::lsl_memory(unsigned short)
+	unsigned short Cpu::lsl_memory(unsigned short)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short cpu_t::lsl_register(unsigned short)
+	unsigned short Cpu::lsl_register(unsigned short)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short cpu_t::lsr_memory(unsigned short)
+	unsigned short Cpu::lsr_memory(unsigned short)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short cpu_t::lsr_register(unsigned short)
+	unsigned short Cpu::lsr_register(unsigned short)
 	{
 		return instructions::LSR;
 	}
 
-	template <typename T> T cpu_t::readAt(uint16_t ea)
-	{
-		unsigned short eam = ea >> 3;
-		unsigned short reg = ea & 7u;
-		switch (eam)
-		{
-		case 0:
-			return static_cast<T>(dRegisters[reg]);
-		case 1:
-			return static_cast<T>(aRegisters[reg]);
-		case 2:
-		{
-			uint32_t address = aRegisters[reg];
-			T x = localMemory.get<T>(address);
-			return x;
-		}
-		case 3:
-		{
-			uint32_t address = aRegisters[reg];
-			T x = localMemory.get<T>(address);
-			if (reg != 7)
-			{
-				aRegisters[reg] += sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] += 1 ? 2 : sizeof(T);
-			}
-			return x;
-		}
-		case 4:
-		{
-			if (reg != 7)
-			{
-				aRegisters[reg] -= sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] -= 1 ? 2 : sizeof(T);
-			}
-			uint32_t address = aRegisters[reg];
-			T x = localMemory.get<T>(address);
-			return x;
-		}
-		case 5:
-		{
-			uint32_t address = aRegisters[reg];
-
-			uint16_t extension = localMemory.get<uint16_t>(pc);
-			pc += 2;
-			int32_t offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
-
-			T x = localMemory.get<T>(address+offset);
-			return x;
-		}
-		case 6:
-		{
-			uint32_t address = aRegisters[reg];
-
-			uint16_t extension = localMemory.get<uint16_t>(pc);
-			pc += 2;
-
-			// calculate the index
-			bool isAddressRegister = extension & 0x8000;
-			unsigned short extensionReg = (extension >> 12) & 7;
-			bool isLongIndexSize = (extension & 0x0800);
-			int32_t index;
-			if (isLongIndexSize)
-			{
-				index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
-			}
-			else
-			{
-				index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
-			}
-
-			// Calculate the displacement
-			int32_t displacement = (int16_t) (extension & 0xff);
-
-			T x = localMemory.get<T>(address + displacement + index);
-			return x;
-		}
-		case 7:
-		{
-			switch (reg)
-			{
-				case 0:
-				{
-					uint16_t extension = localMemory.get<uint16_t>(pc);
-					pc += 2;
-					int32_t address = (int16_t)extension;
-
-					T x = localMemory.get<T>(address);
-					return x;
-				}
-				case 1:
-				{
-					uint32_t address = localMemory.get<uint32_t>(pc);
-					pc += 4;
-					T x = localMemory.get<T>(address);
-					return x;
-				}
-				case 2:
-				{
-					uint32_t address = pc;
-					uint16_t extension = localMemory.get<uint16_t>(pc);
-					pc += 2;
-					int32_t offset = (int16_t)extension;
-					address += offset;
-
-					T x = localMemory.get<T>(address);
-					return x;
-				}
-				case 3:
-				{
-					uint32_t address = pc;
-
-					uint16_t extension = localMemory.get<uint16_t>(pc);
-					pc += 2;
-
-					// calculate the index
-					bool isAddressRegister = extension & 0x8000;
-					unsigned short extensionReg = (extension >> 12) & 7;
-					bool isLongIndexSize = (extension & 0x0800);
-					int32_t index;
-					if (isLongIndexSize)
-					{
-						index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
-					}
-					else
-					{
-						index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
-					}
-
-					// Calculate the displacement
-					int32_t displacement = (int16_t)(extension & 0xff);
-
-					T x = localMemory.get<T>(address + displacement + index);
-					return x;
-				}
-				case 4:
-				{
-					T x;
-					if (sizeof(T) == 1)
-					{
-						x = localMemory.get<T>(pc + 1);
-						pc += 2; // pc must be aligned on a word boundary
-					}
-					else
-					{
-						x = localMemory.get<T>(pc);
-						pc += sizeof(T);
-					}
-					return x;
-				}
-				default:
-					break;
-			}
-			break;
-		}
-		default:
-			break;
-		}
-		throw "readAt: incorrect addressing mode";
-	}
-
-	uint32_t maskDRegister(uint32_t& reg, size_t size)
-	{
-		switch (size)
-		{
-		case 1:
-			reg &= 0xffffff00;
-			break;
-		case 2:
-			reg &= 0xffff0000;
-			break;
-		case 4:
-			reg = 0;
-		}
-		return reg;
-	}
-
-	template <typename T> void cpu_t::writeAt(uint16_t  ea, T data)
-	{
-		unsigned short eam = ea >> 3;
-		unsigned short reg = ea & 7u;
-		switch (eam)
-		{
-		case 0:
-			dRegisters[reg] = maskDRegister(dRegisters[reg], sizeof(T)) | data;
-			break;
-		case 1:
-			aRegisters[reg] = data;
-			break;
-		case 2:
-		{
-			uint32_t address = aRegisters[reg];
-			localMemory.set<T>(address, data);
-			break;
-		}
-		case 3:
-		{
-			uint32_t address = aRegisters[reg];
-			localMemory.set<T>(address, data);
-			if (reg != 7)
-			{
-				aRegisters[reg] += sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] += 1 ? 2 : sizeof(T); 
-			}
-			break;
-		}
-		case 4:
-		{
-			if (reg != 7)
-			{
-				aRegisters[reg] -= sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] -= 1 ? 2 : sizeof(T);
-			}
-			uint32_t address = aRegisters[reg];
-			localMemory.set<T>(address, data);
-			break;
-		}
-		case 5:
-		{
-			uint32_t address = aRegisters[reg];
-
-			uint16_t extension = localMemory.get<T>(pc);
-			pc += sizeof(T) == 1 ? 2 : sizeof(T); // pc must be aligned on a word boundary
-			int32_t offset = (int16_t)extension;
-
-			localMemory.set<T>(address + offset, data);
-			break;
-		}
-		case 6:
-		{
-			uint32_t address = aRegisters[reg];
-
-			uint16_t extension = localMemory.get<uint16_t>(pc);
-			pc += 2;
-
-			// calculate the index
-			bool isAddressRegister = extension & 0x8000;
-			unsigned short extensionReg = (extension >> 12) & 7;
-			bool isLongIndexSize = (extension & 0x0800);
-			int32_t index;
-			if (isLongIndexSize)
-			{
-				index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
-			}
-			else
-			{
-				index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
-			}
-
-			// Calculate the displacement
-			int32_t displacement = (int16_t)(extension & 0xff);
-
-			localMemory.set<T>(address + displacement + index, data);
-			break;
-		}
-		case 7:
-		{
-			switch (reg)
-			{
-				case 0:
-				{
-					uint16_t extension = localMemory.get<uint16_t>(pc);
-					pc += 2;
-					int32_t address = (int16_t)extension;
-
-					localMemory.set<T>(address, data);
-					break;
-				}
-				case 1:
-				{
-					uint32_t address = localMemory.get<uint32_t>(pc);
-					pc += 4;
-					localMemory.set<T>(address, data);
-					break;
-				}
-				case 2:
-				case 3:
-				case 4:
-					throw "writeAt: non alterable addressing mode";
-			}
-			break;
-		}
-		default:
-			throw "writeAt: incorrect addressing mode";
-		}
-	}
-
-	template<typename T> void cpu_t::move(uint16_t sourceEffectiveAddress, uint16_t  destinationEffectiveAddress)
-	{
-		T source = readAt<T>(sourceEffectiveAddress);
-		writeAt<T>(destinationEffectiveAddress, source);
-		sr.c = 0;
-		sr.v = 0;
-		sr.z = source == 0 ? 1 : 0;
-		sr.n = (source >> (sizeof(T) * 8 - 1)) ? 1 : 0;
-	}
-
-	unsigned short cpu_t::move(unsigned short opcode)
+	// ==========
+	// MOVE
+	// ==========
+	unsigned short Cpu::move(unsigned short opcode)
 	{
 		unsigned short size = opcode >> 12;
 		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
@@ -1210,7 +868,10 @@ namespace mc68000
 		return instructions::MOVE;
 	}
 
-	unsigned short cpu_t::movea(unsigned short opcode)
+	// ==========
+	// MOVEA
+	// ==========
+	unsigned short Cpu::movea(unsigned short opcode)
 	{
 		unsigned short size = opcode >> 12;
 		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
@@ -1241,36 +902,42 @@ namespace mc68000
 		return instructions::MOVEA;
 	}
 
-	unsigned short cpu_t::move2ccr(unsigned short)
+	// ==========
+	// MOVE to CCR
+	// ==========
+	unsigned short Cpu::move2ccr(unsigned short)
 	{
 		uint16_t extension = localMemory.get<uint16_t>(pc);
 		pc += 2;
 
-		sr.c = extension & 0x1;
-		sr.v = (extension & 0x2) >> 1;
-		sr.z = (extension & 0x4) >> 2;
-		sr.n = (extension & 0x8) >> 3;
-		sr.x = (extension & 0x10) >> 4;
+		statusRegister.c = extension & 0x1;
+		statusRegister.v = (extension & 0x2) >> 1;
+		statusRegister.z = (extension & 0x4) >> 2;
+		statusRegister.n = (extension & 0x8) >> 3;
+		statusRegister.x = (extension & 0x10) >> 4;
 
 		return instructions::MOVE2CCR;
 	}
 
-	unsigned short cpu_t::movesr(unsigned short)
+	unsigned short Cpu::movesr(unsigned short)
 	{
 		return instructions::MOVESR;
 	}
 
-	unsigned short cpu_t::movem(unsigned short)
+	unsigned short Cpu::movem(unsigned short)
 	{
 		return instructions::MOVEM;
 	}
 
-	unsigned short cpu_t::movep(unsigned short)
+	unsigned short Cpu::movep(unsigned short)
 	{
 		return instructions::MOVEP;
 	}
 
-	unsigned short cpu_t::moveq(unsigned short opcode)
+	// ==========
+	// MOVEQ
+	// ==========
+	unsigned short Cpu::moveq(unsigned short opcode)
 	{
 		uint16_t reg = (opcode >> 9) & 0x07;
 		int32_t data = (int8_t) (opcode & 0xff);
@@ -1280,175 +947,175 @@ namespace mc68000
 		return instructions::MOVEQ;
 	}
 
-	unsigned short cpu_t::muls(unsigned short)
+	unsigned short Cpu::muls(unsigned short)
 	{
 		return instructions::MULS;
 	}
 
-	unsigned short cpu_t::mulu(unsigned short)
+	unsigned short Cpu::mulu(unsigned short)
 	{
 		return instructions::MULU;
 	}
 
-	unsigned short cpu_t::nbcd(unsigned short)
+	unsigned short Cpu::nbcd(unsigned short)
 	{
 		return instructions::NBCD;
 	}
 
-	unsigned short cpu_t::neg(unsigned short)
+	unsigned short Cpu::neg(unsigned short)
 	{
 		return instructions::NEG;
 	}
-	unsigned short cpu_t::negx(unsigned short)
+	unsigned short Cpu::negx(unsigned short)
 	{
 		return instructions::NEGX;
 	}
-	unsigned short cpu_t::nop(unsigned short)
+	unsigned short Cpu::nop(unsigned short)
 	{
 		return instructions::NOP;
 	}
-	unsigned short cpu_t::not_(unsigned short)
+	unsigned short Cpu::not_(unsigned short)
 	{
 		return instructions::NOT;
 	}
 
-	unsigned short cpu_t::or_(unsigned short)
+	unsigned short Cpu::or_(unsigned short)
 	{
 		return instructions::OR;
 	}
 
-	unsigned short cpu_t::ori(unsigned short)
+	unsigned short Cpu::ori(unsigned short)
 	{
 		return instructions::ORI;
 	}
 
-	unsigned short cpu_t::ori2ccr(unsigned short)
+	unsigned short Cpu::ori2ccr(unsigned short)
 	{
 		return instructions::ORI2CCR;
 	}
 
-	unsigned short cpu_t::pea(unsigned short)
+	unsigned short Cpu::pea(unsigned short)
 	{
 		return instructions::PEA;
 	}
 
-	unsigned short cpu_t::rol_memory(unsigned short)
+	unsigned short Cpu::rol_memory(unsigned short)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short cpu_t::ror_memory(unsigned short)
+	unsigned short Cpu::ror_memory(unsigned short)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short cpu_t::roxl_memory(unsigned short)
+	unsigned short Cpu::roxl_memory(unsigned short)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short cpu_t::roxr_memory(unsigned short)
+	unsigned short Cpu::roxr_memory(unsigned short)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short cpu_t::rol_register(unsigned short)
+	unsigned short Cpu::rol_register(unsigned short)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short cpu_t::ror_register(unsigned short)
+	unsigned short Cpu::ror_register(unsigned short)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short cpu_t::roxl_register(unsigned short)
+	unsigned short Cpu::roxl_register(unsigned short)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short cpu_t::roxr_register(unsigned short)
+	unsigned short Cpu::roxr_register(unsigned short)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short cpu_t::sbcd(unsigned short)
+	unsigned short Cpu::sbcd(unsigned short)
 	{
 		return instructions::SBCD;
 	}
 
-	unsigned short cpu_t::rtr(unsigned short)
+	unsigned short Cpu::rtr(unsigned short)
 	{
 		return instructions::RTR;
 	}
 
-	unsigned short cpu_t::rts(unsigned short)
+	unsigned short Cpu::rts(unsigned short)
 	{
 		return instructions::RTS;
 	}
 
-	unsigned short cpu_t::scc(unsigned short)
+	unsigned short Cpu::scc(unsigned short)
 	{
 		return instructions::SCC;
 	}
 
-	unsigned short cpu_t::sub(unsigned short)
+	unsigned short Cpu::sub(unsigned short)
 	{
 		return instructions::SUB;
 	}
 
-	unsigned short cpu_t::subi(unsigned short)
+	unsigned short Cpu::subi(unsigned short)
 	{
 		return instructions::SUBI;
 	}
 
-	unsigned short cpu_t::suba(unsigned short)
+	unsigned short Cpu::suba(unsigned short)
 	{
 		return instructions::SUBA;
 	}
 
-	unsigned short cpu_t::subq(unsigned short)
+	unsigned short Cpu::subq(unsigned short)
 	{
 		return instructions::SUBQ;
 	}
 
-	unsigned short cpu_t::subx(unsigned short)
+	unsigned short Cpu::subx(unsigned short)
 	{
 		return instructions::SUBX;
 	}
 
-	unsigned short cpu_t::swap(unsigned short)
+	unsigned short Cpu::swap(unsigned short)
 	{
 		return instructions::SWAP;
 	}
 
-	unsigned short cpu_t::tas(unsigned short)
+	unsigned short Cpu::tas(unsigned short)
 	{
 		return instructions::TAS;
 	}
 
-	unsigned short cpu_t::trap(unsigned short)
+	unsigned short Cpu::trap(unsigned short)
 	{
 		done = true;
 		return instructions::TRAP;
 	}
 
-	unsigned short cpu_t::trapv(unsigned short)
+	unsigned short Cpu::trapv(unsigned short)
 	{
 		return instructions::TRAPV;
 	}
 
-	unsigned short cpu_t::tst(unsigned short)
+	unsigned short Cpu::tst(unsigned short)
 	{
 		return instructions::TST;
 	}
 
-	unsigned short cpu_t::unlk(unsigned short opcode)
+	unsigned short Cpu::unlk(unsigned short opcode)
 	{
 		return instructions::UNLK;
 	}
 
-	unsigned short cpu_t::unknown(unsigned short)
+	unsigned short Cpu::unknown(unsigned short)
 	{
 		throw "unknown instruction";
 		return instructions::UNKNOWN;

@@ -1,7 +1,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-// #include <format>
 
 #include "core.h"
 #include "instructions.h"
@@ -26,15 +25,26 @@ namespace mc68000
 		stream << std::hex << value;
 		return stream.str();
 	}
-	std::string DisAsm::disassemble(const unsigned short* code)
-	{
-		this->operator*()->reset(code);
 
-		auto resultCode = this->operator()(*code);
-		return this->operator*()->disassembly;
+	DisAsm::DisAsm() : pc(nullptr), memory(nullptr)
+	{
+		handlers = setup<DisAsm>();
 	}
 
-	std::string DisAsm_t::decodeEffectiveAddress(unsigned short ea, bool isLongOperation)
+	DisAsm::~DisAsm()
+	{
+		delete handlers;
+	}
+
+	std::string DisAsm::disassemble(const unsigned short* code)
+	{
+		reset(code);
+
+		auto resultCode = (this->*handlers[*code])(*code);
+		return disassembly;
+	}
+
+	std::string DisAsm::decodeEffectiveAddress(unsigned short ea, bool isLongOperation)
 	{
 		unsigned short eam = ea >> 3;
 		unsigned short reg = ea & 7u;
@@ -134,7 +144,7 @@ namespace mc68000
 		}
 	}
 
-	unsigned short DisAsm_t::disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
+	unsigned short DisAsm::disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
 	{
 		const char* sizes[] = { ".b #$", ".w #$", ".l #$" };
 
@@ -165,7 +175,7 @@ namespace mc68000
 		return instructions::CMPI;
 	}
 
-	unsigned short DisAsm_t::abcd(unsigned short opcode)
+	unsigned short DisAsm::abcd(unsigned short opcode)
 	{
 		disassembly = "abcd ";
 		unsigned short registerX = (opcode >> 9) & 7;
@@ -188,7 +198,7 @@ namespace mc68000
 		return instructions::ABCD;
 	}
 
-	unsigned short DisAsm_t::add(unsigned short opcode)
+	unsigned short DisAsm::add(unsigned short opcode)
 	{
 		disassembly = "add";
 		unsigned short reg = (opcode >> 9) & 7;
@@ -211,65 +221,65 @@ namespace mc68000
 		return instructions::ADD;
 	}
 
-	unsigned short DisAsm_t::adda(unsigned short)
+	unsigned short DisAsm::adda(unsigned short)
 	{
 		return instructions::ADDA;
 	}
 
-	unsigned short DisAsm_t::addi(unsigned short opcode)
+	unsigned short DisAsm::addi(unsigned short opcode)
 	{
 		return disassembleImmediateInstruction("addi", instructions::ADDI, opcode);
 	}
 
-	unsigned short DisAsm_t::addq(unsigned short)
+	unsigned short DisAsm::addq(unsigned short)
 	{
 		return instructions::ADDQ;
 	}
 
-	unsigned short DisAsm_t::addx(unsigned short)
+	unsigned short DisAsm::addx(unsigned short)
 	{
 		return instructions::ADDX;
 	}
 
-	unsigned short DisAsm_t::and_(unsigned short)
+	unsigned short DisAsm::and_(unsigned short)
 	{
 		return instructions::AND;
 	}
 
-	unsigned short DisAsm_t::andi(unsigned short)
+	unsigned short DisAsm::andi(unsigned short)
 	{
 		return instructions::ANDI;
 	}
 
-	unsigned short DisAsm_t::andi2ccr(unsigned short)
+	unsigned short DisAsm::andi2ccr(unsigned short)
 	{
 		return instructions::ANDI2CCR;
 	}
-	unsigned short DisAsm_t::andi2sr(unsigned short)
+	unsigned short DisAsm::andi2sr(unsigned short)
 	{
 		return instructions::ANDI2SR;
 	}
-	unsigned short DisAsm_t::asl_memory(unsigned short)
+	unsigned short DisAsm::asl_memory(unsigned short)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short DisAsm_t::asl_register(unsigned short)
+	unsigned short DisAsm::asl_register(unsigned short)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short DisAsm_t::asr_memory(unsigned short)
+	unsigned short DisAsm::asr_memory(unsigned short)
 	{
 		return instructions::ASR;
 	}
 
-	unsigned short DisAsm_t::asr_register(unsigned short)
+	unsigned short DisAsm::asr_register(unsigned short)
 	{
 		return instructions::ASR;
 	}
 
-	unsigned short DisAsm_t::disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
+	unsigned short DisAsm::disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
 	{
 		disassembly = instructionName;
 		disassembly += " $";
@@ -292,204 +302,204 @@ namespace mc68000
 		return instructionId;
 	}
 
-	unsigned short DisAsm_t::bra(unsigned short)
+	unsigned short DisAsm::bra(unsigned short)
 	{
 		return instructions::BRA;
 	}
-	unsigned short DisAsm_t::bhi(unsigned short opcode)
+	unsigned short DisAsm::bhi(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bhi", instructions::BHI, opcode);
 	}
-	unsigned short DisAsm_t::bls(unsigned short opcode)
+	unsigned short DisAsm::bls(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bls", instructions::BLS, opcode);
 	}
-	unsigned short DisAsm_t::bcc(unsigned short opcode)
+	unsigned short DisAsm::bcc(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bcc", instructions::BCC, opcode);
 	}
-	unsigned short DisAsm_t::bcs(unsigned short opcode)
+	unsigned short DisAsm::bcs(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bcs", instructions::BCS, opcode);
 	}
-	unsigned short DisAsm_t::bne(unsigned short opcode)
+	unsigned short DisAsm::bne(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bne", instructions::BNE, opcode);
 	}
-	unsigned short DisAsm_t::beq(unsigned short opcode)
+	unsigned short DisAsm::beq(unsigned short opcode)
 	{
 		return disassembleBccInstruction("beq", instructions::BEQ, opcode);
 	}
-	unsigned short DisAsm_t::bvc(unsigned short opcode)
+	unsigned short DisAsm::bvc(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bvc", instructions::BVC, opcode);
 	}
-	unsigned short DisAsm_t::bvs(unsigned short opcode)
+	unsigned short DisAsm::bvs(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bvs", instructions::BVS, opcode);
 	}
-	unsigned short DisAsm_t::bpl(unsigned short opcode)
+	unsigned short DisAsm::bpl(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bpl", instructions::BPL, opcode);
 	}
-	unsigned short DisAsm_t::bmi(unsigned short opcode)
+	unsigned short DisAsm::bmi(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bmi", instructions::BMI, opcode);
 	}
-	unsigned short DisAsm_t::bge(unsigned short opcode)
+	unsigned short DisAsm::bge(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bge", instructions::BGE, opcode);
 	}
-	unsigned short DisAsm_t::blt(unsigned short opcode)
+	unsigned short DisAsm::blt(unsigned short opcode)
 	{
 		return disassembleBccInstruction("blt", instructions::BLT, opcode);
 	}
-	unsigned short DisAsm_t::bgt(unsigned short opcode)
+	unsigned short DisAsm::bgt(unsigned short opcode)
 	{
 		return disassembleBccInstruction("bgt", instructions::BGT, opcode);
 	}
-	unsigned short DisAsm_t::ble(unsigned short opcode)
+	unsigned short DisAsm::ble(unsigned short opcode)
 	{
 		return disassembleBccInstruction("ble", instructions::BLE, opcode);
 	}
 
-	unsigned short DisAsm_t::bchg_r(unsigned short)
+	unsigned short DisAsm::bchg_r(unsigned short)
 	{
 		return instructions::BCHG_R;
 	}
 
-	unsigned short DisAsm_t::bchg_i(unsigned short)
+	unsigned short DisAsm::bchg_i(unsigned short)
 	{
 		return instructions::BCHG_I;
 	}
 
-	unsigned short DisAsm_t::bclr_r(unsigned short)
+	unsigned short DisAsm::bclr_r(unsigned short)
 	{
 		return instructions::BCLR_R;
 	}
 
-	unsigned short DisAsm_t::bclr_i(unsigned short)
+	unsigned short DisAsm::bclr_i(unsigned short)
 	{
 		return instructions::BCLR_I;
 	}
 
-	unsigned short DisAsm_t::bset_r(unsigned short)
+	unsigned short DisAsm::bset_r(unsigned short)
 	{
 		return instructions::BSET_R;
 	}
 
-	unsigned short DisAsm_t::bset_i(unsigned short)
+	unsigned short DisAsm::bset_i(unsigned short)
 	{
 		return instructions::BSET_I;
 	}
 
-	unsigned short DisAsm_t::bsr(unsigned short)
+	unsigned short DisAsm::bsr(unsigned short)
 	{
 		return instructions::BSR;
 	}
 
-	unsigned short DisAsm_t::btst_r(unsigned short)
+	unsigned short DisAsm::btst_r(unsigned short)
 	{
 		return instructions::BTST_R;
 	}
 
-	unsigned short DisAsm_t::btst_i(unsigned short)
+	unsigned short DisAsm::btst_i(unsigned short)
 	{
 		return instructions::BTST_I;
 	}
 
-	unsigned short DisAsm_t::chk(unsigned short)
+	unsigned short DisAsm::chk(unsigned short)
 	{
 		return instructions::CHK;
 	}
 
-	unsigned short DisAsm_t::clr(unsigned short)
+	unsigned short DisAsm::clr(unsigned short)
 	{
 		return instructions::CLR;
 	}
 
 
-	unsigned short DisAsm_t::cmp(unsigned short)
+	unsigned short DisAsm::cmp(unsigned short)
 	{
 		return instructions::CMP;
 	}
 
-	unsigned short DisAsm_t::cmpa(unsigned short)
+	unsigned short DisAsm::cmpa(unsigned short)
 	{
 		return instructions::CMPA;
 	}
 
-	unsigned short DisAsm_t::cmpi(unsigned short opcode)
+	unsigned short DisAsm::cmpi(unsigned short opcode)
 	{
 		return disassembleImmediateInstruction("cmpi", instructions::CMPI, opcode);
 	}
 
-	unsigned short DisAsm_t::cmpm(unsigned short)
+	unsigned short DisAsm::cmpm(unsigned short)
 	{
 		return instructions::CMPM;
 	}
 
-	unsigned short DisAsm_t::dbcc(unsigned short)
+	unsigned short DisAsm::dbcc(unsigned short)
 	{
 		return instructions::DBCC;
 	}
 
-	unsigned short DisAsm_t::divs(unsigned short)
+	unsigned short DisAsm::divs(unsigned short)
 	{
 		return instructions::DIVS;
 	}
 
-	unsigned short DisAsm_t::divu(unsigned short)
+	unsigned short DisAsm::divu(unsigned short)
 	{
 		return instructions::DIVU;
 	}
 
-	unsigned short DisAsm_t::eor(unsigned short)
+	unsigned short DisAsm::eor(unsigned short)
 	{
 		return instructions::EOR;
 	}
 
-	unsigned short DisAsm_t::eori(unsigned short)
+	unsigned short DisAsm::eori(unsigned short)
 	{
 		return instructions::EORI;
 	}
 
-	unsigned short DisAsm_t::eori2ccr(unsigned short)
+	unsigned short DisAsm::eori2ccr(unsigned short)
 	{
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short DisAsm_t::exg(unsigned short)
+	unsigned short DisAsm::exg(unsigned short)
 	{
 		return instructions::EXG;
 	}
 
-	unsigned short DisAsm_t::ext(unsigned short)
+	unsigned short DisAsm::ext(unsigned short)
 	{
 		return instructions::EXT;
 	}
 
-	unsigned short DisAsm_t::illegal(unsigned short)
+	unsigned short DisAsm::illegal(unsigned short)
 	{
 		return instructions::ILLEGAL;
 	}
 
-	unsigned short DisAsm_t::jmp(unsigned short)
+	unsigned short DisAsm::jmp(unsigned short)
 	{
 		return instructions::JMP;
 	}
 
-	unsigned short DisAsm_t::jsr(unsigned short)
+	unsigned short DisAsm::jsr(unsigned short)
 	{
 		return instructions::JSR;
 	}
 
-	unsigned short DisAsm_t::lea(unsigned short)
+	unsigned short DisAsm::lea(unsigned short)
 	{
 		return instructions::LEA;
 	}
 
-	unsigned short DisAsm_t::link(unsigned short opcode)
+	unsigned short DisAsm::link(unsigned short opcode)
 	{
 		disassembly = "link ";
 		unsigned short reg = opcode & 7u;
@@ -500,39 +510,39 @@ namespace mc68000
 		return instructions::LINK;
 	}
 
-	unsigned short DisAsm_t::fetchNextWord()
+	unsigned short DisAsm::fetchNextWord()
 	{
 		pc++;
 		return *pc;
 	}
 
-	void DisAsm_t::reset(const unsigned short* mem)
+	void DisAsm::reset(const unsigned short* mem)
 	{
 		memory = mem;
 		pc = mem;
 	}
 
-	unsigned short DisAsm_t::lsl_memory(unsigned short)
+	unsigned short DisAsm::lsl_memory(unsigned short)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short DisAsm_t::lsl_register(unsigned short)
+	unsigned short DisAsm::lsl_register(unsigned short)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short DisAsm_t::lsr_memory(unsigned short)
+	unsigned short DisAsm::lsr_memory(unsigned short)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short DisAsm_t::lsr_register(unsigned short)
+	unsigned short DisAsm::lsr_register(unsigned short)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short DisAsm_t::move(unsigned short opcode)
+	unsigned short DisAsm::move(unsigned short opcode)
 	{
 		const char* sizes[4] = { "?", "b", "l", "w" };
 
@@ -555,7 +565,7 @@ namespace mc68000
 		return instructions::MOVE;
 	}
 
-	unsigned short DisAsm_t::movea(unsigned short opcode)
+	unsigned short DisAsm::movea(unsigned short opcode)
 	{
 		disassembly = "movea";
 		bool isWordSize = opcode & 0b0001'0000'0000'0000u;
@@ -568,202 +578,202 @@ namespace mc68000
 		return instructions::MOVEA;
 	}
 
-	unsigned short DisAsm_t::move2ccr(unsigned short)
+	unsigned short DisAsm::move2ccr(unsigned short)
 	{
 		return instructions::MOVE2CCR;
 	}
 
-	unsigned short DisAsm_t::movesr(unsigned short)
+	unsigned short DisAsm::movesr(unsigned short)
 	{
 		return instructions::MOVESR;
 	}
 
-	unsigned short DisAsm_t::movem(unsigned short)
+	unsigned short DisAsm::movem(unsigned short)
 	{
 		return instructions::MOVEM;
 	}
 
-	unsigned short DisAsm_t::movep(unsigned short)
+	unsigned short DisAsm::movep(unsigned short)
 	{
 		return instructions::MOVEP;
 	}
 
-	unsigned short DisAsm_t::moveq(unsigned short)
+	unsigned short DisAsm::moveq(unsigned short)
 	{
 		return instructions::MOVEQ;
 	}
 
-	unsigned short DisAsm_t::muls(unsigned short)
+	unsigned short DisAsm::muls(unsigned short)
 	{
 		return instructions::MULS;
 	}
 
-	unsigned short DisAsm_t::mulu(unsigned short)
+	unsigned short DisAsm::mulu(unsigned short)
 	{
 		return instructions::MULU;
 	}
 
-	unsigned short DisAsm_t::nbcd(unsigned short)
+	unsigned short DisAsm::nbcd(unsigned short)
 	{
 		return instructions::NBCD;
 	}
 
-	unsigned short DisAsm_t::neg(unsigned short)
+	unsigned short DisAsm::neg(unsigned short)
 	{
 		return instructions::NEG;
 	}
-	unsigned short DisAsm_t::negx(unsigned short)
+	unsigned short DisAsm::negx(unsigned short)
 	{
 		return instructions::NEGX;
 	}
-	unsigned short DisAsm_t::nop(unsigned short)
+	unsigned short DisAsm::nop(unsigned short)
 	{
 		return instructions::NOP;
 	}
-	unsigned short DisAsm_t::not_(unsigned short)
+	unsigned short DisAsm::not_(unsigned short)
 	{
 		return instructions::NOT;
 	}
 
-	unsigned short DisAsm_t::or_(unsigned short)
+	unsigned short DisAsm::or_(unsigned short)
 	{
 		return instructions::OR;
 	}
 
-	unsigned short DisAsm_t::ori(unsigned short)
+	unsigned short DisAsm::ori(unsigned short)
 	{
 		return instructions::ORI;
 	}
 
-	unsigned short DisAsm_t::ori2ccr(unsigned short)
+	unsigned short DisAsm::ori2ccr(unsigned short)
 	{
 		return instructions::ORI2CCR;
 	}
 
-	unsigned short DisAsm_t::pea(unsigned short)
+	unsigned short DisAsm::pea(unsigned short)
 	{
 		return instructions::PEA;
 	}
 
-	unsigned short DisAsm_t::rol_memory(unsigned short)
+	unsigned short DisAsm::rol_memory(unsigned short)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short DisAsm_t::ror_memory(unsigned short)
+	unsigned short DisAsm::ror_memory(unsigned short)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short DisAsm_t::roxl_memory(unsigned short)
+	unsigned short DisAsm::roxl_memory(unsigned short)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short DisAsm_t::roxr_memory(unsigned short)
+	unsigned short DisAsm::roxr_memory(unsigned short)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short DisAsm_t::rol_register(unsigned short)
+	unsigned short DisAsm::rol_register(unsigned short)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short DisAsm_t::ror_register(unsigned short)
+	unsigned short DisAsm::ror_register(unsigned short)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short DisAsm_t::roxl_register(unsigned short)
+	unsigned short DisAsm::roxl_register(unsigned short)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short DisAsm_t::roxr_register(unsigned short)
+	unsigned short DisAsm::roxr_register(unsigned short)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short DisAsm_t::sbcd(unsigned short)
+	unsigned short DisAsm::sbcd(unsigned short)
 	{
 		return instructions::SBCD;
 	}
 
-	unsigned short DisAsm_t::rtr(unsigned short)
+	unsigned short DisAsm::rtr(unsigned short)
 	{
 		return instructions::RTR;
 	}
 
-	unsigned short DisAsm_t::rts(unsigned short)
+	unsigned short DisAsm::rts(unsigned short)
 	{
 		disassembly = "rts";
 		return instructions::RTS;
 	}
 
-	unsigned short DisAsm_t::scc(unsigned short)
+	unsigned short DisAsm::scc(unsigned short)
 	{
 		return instructions::SCC;
 	}
 
-	unsigned short DisAsm_t::sub(unsigned short)
+	unsigned short DisAsm::sub(unsigned short)
 	{
 		return instructions::SUB;
 	}
 
-	unsigned short DisAsm_t::subi(unsigned short)
+	unsigned short DisAsm::subi(unsigned short)
 	{
 		return instructions::SUBI;
 	}
 
-	unsigned short DisAsm_t::suba(unsigned short)
+	unsigned short DisAsm::suba(unsigned short)
 	{
 		return instructions::SUBA;
 	}
 
-	unsigned short DisAsm_t::subq(unsigned short)
+	unsigned short DisAsm::subq(unsigned short)
 	{
 		return instructions::SUBQ;
 	}
 
-	unsigned short DisAsm_t::subx(unsigned short)
+	unsigned short DisAsm::subx(unsigned short)
 	{
 		return instructions::SUBX;
 	}
 
-	unsigned short DisAsm_t::swap(unsigned short)
+	unsigned short DisAsm::swap(unsigned short)
 	{
 		return instructions::SWAP;
 	}
 
-	unsigned short DisAsm_t::tas(unsigned short)
+	unsigned short DisAsm::tas(unsigned short)
 	{
 		return instructions::TAS;
 	}
 
-	unsigned short DisAsm_t::trap(unsigned short)
+	unsigned short DisAsm::trap(unsigned short)
 	{
 		return instructions::TRAP;
 	}
 
-	unsigned short DisAsm_t::trapv(unsigned short)
+	unsigned short DisAsm::trapv(unsigned short)
 	{
 		return instructions::TRAPV;
 	}
 
-	unsigned short DisAsm_t::tst(unsigned short)
+	unsigned short DisAsm::tst(unsigned short)
 	{
 		return instructions::TST;
 	}
 
-	unsigned short DisAsm_t::unlk(unsigned short opcode)
+	unsigned short DisAsm::unlk(unsigned short opcode)
 	{
 		disassembly = "unlk a";
 		disassembly += toHex(opcode & 0b111u);
 		return instructions::UNLK;
 	}
 
-	unsigned short DisAsm_t::unknown(unsigned short)
+	unsigned short DisAsm::unknown(unsigned short)
 	{
 		return instructions::UNKNOWN;
 	}
