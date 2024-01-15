@@ -19,6 +19,9 @@ namespace mc68000
 
 	class Cpu
 	{
+		//
+		// Instruction handlers
+		//
 	private:
 		unsigned short unknown(unsigned short);
 
@@ -162,7 +165,17 @@ namespace mc68000
 		friend t_handler* setup<Cpu>();
 
 		t_handler* handlers;
+		
+		//
+		// trap handlers
+		// 
+	private:
+		using trapHandler_t = void (*)(uint32_t d0, uint32_t a0);
+		trapHandler_t trapHandlers[16];
 
+		//
+		// internal helpers
+		//
 	private:
 		template <typename T> T readAt(uint16_t ea);
 		template <typename T> void writeAt(uint16_t ea, T data);
@@ -171,8 +184,12 @@ namespace mc68000
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
+		template <typename T> void and_(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
+		//
+		// private members
+		//
 	private:
 		unsigned int dRegisters[8];
 		unsigned int aRegisters[8];
@@ -181,6 +198,9 @@ namespace mc68000
 		memory localMemory;
 		bool done;
 
+		//
+		// public methods
+		//
 	public:
 		Cpu(const memory& memory);
 		~Cpu();
@@ -189,7 +209,11 @@ namespace mc68000
 		void reset(const memory& memory);
 		void start(uint32_t startPc, uint32_t startSP = 0);
 		void setARegister(int reg, uint32_t value);
+		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
 
+		//
+		// public fields
+		//
 	public:
 		const unsigned int& d0;
 		const unsigned int& d1;

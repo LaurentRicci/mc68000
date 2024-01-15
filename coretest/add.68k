@@ -1,0 +1,71 @@
+* -------------
+* ADD
+* -------------
+    ORG    $1000
+start:
+    move.b #$32,d3
+    move   #data, a4
+    and.b  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.b $29
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.w #$8a8f,d3
+    move   #data, a4
+    and.w  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.w $8181, $fefe
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.l #$95368a8f,d3
+    move   #data, a4
+    and.l  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.l $7f278181, $fefefefe
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.b #$32,d3
+    move   #data, a4
+    and.b  d3,(a4)
+    move.b (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.b $29
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.w #$8a8f,d3
+    move   #data, a4
+    and.w  d3, (a4)
+    move.w (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.w $8181, $fefe
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.l #$95368a8f,d3
+    move   #data, a4
+    and.l  d3, (a4)
+    move.l (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.l $7f278181, $fefefefe
+    END start

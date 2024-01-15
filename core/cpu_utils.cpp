@@ -10,6 +10,9 @@ namespace mc68000
 	template <> int32_t signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
 
+	// ==========
+	// ADD
+	// ==========
 	template <typename T> void Cpu::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
@@ -27,6 +30,9 @@ namespace mc68000
 	template void Cpu::add<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::add<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ==========
+	// ADDQ
+	// ==========
 	template <typename T> void Cpu::addq(uint32_t data, uint16_t destinationEffectiveAdress)
 	{
 		uint32_t destination = readAt<T>(destinationEffectiveAdress);
@@ -47,6 +53,25 @@ namespace mc68000
 	template void Cpu::addq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+
+	// ==========
+	// AND
+	// ==========
+	template <typename T> void Cpu::and_(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t result = source & destination;
+		writeAt<T>(destinationEffectiveAdress, result);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
+	}
+	template void Cpu::and_<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::and_<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::and_<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
 	uint32_t Cpu::getTargetAddress(uint16_t opcode)
 	{

@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
 		0x38, 0x7c, 0x10, 0x10,    //   move   #value, a4
 		0xd7, 0x14,                //   add.b  d3, (a4)
-		0x14, 0x14,                 //   move.b (a4), d2
+		0x14, 0x14,                //   move.b (a4), d2
 		0x4e, 0x40,                //   trap   #0
 		0xff, 0xff,                // 
 		0x29, 0xfe };              // value dc.b $29

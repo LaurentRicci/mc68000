@@ -523,7 +523,7 @@ namespace mc68000
 		}
 
 		// TRAP
-		for (unsigned vector = 0; vector <= 7; vector++)
+		for (unsigned vector = 0; vector <= 15; vector++)
 		{
 			handlers[0x4e40 + vector] = &T::trap;
 		}

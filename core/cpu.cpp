@@ -31,11 +31,12 @@ namespace mc68000
 	{
 		localMemory = memory;
 		handlers = setup<Cpu>();
+		for (int i = 0; i < 16; trapHandlers[i++] = nullptr);
 	}
 
 	Cpu::~Cpu()
 	{
-		delete handlers;
+		delete[] handlers;
 	}
 
 	void Cpu::reset()
@@ -72,6 +73,14 @@ namespace mc68000
 		aRegisters[reg] = value;
 	}
 
+	void Cpu::registerTrapHandler(int trapNumber, trapHandler_t trapHandler)
+	{
+		if (trapNumber < 0 || trapNumber > 15)
+		{
+			throw "registerTrapHandler: invalid trapNumber";
+		}
+		trapHandlers[trapNumber] = trapHandler;
+	}
 	// =================================================================================================
 	// cpu instruction handlers
 	// =================================================================================================
@@ -270,8 +279,53 @@ namespace mc68000
 		return instructions::ADDX;
 	}
 
-	unsigned short Cpu::and_(unsigned short)
+	// ==========
+	// AND
+	// ==========
+
+	unsigned short Cpu::and_(unsigned short opcode)
 	{
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t mode = (opcode >> 8) & 0b1;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		if (mode == 0)
+		{
+			// < ea > and Dn -> Dn
+			switch (size)
+			{
+			case 0:
+				and_<uint8_t>(effectiveAddress, reg);
+				break;
+			case 1:
+				and_<uint16_t>(effectiveAddress, reg);
+				break;
+			case 2:
+				and_<uint32_t>(effectiveAddress, reg);
+				break;
+			default:
+				throw "and_: invalid size";
+			}
+		}
+		else
+		{
+			// Dn and < ea > -> < ea >
+			switch (size)
+			{
+			case 0:
+				and_<uint8_t>(reg, effectiveAddress);
+				break;
+			case 1:
+				and_<uint16_t>(reg, effectiveAddress);
+				break;
+			case 2:
+				and_<uint32_t>(reg, effectiveAddress);
+				break;
+			default:
+				throw "and_: invalid size";
+			}
+		}
 		return instructions::AND;
 	}
 
@@ -1094,9 +1148,20 @@ namespace mc68000
 		return instructions::TAS;
 	}
 
-	unsigned short Cpu::trap(unsigned short)
+	// ==========
+	// TRAP
+	// ==========
+	unsigned short Cpu::trap(unsigned short opcode)
 	{
-		done = true;
+		uint8_t trapNumber = opcode & 0b1111;
+		if (trapHandlers[trapNumber] != nullptr)
+		{
+			trapHandlers[trapNumber](d0, a0);
+		}
+		else
+		{
+			done = true;
+		}
 		return instructions::TRAP;
 	}
 

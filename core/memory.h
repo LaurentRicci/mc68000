@@ -128,6 +128,7 @@ namespace mc68000
 	template<> uint8_t memory::get<uint8_t>(uint32_t address) const;
 	template<> uint16_t memory::get<uint16_t>(uint32_t address) const;
 	template<> uint32_t memory::get<uint32_t>(uint32_t address) const;
+	template<> void* memory::get<void*>(uint32_t address) const;
 
 	template<> void memory::set<uint8_t>(uint32_t address, uint8_t data);
 	template<> void memory::set<uint16_t>(uint32_t address, uint16_t data);
