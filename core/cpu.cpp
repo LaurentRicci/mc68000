@@ -363,8 +363,20 @@ namespace mc68000
 		return instructions::ANDI;
 	}
 
-	unsigned short Cpu::andi2ccr(unsigned short)
+	// ==========
+	// ANDI to CCR
+	// ==========
+
+	unsigned short Cpu::andi2ccr(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		statusRegister.c &= (source & 1);
+		statusRegister.v &= (source >> 1) & 1;
+		statusRegister.z &= (source >> 2) & 1;
+		statusRegister.n &= (source >> 3) & 1;
+		statusRegister.x &= (source >> 4) & 1;
+
 		return instructions::ANDI2CCR;
 	}
 	unsigned short Cpu::andi2sr(unsigned short)

@@ -263,4 +263,56 @@ BOOST_AUTO_TEST_CASE(a_andi_l)
 	BOOST_CHECK_EQUAL(0x15268081, cpu.d3);
 }
 
+// ===================================================
+// ANDI tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_andi2ccr_1)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x1f, // move #31,ccr
+		0x02, 0x3c, 0x00, 0x15, // move #21,ccr
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff  // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(1, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+BOOST_AUTO_TEST_CASE(a_andi2ccr_2)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x1f, // move #31,ccr
+		0x02, 0x3c, 0x00, 0x0a, // move #10,ccr
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff  // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
