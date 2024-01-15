@@ -1,5 +1,5 @@
 * -------------
-* ADD
+* AND
 * -------------
     ORG    $1000
 start:
@@ -68,4 +68,31 @@ start:
     SIMHALT
 data:
     dc.l $7f278181, $fefefefe
+    END start
+
+* -------------
+* ANDI
+* -------------
+    ORG    $1000
+start:
+    move.b  #$32,d3
+    andi.b  #$29, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.w  #$8a8f,d3
+    andi.w  #$8181, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.l  #$95368a8f,d3
+    andi.l  #$7f278181, d3
+    trap #0
+    SIMHALT
     END start

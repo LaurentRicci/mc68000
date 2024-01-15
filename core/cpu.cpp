@@ -329,8 +329,37 @@ namespace mc68000
 		return instructions::AND;
 	}
 
-	unsigned short Cpu::andi(unsigned short)
+	// ==========
+	// ANDI
+	// ==========
+
+	unsigned short Cpu::andi(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+		{
+			and_<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		}
+		case 1:
+		{
+			and_<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		}
+		case 2:
+		{
+			and_<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		}
+		default:
+			throw "andi: invalid size";
+		}
+
 		return instructions::ANDI;
 	}
 
