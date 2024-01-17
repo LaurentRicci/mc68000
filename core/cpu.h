@@ -186,6 +186,8 @@ namespace mc68000
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
 		template <typename T> void and_(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
+		template <typename T> void or_(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
+
 
 		//
 		// private members

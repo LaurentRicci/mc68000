@@ -73,6 +73,25 @@ namespace mc68000
 	template void Cpu::and_<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::and_<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ==========
+	// OR
+	// ==========
+	template <typename T> void Cpu::or_(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t result = source | destination;
+		writeAt<T>(destinationEffectiveAdress, result);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
+	}
+	template void Cpu::or_<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::or_<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::or_<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+
 	uint32_t Cpu::getTargetAddress(uint16_t opcode)
 	{
 		uint32_t address = pc;
