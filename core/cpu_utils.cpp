@@ -54,14 +54,14 @@ namespace mc68000
 	template void Cpu::addq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 
-	// ==========
-	// AND
-	// ==========
-	template <typename T> void Cpu::and_(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	// =========
+	// LOGICAL Operations
+	// =========
+	template <typename T> void Cpu::logical(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress, uint32_t (*op)(uint32_t lhs, uint32_t rhs))
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
 		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint32_t result = source & destination;
+		uint32_t result = op(source, destination);
 		writeAt<T>(destinationEffectiveAdress, result);
 
 		statusRegister.n = signed_cast<T>(result) < 0;
@@ -69,24 +69,35 @@ namespace mc68000
 		statusRegister.c = 0;
 		statusRegister.v = 0;
 	}
+
+	// ==========
+	// AND
+	// ==========
+	template <typename T> void Cpu::and_(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		logical<T>(sourceEffectiveAddress, destinationEffectiveAdress, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
+	}
 	template void Cpu::and_<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::and_<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::and_<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+
+	// ==========
+	// EOR
+	// ==========
+	template <typename T> void Cpu::eor(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		logical<T>(sourceEffectiveAddress, destinationEffectiveAdress, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
+	}
+	template void Cpu::eor<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::eor<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::eor<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
 	// ==========
 	// OR
 	// ==========
 	template <typename T> void Cpu::or_(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
-		uint32_t result = source | destination;
-		writeAt<T>(destinationEffectiveAdress, result);
-
-		statusRegister.n = signed_cast<T>(result) < 0;
-		statusRegister.z = static_cast<T>(result) == 0;
-		statusRegister.c = 0;
-		statusRegister.v = 0;
+		logical<T>(sourceEffectiveAddress, destinationEffectiveAdress, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 	}
 	template void Cpu::or_<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::or_<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
