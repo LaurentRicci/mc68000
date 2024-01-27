@@ -1,0 +1,116 @@
+* -------------
+* OR
+* -------------
+    ORG    $1000
+start:
+    move.b #$32,d3
+    move   #data, a4
+    or.b  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.b $29
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.w #$8a8f,d3
+    move   #data, a4
+    or.w  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.w $8181, $fefe
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.l #$95368a8f,d3
+    move   #data, a4
+    or.l  (a4), d3
+    trap #0
+    SIMHALT
+data:
+    dc.l $7f278181, $fefefefe
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.b #$32,d3
+    move   #data, a4
+    or.b  d3,(a4)
+    move.b (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.b $29
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.w #$8a8f,d3
+    move   #data, a4
+    or.w  d3, (a4)
+    move.w (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.w $8181, $fefe
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.l #$95368a8f,d3
+    move   #data, a4
+    or.l  d3, (a4)
+    move.l (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.l $7f278181, $fefefefe
+    END start
+
+* -------------
+* ORI
+* -------------
+    ORG    $1000
+start:
+    move.b  #$32,d3
+    ori.b  #$29, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.w  #$8a8f,d3
+    ori.w  #$8181, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.l  #$95368a8f,d3
+    ori.l  #$7f278181, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+* ORI to CCR
+* -------------
+    ORG    $1000
+start:
+    move  #31,ccr
+    ori   #21, ccr
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move  #00,ccr
+    ori   #10, ccr
+    trap #0
+    SIMHALT
+    END start

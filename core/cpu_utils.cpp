@@ -10,6 +10,9 @@ namespace mc68000
 	template <> int32_t signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
 
+	// ==========
+	// ADD
+	// ==========
 	template <typename T> void Cpu::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
@@ -27,6 +30,9 @@ namespace mc68000
 	template void Cpu::add<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::add<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ==========
+	// ADDQ
+	// ==========
 	template <typename T> void Cpu::addq(uint32_t data, uint16_t destinationEffectiveAdress)
 	{
 		uint32_t destination = readAt<T>(destinationEffectiveAdress);
@@ -47,6 +53,115 @@ namespace mc68000
 	template void Cpu::addq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+
+	// =========
+	// LOGICAL Operations
+	// =========
+	template <typename T> void Cpu::logical(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress, uint32_t (*op)(uint32_t lhs, uint32_t rhs))
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t result = op(source, destination);
+		writeAt<T>(destinationEffectiveAdress, result);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
+	}
+
+	void Cpu::logical(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t lhs, uint32_t rhs))
+	{
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t mode = (opcode >> 8) & 0b1;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		if (mode == 0)
+		{
+			// < ea > and Dn -> Dn
+			switch (size)
+			{
+			case 0:
+				logical<uint8_t>(effectiveAddress, reg, logicalOperator);
+				break;
+			case 1:
+				logical<uint16_t>(effectiveAddress, reg, logicalOperator);
+				break;
+			case 2:
+				logical<uint32_t>(effectiveAddress, reg, logicalOperator);
+				break;
+			default:
+				throw "logical: invalid size";
+			}
+		}
+		else
+		{
+			// Dn and < ea > -> < ea >
+			switch (size)
+			{
+			case 0:
+				logical<uint8_t>(reg, effectiveAddress, logicalOperator);
+				break;
+			case 1:
+				logical<uint16_t>(reg, effectiveAddress, logicalOperator);
+				break;
+			case 2:
+				logical<uint32_t>(reg, effectiveAddress, logicalOperator);
+				break;
+			default:
+				throw "logical: invalid size";
+			}
+		}
+	}
+
+	void Cpu::logicalImmediate(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t lhs, uint32_t rhs))
+	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+		{
+			logical<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress, logicalOperator);
+			break;
+		}
+		case 1:
+		{
+			logical<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress, logicalOperator);
+			break;
+		}
+		case 2:
+		{
+			logical<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress, logicalOperator);
+			break;
+		}
+		default:
+			throw "logicalImmediate: invalid size";
+		}
+
+	}
+	// ==========
+	// SUB
+	// ==========
+	template <typename T> void Cpu::sub(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint64_t result = (uint64_t)destination - (uint64_t)source;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((destination ^ source) & (destination ^ result)) < 0;
+	}
+	template void Cpu::sub<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::sub<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::sub<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
 	uint32_t Cpu::getTargetAddress(uint16_t opcode)
 	{

@@ -13,3 +13,4 @@ endif()
 # Include sub-projects.
 add_subdirectory ("core")
 add_subdirectory("coretest")
+add_subdirectory("simple")

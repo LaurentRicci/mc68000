@@ -1,0 +1,83 @@
+* -------------
+* EOR
+* -------------
+    ORG    $1000
+start:
+    move.b #$32,d3
+    move   #data, a4
+    eor.b  d3,(a4)
+    move.b (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.b $29
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.w #$8a8f,d3
+    move   #data, a4
+    eor.w  d3, (a4)
+    move.w (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.w $8181, $fefe
+    END start
+* ----------------
+    ORG    $1000
+start:
+    move.l #$95368a8f,d3
+    move   #data, a4
+    eor.l  d3, (a4)
+    move.l (a4), d2
+    trap #0
+    SIMHALT
+data:
+    dc.l $7f278181, $fefefefe
+    END start
+
+* -------------
+* ORI
+* -------------
+    ORG    $1000
+start:
+    move.b  #$32,d3
+    eori.b  #$29, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.w  #$8a8f,d3
+    eori.w  #$8181, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move.l  #$95368a8f,d3
+    eori.l  #$7f278181, d3
+    trap #0
+    SIMHALT
+    END start
+* -------------
+* EORI to CCR
+* -------------
+    ORG    $1000
+start:
+    move  #31,ccr
+    eori   #21, ccr
+    trap #0
+    SIMHALT
+    END start
+* -------------
+    ORG    $1000
+start:
+    move  #00,ccr
+    eori   #10, ccr
+    trap #0
+    SIMHALT
+    END start

@@ -25,6 +25,13 @@ namespace mc68000
 		return longWord;
 	}
 
+	template<> void* memory::get<void*>(uint32_t address) const
+	{
+		verifyAddress(address, 0);
+		uint8_t* p8 = rawMemory + (address - baseAddress);
+		return p8;
+	}
+
 	template<> void memory::set<uint8_t>(uint32_t address, uint8_t data)
 	{
 		verifyAddress(address, sizeof(uint8_t));

@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
 		0x38, 0x7c, 0x10, 0x10,    //   move   #value, a4
 		0xd7, 0x14,                //   add.b  d3, (a4)
-		0x14, 0x14,                 //   move.b (a4), d2
+		0x14, 0x14,                //   move.b (a4), d2
 		0x4e, 0x40,                //   trap   #0
 		0xff, 0xff,                // 
 		0x29, 0xfe };              // value dc.b $29
@@ -360,7 +360,6 @@ void verifyAddiExecution_b(uint8_t destination, uint8_t source, uint8_t expected
 }
 
 inline uint8_t u8(uint16_t val) { return static_cast<uint8_t>(val); }
-//inline uint8_t u8(uint32_t val) { return static_cast<uint8_t>(val); }
 
 void verifyAddiExecution_w(uint16_t destination, uint16_t source, uint16_t expected, uint8_t x, uint8_t n, uint8_t z, uint8_t v, uint8_t c)
 {
@@ -394,7 +393,7 @@ void verifyAddiExecution_l(uint32_t destination, uint32_t source, uint32_t expec
 	unsigned char code[] = {
 		0x26, 0x3c, u8(destination >> 24), u8((destination >> 16) & 0xff), u8((destination >> 8) & 0xff), u8(destination & 0xff),    // move.l #destination, d3
 		0x06, 0x83, u8(source >> 24), u8((source >> 16) & 0xff), u8((source >> 8) & 0xff), u8(source & 0xff),                        // addi.l #source, d3
-		0x4e, 0x40,                                                                                                                   // trap #0
+		0x4e, 0x40,                                                                                                                  // trap #0
 		0xff, 0xff };
 
 	// Arrange

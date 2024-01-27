@@ -31,11 +31,12 @@ namespace mc68000
 	{
 		localMemory = memory;
 		handlers = setup<Cpu>();
+		for (int i = 0; i < 16; trapHandlers[i++] = nullptr);
 	}
 
 	Cpu::~Cpu()
 	{
-		delete handlers;
+		delete[] handlers;
 	}
 
 	void Cpu::reset()
@@ -72,6 +73,14 @@ namespace mc68000
 		aRegisters[reg] = value;
 	}
 
+	void Cpu::registerTrapHandler(int trapNumber, trapHandler_t trapHandler)
+	{
+		if (trapNumber < 0 || trapNumber > 15)
+		{
+			throw "registerTrapHandler: invalid trapNumber";
+		}
+		trapHandlers[trapNumber] = trapHandler;
+	}
 	// =================================================================================================
 	// cpu instruction handlers
 	// =================================================================================================
@@ -270,18 +279,40 @@ namespace mc68000
 		return instructions::ADDX;
 	}
 
-	unsigned short Cpu::and_(unsigned short)
+	// ==========
+	// AND
+	// ==========
+
+	unsigned short Cpu::and_(unsigned short opcode)
 	{
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::AND;
 	}
 
-	unsigned short Cpu::andi(unsigned short)
+	// ==========
+	// ANDI
+	// ==========
+
+	unsigned short Cpu::andi(unsigned short opcode)
 	{
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::ANDI;
 	}
 
-	unsigned short Cpu::andi2ccr(unsigned short)
+	// ==========
+	// ANDI to CCR
+	// ==========
+
+	unsigned short Cpu::andi2ccr(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		statusRegister.c &= (source & 1);
+		statusRegister.v &= (source >> 1) & 1;
+		statusRegister.z &= (source >> 2) & 1;
+		statusRegister.n &= (source >> 3) & 1;
+		statusRegister.x &= (source >> 4) & 1;
+
 		return instructions::ANDI2CCR;
 	}
 	unsigned short Cpu::andi2sr(unsigned short)
@@ -634,18 +665,37 @@ namespace mc68000
 		return instructions::DIVU;
 	}
 
-	unsigned short Cpu::eor(unsigned short)
+	// ==========
+	// EOR
+	// ==========
+	unsigned short Cpu::eor(unsigned short opcode)
 	{
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EOR;
 	}
 
-	unsigned short Cpu::eori(unsigned short)
+	// ==========
+	// EORI
+	// ==========
+	unsigned short Cpu::eori(unsigned short opcode)
 	{
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EORI;
 	}
 
-	unsigned short Cpu::eori2ccr(unsigned short)
+	// ==========
+	// EORI to CCR
+	// ==========
+	unsigned short Cpu::eori2ccr(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		statusRegister.c ^= (source & 1);
+		statusRegister.v ^= (source >> 1) & 1;
+		statusRegister.z ^= (source >> 2) & 1;
+		statusRegister.n ^= (source >> 3) & 1;
+		statusRegister.x ^= (source >> 4) & 1;
+
 		return instructions::EORI2CCR;
 	}
 
@@ -979,18 +1029,39 @@ namespace mc68000
 		return instructions::NOT;
 	}
 
-	unsigned short Cpu::or_(unsigned short)
+	// ==========
+	// OR
+	// ==========
+
+	unsigned short Cpu::or_(unsigned short opcode)
 	{
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::OR;
 	}
 
-	unsigned short Cpu::ori(unsigned short)
+	// ==========
+	// ORI
+	// ==========
+
+	unsigned short Cpu::ori(unsigned short opcode)
 	{
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::ORI;
 	}
 
+	// ==========
+	// ORI to CCR
+	// ==========
 	unsigned short Cpu::ori2ccr(unsigned short)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		statusRegister.c |= (source & 1);
+		statusRegister.v |= (source >> 1) & 1;
+		statusRegister.z |= (source >> 2) & 1;
+		statusRegister.n |= (source >> 3) & 1;
+		statusRegister.x |= (source >> 4) & 1;
+
 		return instructions::ORI2CCR;
 	}
 
@@ -1059,8 +1130,39 @@ namespace mc68000
 		return instructions::SCC;
 	}
 
-	unsigned short Cpu::sub(unsigned short)
+	// ==========
+	// SUB
+	// ==========
+	unsigned short Cpu::sub(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b111;
+		switch (size)
+		{
+		case 0:
+			sub<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			sub<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			sub<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 4:
+			sub<uint8_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 5:
+			sub<uint16_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 6:
+			sub<uint32_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		default:
+			throw "sub: invalid size";
+		}
+
 		return instructions::SUB;
 	}
 
@@ -1094,9 +1196,20 @@ namespace mc68000
 		return instructions::TAS;
 	}
 
-	unsigned short Cpu::trap(unsigned short)
+	// ==========
+	// TRAP
+	// ==========
+	unsigned short Cpu::trap(unsigned short opcode)
 	{
-		done = true;
+		uint8_t trapNumber = opcode & 0b1111;
+		if (trapHandlers[trapNumber] != nullptr)
+		{
+			trapHandlers[trapNumber](d0, a0);
+		}
+		else
+		{
+			done = true;
+		}
 		return instructions::TRAP;
 	}
 

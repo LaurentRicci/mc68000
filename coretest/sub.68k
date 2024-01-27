@@ -1,0 +1,65 @@
+* -------------
+* SUB
+* -------------
+    ORG    $1000
+start:
+    move.b #$32, d3
+    move   #value, a4
+    sub.b  (a4), d3
+    trap   #0
+    SIMHALT
+value: dc.b $29
+    END    start
+* -------------
+    ORG    $1000
+start:
+    move.b #$32, d3
+    move   #value, a4
+    sub.b  d3, (a4)
+    move.b (a4), d2
+    trap   #0
+    SIMHALT
+value: dc.b $29
+    END    start
+* -------------
+    ORG    $1000
+start:
+    move.w #$9090, d3
+    move   #value, a4
+    sub.w  (a4), d3
+    trap   #0
+    SIMHALT
+value: dc.w $8181
+    END    start
+* -------------sub_from_dregister_w
+    ORG    $1000
+start:
+    move.w #$9090, d3
+    move   #value, a4
+    sub.w  d3, (a4)
+    move.w (a4), d2
+    trap   #0
+    SIMHALT
+value: dc.w $8181
+    END    start
+* -------------sub_to_dregister_l
+    ORG    $1000
+start:
+    move.l #$90909090, d3
+    move   #value, a4
+    sub.l  (a4), d3
+    trap   #0
+    SIMHALT
+value: dc.l $81818181
+    END    start
+* -------------sub_from_dregister_l
+    ORG    $1000
+start:
+    move.l #$90909090, d3
+    move   #value, a4
+    sub.l  d3, (a4)
+    move.l (a4), d2
+    trap   #0
+    SIMHALT
+value: dc.l $81818181
+    END    start
