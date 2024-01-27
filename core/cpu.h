@@ -182,15 +182,15 @@ namespace mc68000
 		template <typename T> void move(uint16_t from, uint16_t to);
 		uint32_t getTargetAddress(uint16_t opcode);
 
-		template <typename T> void logical(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress, uint32_t (*op)(uint32_t, uint32_t));
+		template <typename T> void logical(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress, uint32_t(*op)(uint32_t, uint32_t));
+		void logical(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t, uint32_t));
+		void logicalImmediate(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t, uint32_t));
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
-		template <typename T> void and_(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
-		template <typename T> void eor(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
-		template <typename T> void or_(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
+		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
 		//
 		// private members

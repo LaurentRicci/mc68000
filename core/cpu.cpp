@@ -285,47 +285,7 @@ namespace mc68000
 
 	unsigned short Cpu::and_(unsigned short opcode)
 	{
-		uint16_t reg = (opcode >> 9) & 0b111;
-		uint16_t mode = (opcode >> 8) & 0b1;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t effectiveAddress = opcode & 0b111'111;
-
-		if (mode == 0)
-		{
-			// < ea > and Dn -> Dn
-			switch (size)
-			{
-			case 0:
-				and_<uint8_t>(effectiveAddress, reg);
-				break;
-			case 1:
-				and_<uint16_t>(effectiveAddress, reg);
-				break;
-			case 2:
-				and_<uint32_t>(effectiveAddress, reg);
-				break;
-			default:
-				throw "and_: invalid size";
-			}
-		}
-		else
-		{
-			// Dn and < ea > -> < ea >
-			switch (size)
-			{
-			case 0:
-				and_<uint8_t>(reg, effectiveAddress);
-				break;
-			case 1:
-				and_<uint16_t>(reg, effectiveAddress);
-				break;
-			case 2:
-				and_<uint32_t>(reg, effectiveAddress);
-				break;
-			default:
-				throw "and_: invalid size";
-			}
-		}
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::AND;
 	}
 
@@ -335,31 +295,7 @@ namespace mc68000
 
 	unsigned short Cpu::andi(unsigned short opcode)
 	{
-		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
-
-		uint16_t size = (opcode >> 6) & 0b11;
-		switch (size)
-		{
-		case 0:
-		{
-			and_<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 1:
-		{
-			and_<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 2:
-		{
-			and_<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		default:
-			throw "andi: invalid size";
-		}
-
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::ANDI;
 	}
 
@@ -734,48 +670,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::eor(unsigned short opcode)
 	{
-		uint16_t reg = (opcode >> 9) & 0b111;
-		uint16_t mode = (opcode >> 8) & 0b1;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t effectiveAddress = opcode & 0b111'111;
-
-		if (mode == 0)
-		{
-			// < ea > or Dn -> Dn
-			switch (size)
-			{
-			case 0:
-				eor<uint8_t>(effectiveAddress, reg);
-				break;
-			case 1:
-				eor<uint16_t>(effectiveAddress, reg);
-				break;
-			case 2:
-				eor<uint32_t>(effectiveAddress, reg);
-				break;
-			default:
-				throw "eor: invalid size";
-			}
-		}
-		else
-		{
-			// Dn and < ea > -> < ea >
-			switch (size)
-			{
-			case 0:
-				eor<uint8_t>(reg, effectiveAddress);
-				break;
-			case 1:
-				eor<uint16_t>(reg, effectiveAddress);
-				break;
-			case 2:
-				eor<uint32_t>(reg, effectiveAddress);
-				break;
-			default:
-				throw "or_: invalid size";
-			}
-		}
-
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EOR;
 	}
 
@@ -784,30 +679,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::eori(unsigned short opcode)
 	{
-		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
-
-		uint16_t size = (opcode >> 6) & 0b11;
-		switch (size)
-		{
-		case 0:
-		{
-			eor<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 1:
-		{
-			eor<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 2:
-		{
-			eor<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		default:
-			throw "eori: invalid size";
-		}
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EORI;
 	}
 
@@ -1163,47 +1035,7 @@ namespace mc68000
 
 	unsigned short Cpu::or_(unsigned short opcode)
 	{
-		uint16_t reg = (opcode >> 9) & 0b111;
-		uint16_t mode = (opcode >> 8) & 0b1;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t effectiveAddress = opcode & 0b111'111;
-
-		if (mode == 0)
-		{
-			// < ea > or Dn -> Dn
-			switch (size)
-			{
-			case 0:
-				or_<uint8_t>(effectiveAddress, reg);
-				break;
-			case 1:
-				or_<uint16_t>(effectiveAddress, reg);
-				break;
-			case 2:
-				or_<uint32_t>(effectiveAddress, reg);
-				break;
-			default:
-				throw "or_: invalid size";
-			}
-		}
-		else
-		{
-			// Dn and < ea > -> < ea >
-			switch (size)
-			{
-			case 0:
-				or_<uint8_t>(reg, effectiveAddress);
-				break;
-			case 1:
-				or_<uint16_t>(reg, effectiveAddress);
-				break;
-			case 2:
-				or_<uint32_t>(reg, effectiveAddress);
-				break;
-			default:
-				throw "or_: invalid size";
-			}
-		}
+		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::OR;
 	}
 
@@ -1213,30 +1045,7 @@ namespace mc68000
 
 	unsigned short Cpu::ori(unsigned short opcode)
 	{
-		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
-
-		uint16_t size = (opcode >> 6) & 0b11;
-		switch (size)
-		{
-		case 0:
-		{
-			or_<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 1:
-		{
-			or_<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		case 2:
-		{
-			or_<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
-			break;
-		}
-		default:
-			throw "ori: invalid size";
-		}
+		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::ORI;
 	}
 
@@ -1321,8 +1130,39 @@ namespace mc68000
 		return instructions::SCC;
 	}
 
-	unsigned short Cpu::sub(unsigned short)
+	// ==========
+	// SUB
+	// ==========
+	unsigned short Cpu::sub(unsigned short opcode)
 	{
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
+
+		uint16_t size = (opcode >> 6) & 0b111;
+		switch (size)
+		{
+		case 0:
+			sub<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 1:
+			sub<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 2:
+			sub<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+			break;
+		case 4:
+			sub<uint8_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 5:
+			sub<uint16_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		case 6:
+			sub<uint32_t>(destinationEffectiveAdress, sourceEffectiveAddress);
+			break;
+		default:
+			throw "sub: invalid size";
+		}
+
 		return instructions::SUB;
 	}
 
