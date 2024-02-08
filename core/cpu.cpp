@@ -2,6 +2,7 @@
 #include "instructions.h"
 #include "cpu.h"
 #include <iostream>
+#include <cassert>
 
 namespace mc68000
 {
@@ -302,7 +303,6 @@ namespace mc68000
 	// ==========
 	// ANDI to CCR
 	// ==========
-
 	unsigned short Cpu::andi2ccr(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
@@ -319,18 +319,72 @@ namespace mc68000
 	{
 		return instructions::ANDI2SR;
 	}
-	unsigned short Cpu::asl_memory(unsigned short)
+	// ==========
+	// ASL
+	// ==========
+	unsigned short Cpu::asl_memory(unsigned short opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t bit15 = memory & 0x8000;
+		memory <<= 1;
+		writeAt<uint16_t>(effectiveAddress, memory);
+		statusRegister.c = statusRegister.x = bit15 ? 1 : 0;
 		return instructions::ASL;
 	}
 
-	unsigned short Cpu::asl_register(unsigned short)
+	unsigned short Cpu::asl_register(unsigned short opcode)
 	{
+		uint16_t destinationRegister = opcode & 0b111;
+		bool isFromRegister = opcode & 0b100000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
+		uint16_t shift = numberOrRegister;
+		if (isFromRegister)
+		{
+			shift = dRegisters[numberOrRegister] % 64;
+		}
+		switch (size)
+		{
+			case 0:
+			{
+				asl<uint8_t>(destinationRegister, shift);
+				break;
+			}
+			case 1:
+			{
+				asl<uint16_t>(destinationRegister, shift);
+				break;
+			}
+			case 2:
+			{
+				asl<uint32_t>(destinationRegister, shift);
+				break;
+			}
+			default:
+			{
+				assert("asl_register: wrong size");
+			}
+		}
 		return instructions::ASL;
 	}
 
-	unsigned short Cpu::asr_memory(unsigned short)
+	// ==========
+	// ASR
+	// ==========
+	unsigned short Cpu::asr_memory(unsigned short opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t bit15 = memory & 0x8000;
+		uint16_t bit0 = memory & 1;
+		memory >>= 1;
+		if (bit15)
+		{
+			memory |= 0x8000;
+		}
+		writeAt<uint16_t>(effectiveAddress, memory);
+		statusRegister.c = statusRegister.x = bit0;
 		return instructions::ASR;
 	}
 
@@ -924,7 +978,7 @@ namespace mc68000
 	unsigned short Cpu::movea(unsigned short opcode)
 	{
 		unsigned short size = opcode >> 12;
-		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+		unsigned short sourceEffectiveAddress = opcode & 0b111'111u;
 
 		// the destination is inverted: register - mode instead of mode - register
 		uint16_t destinationRegister = (opcode >> 9) & 0b111u;
@@ -969,8 +1023,14 @@ namespace mc68000
 		return instructions::MOVE2CCR;
 	}
 
-	unsigned short Cpu::movesr(unsigned short)
+	// ==========
+	// MOVE from SR
+	// ==========
+	unsigned short Cpu::movesr(unsigned short opcode)
 	{
+		unsigned short effectiveAddress = opcode & 0b111'111u;
+		writeAt<uint16_t>(effectiveAddress, sr);
+
 		return instructions::MOVESR;
 	}
 

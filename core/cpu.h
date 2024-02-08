@@ -6,14 +6,51 @@ namespace mc68000
 {
 	struct StatusRegister
 	{
-		uint8_t c : 1;
-		uint8_t v : 1;
-		uint8_t z : 1;
-		uint8_t n : 1;
+		uint16_t t : 1;
+		uint16_t s : 1;
+		uint16_t i : 3;
 		uint8_t x : 1;
+		uint8_t n : 1;
+		uint8_t z : 1;
+		uint8_t v : 1;
+		uint8_t c : 1;
 		StatusRegister()
 		{
+			t = s = i = 0;
 			c = v = z = n = x = 0;
+		}
+		StatusRegister& operator=(int8_t ccr)
+		{
+			c = (ccr & 0x01);
+			v = (ccr & 0x02) >> 1;
+			z = (ccr & 0x04) >> 2;
+			n = (ccr & 0x08) >> 3;
+			x = (ccr & 0x10) >> 4;
+			return *this;
+		}
+		StatusRegister& operator=(int16_t sr)
+		{
+			c = sr & 0x1;
+			v = (sr & 0x0002) >> 1;
+			z = (sr & 0x0004) >> 2;
+			n = (sr & 0x0008) >> 3;
+			x = (sr & 0x0010) >> 4;
+			i = (sr & 0x0700) >> 8;
+			s = (sr & 0x2000) >> 13;
+			t = (sr & 0x8000) >> 15;
+			return *this;
+		}
+
+		operator uint8_t() const
+		{
+			uint8_t ccr = (x << 4) | (n << 3) | (z << 2) | (v << 1) | c;
+			return ccr;
+		}
+
+		operator uint16_t() const
+		{
+			uint16_t sr = (t << 15) | (s << 13) | (i << 8) | (x << 4) | (n << 3) | (z << 2) | (v << 1) | c;
+			return sr;
 		}
 	};
 
@@ -188,6 +225,7 @@ namespace mc68000
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
+		template <typename T> void asl(uint16_t destinationRegister, uint32_t shift);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
