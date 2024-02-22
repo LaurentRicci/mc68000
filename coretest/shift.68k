@@ -1,0 +1,14 @@
+* -------------
+* ASR ASL
+* ------------- shift_memory
+    ORG    $1000
+start:
+    move #data, a3
+    asr (a3)
+    move (a3),d3
+    asl (a3)
+    move (a3), d2
+    trap #0
+    SIMHALT
+data: dc.w   $87f3
+    END    START

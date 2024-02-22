@@ -49,6 +49,87 @@ BOOST_AUTO_TEST_CASE(a_sr)
 
 }
 
+BOOST_AUTO_TEST_CASE(sr_init)
+{
+	StatusRegister sr;
+
+	BOOST_CHECK_EQUAL(0, sr.c);
+	BOOST_CHECK_EQUAL(0, sr.v);
+	BOOST_CHECK_EQUAL(0, sr.z);
+	BOOST_CHECK_EQUAL(0, sr.n);
+	BOOST_CHECK_EQUAL(0, sr.x);
+	BOOST_CHECK_EQUAL(0, sr.i);
+	BOOST_CHECK_EQUAL(0, sr.s);
+	BOOST_CHECK_EQUAL(0, sr.t);
+
+}
+
+BOOST_AUTO_TEST_CASE(sr_from_int1)
+{
+	StatusRegister sr;
+
+	sr = (int16_t) 0b1010'0110'0001'0110;
+
+	BOOST_CHECK_EQUAL(0, sr.c);
+	BOOST_CHECK_EQUAL(1, sr.v);
+	BOOST_CHECK_EQUAL(1, sr.z);
+	BOOST_CHECK_EQUAL(0, sr.n);
+	BOOST_CHECK_EQUAL(1, sr.x);
+	BOOST_CHECK_EQUAL(6, sr.i);
+	BOOST_CHECK_EQUAL(1, sr.s);
+	BOOST_CHECK_EQUAL(1, sr.t);
+}
+
+BOOST_AUTO_TEST_CASE(sr_from_int2)
+{
+	StatusRegister sr;
+
+	sr = (int16_t)0b0101'1001'1110'1001;
+
+	BOOST_CHECK_EQUAL(1, sr.c);
+	BOOST_CHECK_EQUAL(0, sr.v);
+	BOOST_CHECK_EQUAL(0, sr.z);
+	BOOST_CHECK_EQUAL(1, sr.n);
+	BOOST_CHECK_EQUAL(0, sr.x);
+	BOOST_CHECK_EQUAL(1, sr.i);
+	BOOST_CHECK_EQUAL(0, sr.s);
+	BOOST_CHECK_EQUAL(0, sr.t);
+}
+
+BOOST_AUTO_TEST_CASE(sr_to_int1)
+{
+	StatusRegister sr;
+
+	sr.c = 0;
+	sr.v = 1;
+	sr.z = 1;
+	sr.n = 0;
+	sr.x = 1;
+	sr.i = 6;
+	sr.s = 1;
+	sr.t = 1;
+
+	uint16_t value = sr;
+	BOOST_CHECK_EQUAL(0b1010'0110'0001'0110, value);
+}
+
+BOOST_AUTO_TEST_CASE(sr_to_int2)
+{
+	StatusRegister sr;
+
+	sr.c = 1;
+	sr.v = 0;
+	sr.z = 0;
+	sr.n = 1;
+	sr.x = 0;
+	sr.i = 1;
+	sr.s = 0;
+	sr.t = 0;
+
+	uint16_t value = sr;
+	BOOST_CHECK_EQUAL(0b0000'0001'0000'1001, value);
+}
+
 void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(const Cpu& c))
 {
 	// Arrange
@@ -976,6 +1057,26 @@ BOOST_AUTO_TEST_CASE(a_move2ccr_2)
 			BOOST_CHECK_EQUAL(0, cpu.sr.z);
 			BOOST_CHECK_EQUAL(1, cpu.sr.v);
 			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(sr_movefromsr)
+{
+	unsigned char code[] = {
+		0x44, 0xfc, 0x00, 0x15,    // move #21, CCR
+		0x40, 0xc0,                // move sr,d0
+		0x44, 0xfc, 0x00, 0x03,    // move #3, CCR
+		0x40, 0xc1,                // move sr,d1
+		0x44, 0xfc, 0x00, 0x04,    // move #4, CCR
+		0x40, 0xc2,                // move sr,d2
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(21, cpu.d0);
+			BOOST_CHECK_EQUAL(3, cpu.d1);
+			BOOST_CHECK_EQUAL(4, cpu.d2);
 		});
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -10,6 +10,26 @@ namespace mc68000
 	template <> int32_t signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
 
+	template <typename T> T mostSignificantBit(T value);
+
+	template <> uint8_t  mostSignificantBit<uint8_t>(uint8_t value)   { return value & 0x80; }
+	template <> uint16_t mostSignificantBit<uint16_t>(uint16_t value) { return value & 0x8000; }
+	template <> uint32_t mostSignificantBit<uint32_t>(uint32_t value) { return value & 0x80000000; }
+
+	template <typename T> bool isMostSignificantBitSet(T value);
+	template <> bool  isMostSignificantBitSet<uint8_t>(uint8_t value)  { return value & 0x80; }
+	template <> bool isMostSignificantBitSet<uint16_t>(uint16_t value) { return value & 0x8000; }
+	template <> bool isMostSignificantBitSet<uint32_t>(uint32_t value) { return value & 0x80000000; }
+
+	template <typename T> T subPart(uint32_t value);
+	template <> uint8_t  subPart<uint8_t>(uint32_t value)  { return value & 0xff; }
+	template <> uint16_t subPart<uint16_t>(uint32_t value) { return value & 0xffff; }
+	template <> uint32_t subPart<uint32_t>(uint32_t value) { return value; }
+
+	template <typename T> uint32_t setSubPart(uint32_t& current, T value);
+	template <> uint32_t setSubPart<uint8_t>(uint32_t& current, uint8_t value)   { current = (current & 0xffffff00) | value; return current; }
+	template <> uint32_t setSubPart<uint16_t>(uint32_t& current, uint16_t value) { current = (current & 0xffff0000) | value; return current; }
+	template <> uint32_t setSubPart<uint32_t>(uint32_t& current, uint32_t value) { current = value; return current; }
 	// ==========
 	// ADD
 	// ==========
@@ -53,6 +73,56 @@ namespace mc68000
 	template void Cpu::addq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+
+	// ==========
+	// ASL
+	// ==========
+	template <typename T> void Cpu::asl(uint16_t destinationRegister, uint32_t shift)
+	{
+		T data = subPart<T>(dRegisters[destinationRegister]);
+		bool c = false;
+		bool v = false;
+		for (auto i = 0; i < shift; i++)
+		{
+			c = isMostSignificantBitSet(data);
+			data <<= 1;
+			v = v | (c ^ (isMostSignificantBitSet(data)));
+		}
+		statusRegister.n = signed_cast<T>(data) < 0;
+		statusRegister.z = data == 0;
+		statusRegister.c = c ? 1 : 0;
+		if (shift) statusRegister.x = statusRegister.c;
+		statusRegister.v = v ? 1 : 0;
+		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], data);
+	}
+	template void Cpu::asl<uint8_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::asl<uint16_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::asl<uint32_t>(uint16_t destinationRegister, uint32_t shift);
+
+	// ==========
+	// ASR
+	// ==========
+	template <typename T> void Cpu::asr(uint16_t destinationRegister, uint32_t shift)
+	{
+		T data = subPart<T>(dRegisters[destinationRegister]);
+		T c = 0;
+		for (auto i = 0; i < shift; i++)
+		{
+			c = data & 1;
+			T msb = mostSignificantBit(data);
+			data >>= 1;
+			data |= msb;
+		}
+		statusRegister.n = signed_cast<T>(data) < 0;
+		statusRegister.z = data == 0;
+		statusRegister.c = c ? 1 : 0;
+		if (shift) statusRegister.x = statusRegister.c;
+		statusRegister.v = 0;
+		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], data);
+	}
+	template void Cpu::asr<uint8_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::asr<uint16_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::asr<uint32_t>(uint16_t destinationRegister, uint32_t shift);
 
 	// =========
 	// LOGICAL Operations
