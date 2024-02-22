@@ -388,8 +388,39 @@ namespace mc68000
 		return instructions::ASR;
 	}
 
-	unsigned short Cpu::asr_register(unsigned short)
+	unsigned short Cpu::asr_register(unsigned short opcode)
 	{
+		uint16_t destinationRegister = opcode & 0b111;
+		bool isFromRegister = opcode & 0b100000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
+		uint16_t shift = numberOrRegister;
+		if (isFromRegister)
+		{
+			shift = dRegisters[numberOrRegister] % 64;
+		}
+		switch (size)
+		{
+			case 0:
+			{
+				asr<uint8_t>(destinationRegister, shift);
+				break;
+			}
+			case 1:
+			{
+				asr<uint16_t>(destinationRegister, shift);
+				break;
+			}
+			case 2:
+			{
+				asr<uint32_t>(destinationRegister, shift);
+				break;
+			}
+			default:
+			{
+				assert("asr_register: wrong size");
+			}
+		}
 		return instructions::ASR;
 	}
 

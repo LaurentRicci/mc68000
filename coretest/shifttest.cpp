@@ -8,17 +8,17 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_shift)
 // ===================================================
 // ASL tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(shift_memory)
+BOOST_AUTO_TEST_CASE(shift_memory_left)
 {
 	unsigned char code[] = {
 		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
 		0xe0, 0xd3,                //   asr  (a3)
 		0x36, 0x13,                //   move (a3), d3
 		0xe1, 0xd3,                //   asl  (a3)
-		0x34, 0x13,                //   move (a3), d4
+		0x34, 0x13,                //   move (a3), d2
 		0x4e, 0x40,                //   trap   #0
 		0xff, 0xff, 0xff, 0xff,    // 
-		0x87, 0xf3 };              // value: dc.w $87f3
+		0x87, 0xf3 };              // data: dc.w $87f3
 
 	// Arrange
 	memory memory(256, 0x1000, code, sizeof(code));
@@ -117,4 +117,119 @@ BOOST_AUTO_TEST_CASE(shift_left_l)
 	BOOST_CHECK_EQUAL(1, cpu.sr.v);
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
+
+// ===================================================
+// ASR tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(shift_memory_right)
+{
+	unsigned char code[] = {
+		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
+		0xe1, 0xd3,                //   asl  (a3)
+		0x36, 0x13,                //   move (a3), d3
+		0xe0, 0xd3,                //   asr  (a3)
+		0x34, 0x13,                //   move (a3), d2
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff, 0xff, 0xff,    // 
+		0x87, 0xf3 };              // data: dc.w $87f3
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x0fe6, cpu.d3);
+	BOOST_CHECK_EQUAL(0x07f3, cpu.d2);
+	BOOST_CHECK_EQUAL(0x1012, cpu.a3);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_b)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
+		0xe2, 0x00,                            //   asr.b #1, d0
+		0x4e, 0x40,                            //   trap   #0
+		0xff, 0xff, 0xff, 0xff,                // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x1234563C, cpu.d0);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_w)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
+		0xe2, 0x40,                            //   asr.w #3, d0
+		0x4e, 0x40,                            //   trap   #0
+		0xff, 0xff, 0xff, 0xff,                // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12342B3C, cpu.d0);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_l)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
+		0x12, 0x3c, 0x00, 0x07,                //   move.b #7, d1 
+		0xe2, 0xa0,                            //   asr.l d1, d0
+		0x4e, 0x40,                            //   trap   #0
+		0xff, 0xff, 0xff, 0xff,                // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x002468AC, cpu.d0);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
