@@ -231,5 +231,38 @@ BOOST_AUTO_TEST_CASE(shift_right_l)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
+// ===================================================
+// LSL tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(shift_memory_left_logical)
+{
+	unsigned char code[] = {
+		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
+		0xe2, 0xd3,                //   asr  (a3)
+		0x36, 0x13,                //   move (a3), d3
+		0xe3, 0xd3,                //   asl  (a3)
+		0x34, 0x13,                //   move (a3), d2
+		0x4e, 0x40,                //   trap   #0
+		0xff, 0xff, 0xff, 0xff,    // 
+		0x87, 0xf3 };              // data: dc.w $87f3
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x43F9, cpu.d3);
+	BOOST_CHECK_EQUAL(0x87F2, cpu.d2);
+	BOOST_CHECK_EQUAL(0x1012, cpu.a3);
+	BOOST_CHECK_EQUAL(0, cpu.sr.c);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(0, cpu.sr.x);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

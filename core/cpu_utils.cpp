@@ -125,6 +125,21 @@ namespace mc68000
 	template void Cpu::asr<uint32_t>(uint16_t destinationRegister, uint32_t shift);
 
 	// =========
+	// SHIFT Operations
+	// =========
+	uint16_t Cpu::shiftLeftMemory(uint16_t opcode, uint16_t instruction)
+	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t bit15 = memory & 0x8000;
+		memory <<= 1;
+		writeAt<uint16_t>(effectiveAddress, memory);
+		statusRegister.c = statusRegister.x = bit15 ? 1 : 0;
+
+		return instruction;
+	}
+
+	// =========
 	// LOGICAL Operations
 	// =========
 	template <typename T> void Cpu::logical(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress, uint32_t (*op)(uint32_t lhs, uint32_t rhs))

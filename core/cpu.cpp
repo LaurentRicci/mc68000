@@ -324,13 +324,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::asl_memory(unsigned short opcode)
 	{
-		uint16_t effectiveAddress = opcode & 0b111'111;
-		uint16_t memory = readAt<uint16_t>(effectiveAddress);
-		uint16_t bit15 = memory & 0x8000;
-		memory <<= 1;
-		writeAt<uint16_t>(effectiveAddress, memory);
-		statusRegister.c = statusRegister.x = bit15 ? 1 : 0;
-		return instructions::ASL;
+		return shiftLeftMemory(opcode, instructions::ASL);
 	}
 
 	unsigned short Cpu::asl_register(unsigned short opcode)
@@ -951,9 +945,12 @@ namespace mc68000
 		return instructions::LINK;
 	}
 
-	unsigned short Cpu::lsl_memory(unsigned short)
+	// ==========
+	// LSL
+	// ==========
+	unsigned short Cpu::lsl_memory(unsigned short opcode)
 	{
-		return instructions::LSL;
+		return shiftLeftMemory(opcode, instructions::LSL);
 	}
 
 	unsigned short Cpu::lsl_register(unsigned short)
@@ -961,8 +958,18 @@ namespace mc68000
 		return instructions::LSL;
 	}
 
-	unsigned short Cpu::lsr_memory(unsigned short)
+	// ==========
+	// LSR
+	// ==========
+	unsigned short Cpu::lsr_memory(unsigned short opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t bit0 = memory & 1;
+		memory >>= 1;
+		memory &= 0x7fff;
+		writeAt<uint16_t>(effectiveAddress, memory);
+		statusRegister.c = statusRegister.x = bit0;
 		return instructions::LSR;
 	}
 
