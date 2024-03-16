@@ -329,38 +329,7 @@ namespace mc68000
 
 	unsigned short Cpu::asl_register(unsigned short opcode)
 	{
-		uint16_t destinationRegister = opcode & 0b111;
-		bool isFromRegister = opcode & 0b100000;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
-		uint16_t shift = numberOrRegister;
-		if (isFromRegister)
-		{
-			shift = dRegisters[numberOrRegister] % 64;
-		}
-		switch (size)
-		{
-			case 0:
-			{
-				asl<uint8_t>(destinationRegister, shift);
-				break;
-			}
-			case 1:
-			{
-				asl<uint16_t>(destinationRegister, shift);
-				break;
-			}
-			case 2:
-			{
-				asl<uint32_t>(destinationRegister, shift);
-				break;
-			}
-			default:
-			{
-				assert("asl_register: wrong size");
-			}
-		}
-		return instructions::ASL;
+		return shiftLeftRegister(opcode, instructions::ASL);
 	}
 
 	// ==========
@@ -384,38 +353,7 @@ namespace mc68000
 
 	unsigned short Cpu::asr_register(unsigned short opcode)
 	{
-		uint16_t destinationRegister = opcode & 0b111;
-		bool isFromRegister = opcode & 0b100000;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
-		uint16_t shift = numberOrRegister;
-		if (isFromRegister)
-		{
-			shift = dRegisters[numberOrRegister] % 64;
-		}
-		switch (size)
-		{
-			case 0:
-			{
-				asr<uint8_t>(destinationRegister, shift);
-				break;
-			}
-			case 1:
-			{
-				asr<uint16_t>(destinationRegister, shift);
-				break;
-			}
-			case 2:
-			{
-				asr<uint32_t>(destinationRegister, shift);
-				break;
-			}
-			default:
-			{
-				assert("asr_register: wrong size");
-			}
-		}
-		return instructions::ASR;
+		return shiftRightRegister(opcode, instructions::ASR, false);
 	}
 
 	// ==========
@@ -953,9 +891,9 @@ namespace mc68000
 		return shiftLeftMemory(opcode, instructions::LSL);
 	}
 
-	unsigned short Cpu::lsl_register(unsigned short)
+	unsigned short Cpu::lsl_register(unsigned short opcode)
 	{
-		return instructions::LSL;
+		return shiftLeftRegister(opcode, instructions::LSL);
 	}
 
 	// ==========
@@ -973,9 +911,9 @@ namespace mc68000
 		return instructions::LSR;
 	}
 
-	unsigned short Cpu::lsr_register(unsigned short)
+	unsigned short Cpu::lsr_register(unsigned short opcode)
 	{
-		return instructions::LSR;
+		return shiftRightRegister(opcode, instructions::LSR, true);
 	}
 
 	// ==========

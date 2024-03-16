@@ -222,12 +222,15 @@ namespace mc68000
 		template <typename T> void logical(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress, uint32_t(*op)(uint32_t, uint32_t));
 		void logical(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t, uint32_t));
 		void logicalImmediate(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t, uint32_t));
+
+		template <typename T> void shiftLeft(uint16_t destinationRegister, uint32_t shift);
+		template <typename T> void shiftRight(uint16_t destinationRegister, uint32_t shift, bool logical);
 		uint16_t shiftLeftMemory(uint16_t opcode, uint16_t instruction);
+		uint16_t shiftLeftRegister(uint16_t opcode, uint16_t instruction);
+		uint16_t shiftRightRegister(uint16_t opcode, uint16_t instruction, bool logical);
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
-		template <typename T> void asl(uint16_t destinationRegister, uint32_t shift);
-		template <typename T> void asr(uint16_t destinationRegister, uint32_t shift);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
