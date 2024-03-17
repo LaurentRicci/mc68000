@@ -1,6 +1,6 @@
 * -------------
 * ASR ASL
-* ------------- shift_memory
+* ------------- 
     ORG    $1000
 start:
     move #data, a3
@@ -11,4 +11,84 @@ start:
     trap #0
     SIMHALT
 data: dc.w   $87f3
+    END    START
+
+* -------------
+* LSL
+* ------------- 
+    ORG    $1000
+start:
+    move #data, a3
+	lsr  (a3)
+	move (a3), d3
+	lsl  (a3)
+	move (a3), d2
+	trap   #0
+    SIMHALT
+data: dc.w $87f3
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$12345678, d0
+    lsl.b #1, d0
+    trap #0
+    SIMHALT
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$12345678, d0
+    lsl.w #3, d0
+    trap #0
+    SIMHALT
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$12345678, d0
+    move.b #7,d1
+    lsl.l d1, d0
+    trap #0
+    SIMHALT
+    END    START
+
+* -------------
+* LSR
+* ------------- 
+    ORG    $1000
+start:
+    move #data, a3
+	lsl  (a3)
+	move (a3), d3
+	lsr  (a3)
+	move (a3), d2
+	trap   #0
+    SIMHALT
+data: dc.w $87f3
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$1234569A, d0
+    lsr.b #1, d0
+    trap #0
+    SIMHALT
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$12349ABC, d0
+    lsr.w #3, d0
+    trap #0
+    SIMHALT
+    END    START
+* ------------- 
+    ORG    $1000
+start:
+    move.l #$9ABC1234, d0
+    move.b #7,d1
+    lsr.l d1, d0
+    trap #0
+    SIMHALT
     END    START

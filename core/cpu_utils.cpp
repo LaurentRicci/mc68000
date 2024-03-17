@@ -1,6 +1,7 @@
 #include "core.h"
 #include "instructions.h"
 #include "cpu.h"
+#include <cassert>
 
 namespace mc68000
 {
@@ -75,14 +76,14 @@ namespace mc68000
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 
 	// ==========
-	// ASL
+	// shiftLeft ASL LSL
 	// ==========
-	template <typename T> void Cpu::asl(uint16_t destinationRegister, uint32_t shift)
+	template <typename T> void Cpu::shiftLeft(uint16_t destinationRegister, uint32_t shift)
 	{
 		T data = subPart<T>(dRegisters[destinationRegister]);
 		bool c = false;
 		bool v = false;
-		for (auto i = 0; i < shift; i++)
+		for (uint32_t i = 0; i < shift; i++)
 		{
 			c = isMostSignificantBitSet(data);
 			data <<= 1;
@@ -95,21 +96,21 @@ namespace mc68000
 		statusRegister.v = v ? 1 : 0;
 		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], data);
 	}
-	template void Cpu::asl<uint8_t>(uint16_t destinationRegister, uint32_t shift);
-	template void Cpu::asl<uint16_t>(uint16_t destinationRegister, uint32_t shift);
-	template void Cpu::asl<uint32_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::shiftLeft<uint8_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::shiftLeft<uint16_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::shiftLeft<uint32_t>(uint16_t destinationRegister, uint32_t shift);
 
 	// ==========
-	// ASR
+	// shiftRight ASR LSR
 	// ==========
-	template <typename T> void Cpu::asr(uint16_t destinationRegister, uint32_t shift)
+	template <typename T> void Cpu::shiftRight(uint16_t destinationRegister, uint32_t shift, bool logical)
 	{
 		T data = subPart<T>(dRegisters[destinationRegister]);
 		T c = 0;
-		for (auto i = 0; i < shift; i++)
+		T msb = logical ? 0 : mostSignificantBit(data); // LSR push 0 while ASR keep the msb
+		for (uint32_t i = 0; i < shift; i++)
 		{
 			c = data & 1;
-			T msb = mostSignificantBit(data);
 			data >>= 1;
 			data |= msb;
 		}
@@ -120,9 +121,98 @@ namespace mc68000
 		statusRegister.v = 0;
 		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], data);
 	}
-	template void Cpu::asr<uint8_t>(uint16_t destinationRegister, uint32_t shift);
-	template void Cpu::asr<uint16_t>(uint16_t destinationRegister, uint32_t shift);
-	template void Cpu::asr<uint32_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::shiftRight<uint8_t>(uint16_t destinationRegister, uint32_t shift, bool logical);
+	template void Cpu::shiftRight<uint16_t>(uint16_t destinationRegister, uint32_t shift, bool logical);
+	template void Cpu::shiftRight<uint32_t>(uint16_t destinationRegister, uint32_t shift, bool logical);
+
+	// =========
+	// SHIFT Operations
+	// =========
+	uint16_t Cpu::shiftLeftMemory(uint16_t opcode, uint16_t instruction)
+	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t bit15 = memory & 0x8000;
+		memory <<= 1;
+		writeAt<uint16_t>(effectiveAddress, memory);
+		statusRegister.c = statusRegister.x = bit15 ? 1 : 0;
+
+		return instruction;
+	}
+
+	uint16_t Cpu::shiftLeftRegister(uint16_t opcode, uint16_t instruction)
+	{
+		uint16_t destinationRegister = opcode & 0b111;
+		bool isFromRegister = opcode & 0b100000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
+		uint16_t shift = numberOrRegister;
+		if (isFromRegister)
+		{
+			shift = dRegisters[numberOrRegister] % 64;
+		}
+		switch (size)
+		{
+			case 0:
+			{
+				shiftLeft<uint8_t>(destinationRegister, shift);
+				break;
+			}
+			case 1:
+			{
+				shiftLeft<uint16_t>(destinationRegister, shift);
+				break;
+			}
+			case 2:
+			{
+				shiftLeft<uint32_t>(destinationRegister, shift);
+				break;
+			}
+			default:
+			{
+				assert("shiftLeftRegister: wrong size");
+			}
+		}
+
+		return instruction;
+	}
+
+	unsigned short Cpu::shiftRightRegister(unsigned short opcode, uint16_t instruction, bool logical)
+	{
+		uint16_t destinationRegister = opcode & 0b111;
+		bool isFromRegister = opcode & 0b100000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t numberOrRegister = (opcode >> 9) & 0b111;
+		uint16_t shift = numberOrRegister;
+		if (isFromRegister)
+		{
+			shift = dRegisters[numberOrRegister] % 64;
+		}
+		switch (size)
+		{
+			case 0:
+			{
+				shiftRight<uint8_t>(destinationRegister, shift, logical);
+				break;
+			}
+			case 1:
+			{
+				shiftRight<uint16_t>(destinationRegister, shift, logical);
+				break;
+			}
+			case 2:
+			{
+				shiftRight<uint32_t>(destinationRegister, shift, logical);
+				break;
+			}
+			default:
+			{
+				assert("asr_register: wrong size");
+			}
+		}
+		return instruction;
+	}
+
 
 	// =========
 	// LOGICAL Operations
