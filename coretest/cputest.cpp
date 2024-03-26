@@ -1,8 +1,40 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
+#include "coretest.h"
 
 using namespace mc68000;
+
+void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(const Cpu& c))
+{
+	// Arrange
+	memory memory(256, 0, code, size);
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	assertFunctor(cpu);
+}
+
+void verifyExecution(const uint8_t* code, uint32_t size, uint32_t baseAddress, void (*assertFunctor)(const Cpu& c))
+{
+	// Arrange
+	memory memory(256, baseAddress, code, size);
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(baseAddress);
+
+	// Assert
+	assertFunctor(cpu);
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE(cpuSuite)
 
@@ -130,33 +162,7 @@ BOOST_AUTO_TEST_CASE(sr_to_int2)
 	BOOST_CHECK_EQUAL(0b0000'0001'0000'1001, value);
 }
 
-void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(const Cpu& c))
-{
-	// Arrange
-	memory memory(256, 0, code, size);
-	Cpu cpu(memory);
 
-	// Act
-	cpu.reset();
-	cpu.start(0);
-
-	// Assert
-	assertFunctor(cpu);
-}
-
-void verifyExecution(const uint8_t* code, uint32_t size, uint32_t baseAddress, void (*assertFunctor)(const Cpu& c))
-{
-	// Arrange
-	memory memory(256, baseAddress, code, size);
-	Cpu cpu(memory);
-
-	// Act
-	cpu.reset();
-	cpu.start(baseAddress);
-
-	// Assert
-	assertFunctor(cpu);
-}
 
 void validateSR(const Cpu& cpu, int x, int n, int z, int v, int c)
 {
