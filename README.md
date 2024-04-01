@@ -7,14 +7,24 @@ If you are running on windows, make sure that the boost library is installed in 
 push-location C:\code\lib
 New-Item -Name boost -ItemType SymbolicLink -Value .\boost_1_82_0\
 ```
+If you are running on linux the boost library should be present in /usr/include/boost. If you have a specific version insatlled you can create a link by doing:
+```
+cd /usr/include
+sudo ln -s boost_1_84_0/ boost
+```
+
 # Build and Test
 To create the makefile just run the following command:
 ```
 cmake .
 ```
-on linux run
+To build the code just do
 ```
-cmake .
+cmake --build .
+```
+To run the tests
+```
+coretest/coretest -p
 ```
 
 
