@@ -508,7 +508,7 @@ namespace mc68000
 	// ==========
 	// BCHG
 	// ==========
-	void Cpu::bchg(uint16_t opcode, uint32_t bit)
+	void Cpu::bchg(uint16_t opcode, uint32_t bit, BitOperation operation)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		if ((opcode & 0b111'000) == 0)
@@ -517,7 +517,13 @@ namespace mc68000
 			uint32_t bitToTest = 1 << (bit & 0x1f);
 			uint32_t& data = dRegisters[opcode & 0b111];
 			statusRegister.z = (data & bitToTest) == 0;
-			data ^= bitToTest;
+			switch (operation)
+			{
+				case BCLR: data &= ~bitToTest; break;
+				case BSET: data |= bitToTest; break;
+				case BCHG: data ^= bitToTest; break;
+				case BTST: break;
+			}
 		}
 		else
 		{
@@ -536,45 +542,65 @@ namespace mc68000
 				data = readAt<uint8_t>(opcode & 0b111'111);
 			}
 			statusRegister.z = (data & bitToTest) == 0;
-			data ^= bitToTest;
+			switch (operation)
+			{
+				case BCLR: data &= ~bitToTest; break;
+				case BSET: data |= bitToTest; break;
+				case BCHG: data ^= bitToTest; break;
+				case BTST: break;
+			}
 			writeAt<uint8_t>(opcode & 0b111'111, data);
 		}
 	}
-
-
 
 	unsigned short Cpu::bchg_r(unsigned short opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t bit = dRegisters[reg];
-		bchg(opcode, bit);
+		bchg(opcode, bit,BCHG);
 		return instructions::BCHG_R;
 	}
 
 	unsigned short Cpu::bchg_i(unsigned short opcode)
 	{
 		uint8_t bit = readAt<uint8_t>(0b111'100);
-		bchg(opcode, bit);
+		bchg(opcode, bit, BCHG);
 		return instructions::BCHG_I;
 	}
 
-	unsigned short Cpu::bclr_r(unsigned short)
+	// ==========
+	// BCLR
+	// ==========
+	unsigned short Cpu::bclr_r(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		uint32_t bit = dRegisters[reg];
+		bchg(opcode, bit, BCLR);
 		return instructions::BCLR_R;
 	}
 
-	unsigned short Cpu::bclr_i(unsigned short)
+	unsigned short Cpu::bclr_i(unsigned short opcode)
 	{
+		uint8_t bit = readAt<uint8_t>(0b111'100);
+		bchg(opcode, bit, BCLR);
 		return instructions::BCLR_I;
 	}
 
-	unsigned short Cpu::bset_r(unsigned short)
+	// ==========
+	// BSET
+	// ==========
+	unsigned short Cpu::bset_r(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		uint32_t bit = dRegisters[reg];
+		bchg(opcode, bit, BSET);
 		return instructions::BSET_R;
 	}
 
-	unsigned short Cpu::bset_i(unsigned short)
+	unsigned short Cpu::bset_i(unsigned short opcode)
 	{
+		uint8_t bit = readAt<uint8_t>(0b111'100);
+		bchg(opcode, bit, BSET);
 		return instructions::BSET_I;
 	}
 
@@ -583,13 +609,21 @@ namespace mc68000
 		return instructions::BSR;
 	}
 
-	unsigned short Cpu::btst_r(unsigned short)
+	// ==========
+	// BTST
+	// ==========
+	unsigned short Cpu::btst_r(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		uint32_t bit = dRegisters[reg];
+		bchg(opcode, bit, BTST);
 		return instructions::BTST_R;
 	}
 
-	unsigned short Cpu::btst_i(unsigned short)
+	unsigned short Cpu::btst_i(unsigned short opcode)
 	{
+		uint8_t bit = readAt<uint8_t>(0b111'100);
+		bchg(opcode, bit, BTST);
 		return instructions::BTST_I;
 	}
 

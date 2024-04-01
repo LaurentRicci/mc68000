@@ -209,7 +209,17 @@ namespace mc68000
 	private:
 		using trapHandler_t = void (*)(uint32_t d0, uint32_t a0);
 		trapHandler_t trapHandlers[16];
-
+		//
+		// internal datastructures
+		// 
+	private:
+		enum BitOperation
+		{
+			BCLR,
+			BSET,
+			BCHG,
+			BTST
+		};
 		//
 		// internal helpers
 		//
@@ -232,7 +242,7 @@ namespace mc68000
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
-		void bchg(uint16_t opcode, uint32_t bit);
+		void bchg(uint16_t opcode, uint32_t bit, BitOperation operation);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 
