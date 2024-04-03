@@ -604,8 +604,28 @@ namespace mc68000
 		return instructions::BSET_I;
 	}
 
-	unsigned short Cpu::bsr(unsigned short)
+	// ==========
+	// BSR
+	// ==========
+	unsigned short Cpu::bsr(unsigned short opcode)
 	{
+		uint32_t currentPc = pc;
+		int32_t displacement;
+		uint8_t offset = opcode & 0xff;
+		if (offset)
+		{
+			displacement = (int8_t)offset;
+		}
+		else
+		{
+			uint16_t extension = localMemory.get<uint16_t>(pc);
+			pc += 2;
+			displacement = (int16_t)extension;
+		}
+		// The PC has been adjusted before being pushed onto the stack
+		writeAt<uint32_t>(0b100'111, pc);
+
+		pc = currentPc + displacement;
 		return instructions::BSR;
 	}
 
@@ -1233,8 +1253,12 @@ namespace mc68000
 		return instructions::RTR;
 	}
 
-	unsigned short Cpu::rts(unsigned short)
+	// ==========
+	// RTS
+	// ==========
+	unsigned short Cpu::rts(unsigned short opcode)
 	{
+		pc = readAt<uint32_t>(0b011'111);
 		return instructions::RTS;
 	}
 
