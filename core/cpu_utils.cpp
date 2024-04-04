@@ -384,7 +384,7 @@ namespace mc68000
 			else
 			{
 				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] += 1 ? 2 : sizeof(T);
+				aRegisters[reg] += sizeof(T) == 1 ? 2 : sizeof(T);
 			}
 			return x;
 		}
@@ -397,7 +397,7 @@ namespace mc68000
 			else
 			{
 				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] -= 1 ? 2 : sizeof(T);
+				aRegisters[reg] -= sizeof(T) == 1 ? 2 : sizeof(T);
 			}
 			uint32_t address = aRegisters[reg];
 			T x = localMemory.get<T>(address);
@@ -573,7 +573,7 @@ namespace mc68000
 			else
 			{
 				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] += 1 ? 2 : sizeof(T);
+				aRegisters[reg] += sizeof(T) == 1 ? 2 : sizeof(T);
 			}
 			break;
 		}
@@ -586,7 +586,7 @@ namespace mc68000
 			else
 			{
 				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] -= 1 ? 2 : sizeof(T);
+				aRegisters[reg] -= sizeof(T) == 1 ? 2 : sizeof(T);
 			}
 			uint32_t address = aRegisters[reg];
 			localMemory.set<T>(address, data);

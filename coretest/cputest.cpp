@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 		0x12, 0xC0,              //  copy       move.b  d0,(a1)+       ; Store D0 to(dst), incr dst
 		0x66, 0xE6,              //             bne     loop           ; Repeat while D0 <> NUL
 		0x4E, 0x5E,              //             unlk    a6             ; Restore stack frame
-		0x4E, 0x75,              //             rts                    ; Return
+		0x4E, 0x71,              //             nop                    ; Do nothing, there is nothing on the stack
 		0x4e, 0x40,              //             trap #0
 		0xff, 0xff,
 		'L', 'A', 'U', 'R', 0x00 };
