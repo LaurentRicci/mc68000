@@ -33,6 +33,7 @@ namespace mc68000
 		localMemory = memory;
 		handlers = setup<Cpu>();
 		for (int i = 0; i < 16; trapHandlers[i++] = nullptr);
+		chkHandlers = nullptr;
 	}
 
 	Cpu::~Cpu()
@@ -647,10 +648,31 @@ namespace mc68000
 		return instructions::BTST_I;
 	}
 
-	unsigned short Cpu::chk(unsigned short)
+	// ==========
+	// CHK
+	// ==========
+	unsigned short Cpu::chk(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int16_t value = (int16_t)(dRegisters[reg] & 0xffff);
+		uint16_t upperBound = readAt<uint16_t>(opcode & 0b111'111);
+		if (value < 0 || value > upperBound)
+		{
+			// The condition codes are set according to the result of the comparison.
+			statusRegister.n = (value < 0) ? 1 : 0;
+			if (chkHandlers != nullptr)
+			{
+				chkHandlers(value, upperBound);
+			}
+			else
+			{
+				done = true;
+			}
+		}
+
 		return instructions::CHK;
 	}
+
 	// ==========
 	// CLR
 	// ==========

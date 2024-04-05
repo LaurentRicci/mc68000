@@ -323,6 +323,10 @@ namespace mc68000
 	template void Cpu::sub<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::sub<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ==============
+	// Bcc utilities
+	// ==============
+
 	uint32_t Cpu::getTargetAddress(uint16_t opcode)
 	{
 		uint32_t address = pc;
@@ -342,6 +346,9 @@ namespace mc68000
 		return address;
 	}
 
+	// ==========
+	// CMP
+	// ==========
 	template <typename T> void Cpu::cmp(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
 		uint32_t source = readAt<T>(sourceEffectiveAddress);
@@ -357,6 +364,9 @@ namespace mc68000
 	template void Cpu::cmp<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::cmp<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ========================================
+	// Memory access through effective address
+	// ========================================
 	template <typename T> T Cpu::readAt(uint16_t ea)
 	{
 		unsigned short eam = ea >> 3;
