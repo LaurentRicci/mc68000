@@ -209,6 +209,7 @@ namespace mc68000
 	private:
 		using trapHandler_t = void (*)(uint32_t d0, uint32_t a0);
 		trapHandler_t trapHandlers[16];
+		trapHandler_t chkHandlers;
 		//
 		// internal datastructures
 		// 

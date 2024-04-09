@@ -33,6 +33,7 @@ namespace mc68000
 		localMemory = memory;
 		handlers = setup<Cpu>();
 		for (int i = 0; i < 16; trapHandlers[i++] = nullptr);
+		chkHandlers = nullptr;
 	}
 
 	Cpu::~Cpu()
@@ -647,10 +648,31 @@ namespace mc68000
 		return instructions::BTST_I;
 	}
 
-	unsigned short Cpu::chk(unsigned short)
+	// ==========
+	// CHK
+	// ==========
+	unsigned short Cpu::chk(unsigned short opcode)
 	{
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int16_t value = (int16_t)(dRegisters[reg] & 0xffff);
+		uint16_t upperBound = readAt<uint16_t>(opcode & 0b111'111);
+		if (value < 0 || value > upperBound)
+		{
+			// The condition codes are set according to the result of the comparison.
+			statusRegister.n = (value < 0) ? 1 : 0;
+			if (chkHandlers != nullptr)
+			{
+				chkHandlers(value, upperBound);
+			}
+			else
+			{
+				done = true;
+			}
+		}
+
 		return instructions::CHK;
 	}
+
 	// ==========
 	// CLR
 	// ==========
@@ -738,19 +760,19 @@ namespace mc68000
 	unsigned short Cpu::cmpi(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
 
 		uint16_t size = (opcode >> 6) & 0b11;
 		switch (size)
 		{
 			case 0:
-				cmp<uint8_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+				cmp<uint8_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 				break;
 			case 1:
-				cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+				cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 				break;
 			case 2:
-				cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAdress);
+				cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAddress);
 				break;
 			default:
 				throw "cmpi: invalid size";
@@ -759,8 +781,33 @@ namespace mc68000
 		return instructions::CMPI;
 	}
 
-	unsigned short Cpu::cmpm(unsigned short)
+	// ==========
+	// CMPM
+	// ==========
+	unsigned short Cpu::cmpm(unsigned short opcode)
 	{
+		uint16_t rx = (opcode >> 9) & 0b111;
+		uint16_t ry = opcode & 0b111;
+
+		uint16_t sourceEffectiveAddress = 0b011'000 | ry;
+		uint16_t destinationEffectiveAddress = 0b011'000 | rx;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			cmp<uint8_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+			break;
+		case 1:
+			cmp<uint16_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+			break;
+		case 2:
+			cmp<uint32_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+			break;
+		default:
+			assert(!"cmpm: invalid size" );
+		}
+
 		return instructions::CMPM;
 	}
 
