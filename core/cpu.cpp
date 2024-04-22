@@ -369,7 +369,7 @@ namespace mc68000
 	unsigned short Cpu::bhi(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!statusRegister.c && !statusRegister.z)
+		if (sr.hi())
 		{
 			pc = targetAddress;
 		}
@@ -379,7 +379,7 @@ namespace mc68000
 	unsigned short Cpu::bls(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.c | statusRegister.z)
+		if (sr.ls())
 		{
 			pc = targetAddress;
 		}
@@ -389,7 +389,7 @@ namespace mc68000
 	unsigned short Cpu::bcc(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!statusRegister.c)
+		if (sr.cc())
 		{
 			pc = targetAddress;
 		}
@@ -399,7 +399,7 @@ namespace mc68000
 	unsigned short Cpu::bcs(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.c)
+		if (sr.cs())
 		{
 			pc = targetAddress;
 		}
@@ -409,7 +409,7 @@ namespace mc68000
 	unsigned short Cpu::bne(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!statusRegister.z)
+		if (sr.ne())
 		{
 			pc = targetAddress;
 		}
@@ -419,7 +419,7 @@ namespace mc68000
 	unsigned short Cpu::beq(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.z)
+		if (sr.eq())
 		{
 			pc = targetAddress;
 		}
@@ -429,7 +429,7 @@ namespace mc68000
 	unsigned short Cpu::bvc(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!statusRegister.v)
+		if (sr.vc())
 		{
 			pc = targetAddress;
 		}
@@ -439,7 +439,7 @@ namespace mc68000
 	unsigned short Cpu::bvs(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.v)
+		if (sr.vs())
 		{
 			pc = targetAddress;
 		}
@@ -449,7 +449,7 @@ namespace mc68000
 	unsigned short Cpu::bpl(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!statusRegister.n)
+		if (sr.pl())
 		{
 			pc = targetAddress;
 		}
@@ -459,7 +459,7 @@ namespace mc68000
 	unsigned short Cpu::bmi(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.n)
+		if (sr.mi())
 		{
 			pc = targetAddress;
 		}
@@ -469,7 +469,7 @@ namespace mc68000
 	unsigned short Cpu::bge(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!(statusRegister.n & statusRegister.v))
+		if (sr.ge())
 		{
 			pc = targetAddress;
 		}
@@ -479,7 +479,7 @@ namespace mc68000
 	unsigned short Cpu::blt(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.n & statusRegister.v)
+		if (sr.lt())
 		{
 			pc = targetAddress;
 		}
@@ -489,7 +489,7 @@ namespace mc68000
 	unsigned short Cpu::bgt(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (!(statusRegister.z | (statusRegister.n & statusRegister.v)))
+		if (sr.gt())
 		{
 			pc = targetAddress;
 		}
@@ -499,7 +499,7 @@ namespace mc68000
 	unsigned short Cpu::ble(unsigned short opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
-		if (statusRegister.z | (statusRegister.n & statusRegister.v))
+		if (sr.le())
 		{
 			pc = targetAddress;
 		}
@@ -811,8 +811,32 @@ namespace mc68000
 		return instructions::CMPM;
 	}
 
-	unsigned short Cpu::dbcc(unsigned short)
+	// ==========
+	// DBCC
+	// ==========
+	unsigned short Cpu::dbcc(unsigned short opcode)
 	{
+		// get the target address 
+		uint32_t address = pc;
+		uint16_t extension = localMemory.get<uint16_t>(pc);
+		pc += 2;
+		int32_t	offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
+		address += offset;
+
+		// evaluate the condition
+		uint16_t conditionCode = (opcode >> 8) & 0b1111;
+		bool condition = sr.condition(conditionCode);
+		if (!condition)
+		{
+			uint32_t& reg = dRegisters[opcode & 0b111];
+			uint16_t regW = reg & 0xFFFF;
+			regW--;
+			reg = (reg & 0xffff0000) | regW;
+			if (regW != 0xffff)
+			{
+				pc = address;
+			}
+		}
 		return instructions::DBCC;
 	}
 
@@ -1173,6 +1197,10 @@ namespace mc68000
 		int32_t data = (int8_t) (opcode & 0xff);
 
 		dRegisters[reg] = data;
+		statusRegister.n = (data < 0);
+		statusRegister.z = (data == 0);
+		statusRegister.v = 0;
+		statusRegister.c = 0;
 
 		return instructions::MOVEQ;
 	}
