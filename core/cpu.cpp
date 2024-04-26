@@ -840,13 +840,75 @@ namespace mc68000
 		return instructions::DBCC;
 	}
 
-	unsigned short Cpu::divs(unsigned short)
+	// ==========
+	// DIVS
+	// ==========
+	unsigned short Cpu::divs(unsigned short opcode)
 	{
+		uint16_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int32_t destination = dRegisters[reg];
+
+		if (source == 0)
+		{
+		}
+		else
+		{
+			int16_t divisor = static_cast<int16_t>(source);
+			int32_t dividend = static_cast<int32_t>(destination);
+
+			int32_t quotient = dividend / divisor;
+			int16_t remainder = dividend % divisor;
+
+			if (quotient > 0x7fff || quotient < -0x8000)
+			{
+				statusRegister.v = 1;
+			}
+			else
+			{
+				dRegisters[reg] = (remainder << 16) | (quotient & 0xffff);
+				statusRegister.n = quotient < 0;
+				statusRegister.z = quotient == 0;
+				statusRegister.v = 0;
+			}
+			statusRegister.c = 0;
+		}
 		return instructions::DIVS;
 	}
 
-	unsigned short Cpu::divu(unsigned short)
+	// ==========
+	// DIVU
+	// ==========
+	unsigned short Cpu::divu(unsigned short opcode)
 	{
+		uint16_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int32_t destination = dRegisters[reg];
+
+		if (source == 0)
+		{
+		}
+		else
+		{
+			uint16_t divisor = (source);
+			uint32_t dividend = (destination);
+
+			uint32_t quotient = dividend / divisor;
+			uint16_t remainder = dividend % divisor;
+
+			if (quotient > 0xffff)
+			{
+				statusRegister.v = 1;
+			}
+			else
+			{
+				dRegisters[reg] = (remainder << 16) | (quotient & 0xffff);
+				statusRegister.n = quotient < 0;
+				statusRegister.z = quotient == 0;
+				statusRegister.v = 0;
+			}
+			statusRegister.c = 0;
+		}
 		return instructions::DIVU;
 	}
 
