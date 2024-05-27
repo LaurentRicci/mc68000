@@ -197,13 +197,15 @@ namespace mc68000
 		void bchg(uint16_t opcode, uint32_t bit, BitOperation operation);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
-
+		void handleException(uint16_t vector);
 		//
 		// private members
 		//
 	private:
-		unsigned int dRegisters[8];
-		unsigned int aRegisters[8];
+		uint32_t dRegisters[8];
+		uint32_t aRegisters[8];
+		uint32_t usp;
+		uint32_t ssp;
 		StatusRegister statusRegister;
 		uint32_t pc;
 		memory localMemory;

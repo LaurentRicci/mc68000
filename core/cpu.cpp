@@ -1,8 +1,10 @@
+#include <iostream>
+#include <cassert>
+
 #include "core.h"
 #include "instructions.h"
 #include "cpu.h"
-#include <iostream>
-#include <cassert>
+#include "exceptions.h"
 
 namespace mc68000
 {
@@ -851,6 +853,7 @@ namespace mc68000
 
 		if (source == 0)
 		{
+			handleException(Exceptions::DIVISION_BY_ZERO);
 		}
 		else
 		{
@@ -887,6 +890,7 @@ namespace mc68000
 
 		if (source == 0)
 		{
+			handleException(Exceptions::DIVISION_BY_ZERO);
 		}
 		else
 		{
@@ -1476,14 +1480,7 @@ namespace mc68000
 	unsigned short Cpu::trap(unsigned short opcode)
 	{
 		uint8_t trapNumber = opcode & 0b1111;
-		if (trapHandlers[trapNumber] != nullptr)
-		{
-			trapHandlers[trapNumber](d0, a0);
-		}
-		else
-		{
-			done = true;
-		}
+		handleException(Exceptions::TRAP + trapNumber);
 		return instructions::TRAP;
 	}
 
