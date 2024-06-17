@@ -950,8 +950,41 @@ namespace mc68000
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short Cpu::exg(unsigned short)
+	// ==========
+	// EORI to CCR
+	// ==========
+	unsigned short Cpu::exg(unsigned short opcode)
 	{
+		uint16_t mode = (opcode >> 3) & 0b11111;
+		uint16_t regx = (opcode >> 9) & 0b111;
+		uint16_t regy = opcode & 0b111;
+
+		switch(mode)
+		{
+			case 0b01000:
+			{
+				uint32_t temp = dRegisters[regx];
+				dRegisters[regx] = dRegisters[regy];
+				dRegisters[regy] = temp;
+				break;
+			}
+			case 0b01001:
+			{
+				uint32_t temp = aRegisters[regx];
+				aRegisters[regx] = aRegisters[regy];
+				aRegisters[regy] = temp;
+				break;
+			}
+			case 0b10001:
+			{
+				uint32_t temp = dRegisters[regx];
+				dRegisters[regx] = aRegisters[regy];
+				aRegisters[regy] = temp;
+				break;
+			}
+			default:
+				throw "exg: invalid mode";
+		}
 		return instructions::EXG;
 	}
 

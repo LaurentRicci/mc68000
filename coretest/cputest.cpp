@@ -724,6 +724,45 @@ BOOST_AUTO_TEST_CASE(a_clr)
 }
 
 // ===================================================
+// EXG tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_exg)
+{
+	unsigned char code[] = {
+	0x32, 0x3c, 0x03, 0xe8,     // move.l #1000,d1
+	0x34, 0x3c, 0x07, 0xd0,     // move.l #2000,d2
+	0x32, 0x7c, 0x03, 0xf2,     // move.l #1010,a1
+	0x34, 0x7c, 0x07, 0xe4,     // move.l #2020,a2
+
+	0x26, 0x3c, 0x00, 0x05, 0x16, 0x15,    // move.l #$333333,d3
+	0x28, 0x7c, 0x00, 0x06, 0xc8, 0x1c,    // move.l #$444444,a4
+
+	0xc3, 0x42,                 // exg d1,d2
+	0xc3, 0x4a,                 // exg a1,a2
+	0xc7, 0x8c,                 // exg d3,a4
+	0x4e, 0x40,                 // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(1000, cpu.d2);
+	BOOST_CHECK_EQUAL(2000, cpu.d1);
+
+	BOOST_CHECK_EQUAL(1010, cpu.a2);
+	BOOST_CHECK_EQUAL(2020, cpu.a1);
+
+	BOOST_CHECK_EQUAL(444444, cpu.d3);
+	BOOST_CHECK_EQUAL(333333, cpu.a4);
+}
+
+// ===================================================
 // LEA tests
 // ===================================================
 BOOST_AUTO_TEST_CASE(a_lea)
