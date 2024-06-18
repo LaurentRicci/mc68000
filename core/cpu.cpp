@@ -951,7 +951,7 @@ namespace mc68000
 	}
 
 	// ==========
-	// EORI to CCR
+	// EXG
 	// ==========
 	unsigned short Cpu::exg(unsigned short opcode)
 	{
@@ -988,13 +988,38 @@ namespace mc68000
 		return instructions::EXG;
 	}
 
-	unsigned short Cpu::ext(unsigned short)
+	// ==========
+	// EXT
+	// ==========
+	unsigned short Cpu::ext(unsigned short opcode)
 	{
+		uint16_t reg = opcode & 0b111;
+		bool isLong = (opcode >> 6) & 0b1;
+
+		if (isLong)
+		{
+			uint32_t v = dRegisters[reg] & 0xffff;
+			if (v & 0x8000)
+			{
+				v |= 0xffff0000;
+			}
+			dRegisters[reg] = v;
+		}
+		else
+		{
+			uint16_t v = dRegisters[reg] & 0xff;
+			if (v & 0b1000'000)
+			{
+				v |= 0xff00;
+			}
+			dRegisters[reg] = (dRegisters[reg] & 0xffff0000) | v;
+		}
 		return instructions::EXT;
 	}
 
 	unsigned short Cpu::illegal(unsigned short)
 	{
+		handleException(Exceptions::ILLEGAL_INSTRUCTION);
 		return instructions::ILLEGAL;
 	}
 
