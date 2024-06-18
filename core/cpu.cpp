@@ -59,11 +59,14 @@ namespace mc68000
 		localMemory = memory;
 	}
 
-	void Cpu::start(uint32_t startPc, uint32_t startSP)
+	void Cpu::start(uint32_t startPc, uint32_t startSP, uint32_t startSSP)
 	{
 		done = false;
 		pc = startPc;
 		aRegisters[7] = startSP;
+		usp = startSP;
+		ssp = startSSP;
+
 		while (!done)
 		{
 			uint16_t x = localMemory.getWord(pc);

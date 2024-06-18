@@ -220,7 +220,7 @@ namespace mc68000
 
 		void reset();
 		void reset(const memory& memory);
-		void start(uint32_t startPc, uint32_t startSP = 0);
+		void start(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 		void setARegister(int reg, uint32_t value);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
 
