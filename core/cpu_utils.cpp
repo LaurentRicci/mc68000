@@ -1,7 +1,9 @@
+#include <cassert>
+
 #include "core.h"
 #include "instructions.h"
 #include "cpu.h"
-#include <cassert>
+#include "exceptions.h"
 
 namespace mc68000
 {
@@ -688,5 +690,48 @@ namespace mc68000
 	template void Cpu::move<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t  destinationEffectiveAddress);
 	template void Cpu::move<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t  destinationEffectiveAddress);
 
+	// ==========
+	// Exception handling
+	// ==========
+	void Cpu::handleException(uint16_t vector)
+	{
+		if (vector == Exceptions::RESET)
+		{
+			// Reset
+			done = true;
+			return;
+		}
+		else if (vector >= Exceptions::TRAP && vector <= Exceptions::TRAP + 15)
+		{
+			// Trap
+			if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
+			{
+				// external handler exists so call it
+				trapHandlers[vector - Exceptions::TRAP](d0, a0);
+				return;
+			}
+		}
 
+		try
+		{
+			uint32_t handler = vector *4;
+			uint32_t newPc = localMemory.get<uint32_t>(handler);
+
+			localMemory.set<uint16_t>(ssp, sr);
+			ssp -= 2;
+			localMemory.set<uint32_t>(ssp, pc);
+			ssp -= 4;
+			statusRegister.t = 0;
+			statusRegister.s = 1;
+			usp = aRegisters[7];
+			aRegisters[7] = ssp;
+			pc = newPc;
+			return;
+		}
+		catch (...)
+		{
+			done = true;
+		}
+		return;
+	}
 }

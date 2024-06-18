@@ -1,8 +1,10 @@
+#include <iostream>
+#include <cassert>
+
 #include "core.h"
 #include "instructions.h"
 #include "cpu.h"
-#include <iostream>
-#include <cassert>
+#include "exceptions.h"
 
 namespace mc68000
 {
@@ -851,6 +853,7 @@ namespace mc68000
 
 		if (source == 0)
 		{
+			handleException(Exceptions::DIVISION_BY_ZERO);
 		}
 		else
 		{
@@ -887,6 +890,7 @@ namespace mc68000
 
 		if (source == 0)
 		{
+			handleException(Exceptions::DIVISION_BY_ZERO);
 		}
 		else
 		{
@@ -946,18 +950,76 @@ namespace mc68000
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short Cpu::exg(unsigned short)
+	// ==========
+	// EXG
+	// ==========
+	unsigned short Cpu::exg(unsigned short opcode)
 	{
+		uint16_t mode = (opcode >> 3) & 0b11111;
+		uint16_t regx = (opcode >> 9) & 0b111;
+		uint16_t regy = opcode & 0b111;
+
+		switch(mode)
+		{
+			case 0b01000:
+			{
+				uint32_t temp = dRegisters[regx];
+				dRegisters[regx] = dRegisters[regy];
+				dRegisters[regy] = temp;
+				break;
+			}
+			case 0b01001:
+			{
+				uint32_t temp = aRegisters[regx];
+				aRegisters[regx] = aRegisters[regy];
+				aRegisters[regy] = temp;
+				break;
+			}
+			case 0b10001:
+			{
+				uint32_t temp = dRegisters[regx];
+				dRegisters[regx] = aRegisters[regy];
+				aRegisters[regy] = temp;
+				break;
+			}
+			default:
+				throw "exg: invalid mode";
+		}
 		return instructions::EXG;
 	}
 
-	unsigned short Cpu::ext(unsigned short)
+	// ==========
+	// EXT
+	// ==========
+	unsigned short Cpu::ext(unsigned short opcode)
 	{
+		uint16_t reg = opcode & 0b111;
+		bool isLong = (opcode >> 6) & 0b1;
+
+		if (isLong)
+		{
+			uint32_t v = dRegisters[reg] & 0xffff;
+			if (v & 0x8000)
+			{
+				v |= 0xffff0000;
+			}
+			dRegisters[reg] = v;
+		}
+		else
+		{
+			uint16_t v = dRegisters[reg] & 0xff;
+			if (v & 0b1000'000)
+			{
+				v |= 0xff00;
+			}
+			dRegisters[reg] = (dRegisters[reg] & 0xffff0000) | v;
+		}
 		return instructions::EXT;
 	}
 
 	unsigned short Cpu::illegal(unsigned short)
 	{
+		handleException(Exceptions::ILLEGAL_INSTRUCTION);
 		return instructions::ILLEGAL;
 	}
 
@@ -1476,14 +1538,7 @@ namespace mc68000
 	unsigned short Cpu::trap(unsigned short opcode)
 	{
 		uint8_t trapNumber = opcode & 0b1111;
-		if (trapHandlers[trapNumber] != nullptr)
-		{
-			trapHandlers[trapNumber](d0, a0);
-		}
-		else
-		{
-			done = true;
-		}
+		handleException(Exceptions::TRAP + trapNumber);
 		return instructions::TRAP;
 	}
 

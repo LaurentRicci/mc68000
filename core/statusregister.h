@@ -58,11 +58,11 @@ namespace mc68000
 		bool eq() const { return z; }
 		bool ne() const { return !z; }
 		bool ge() const { return (n && v) || (!n && !v); }
-		bool gt() const { return (n & v & !z) | (!n & !v & !z); }
+		bool gt() const { return (n && v && !z) | (!n && !v && !z); }
 		bool hi() const { return !c && !z; }
-		bool le() const { return (z | n & !v | !n & v); }
-		bool ls() const { return c | z; }
-		bool lt() const { return (n & v) | (!n & v); }
+		bool le() const { return (z || n && !v || !n && v); }
+		bool ls() const { return c || z; }
+		bool lt() const { return (n && v) | (!n && v); }
 		bool mi() const { return n; }
 		bool pl() const { return !n; }
 		bool vc() const { return !v; }
