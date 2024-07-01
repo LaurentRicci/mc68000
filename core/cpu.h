@@ -180,6 +180,7 @@ namespace mc68000
 		template <typename T> void writeAt(uint16_t ea, T data);
 		template <typename T> void move(uint16_t from, uint16_t to);
 		uint32_t getTargetAddress(uint16_t opcode);
+		uint32_t getEffectiveAddress(uint16_t opcode);
 
 		template <typename T> void logical(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress, uint32_t(*op)(uint32_t, uint32_t));
 		void logical(uint16_t opcode, uint32_t(*logicalOperator)(uint32_t, uint32_t));

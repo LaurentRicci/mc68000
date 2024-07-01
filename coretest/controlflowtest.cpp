@@ -393,4 +393,36 @@ BOOST_AUTO_TEST_CASE(controlFlow_dbvs)
 	verifyDbccExecution(0b10001, 0x59); // V=0
 }
 
+// ===================================================
+// DBCC tests
+// ===================================================
+
+BOOST_AUTO_TEST_CASE(controlFlow_jmp)
+{
+	//uint8_t ccr = 24;
+	//uint8_t bccOp = 64;
+
+	unsigned char code[] = {
+		0x70, 0x15,                           //   moveq #21, d0
+		0x4e, 0xf9, 0x00, 0x00, 0x10, 0x0c,   //   jmp label
+		0x70, 0x2a,                           //   moveq #42,d0
+		0x4e, 0x40,                           //   trap #0
+                                              // label:
+		0x70, 0x40,                           //   moveq #64,d0
+		0x4e, 0x40,                           //   trap #0
+		0xff, 0xff };
+
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Arrange
+	BOOST_CHECK_EQUAL(64, cpu.d0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
