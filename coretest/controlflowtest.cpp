@@ -393,4 +393,67 @@ BOOST_AUTO_TEST_CASE(controlFlow_dbvs)
 	verifyDbccExecution(0b10001, 0x59); // V=0
 }
 
+// ===================================================
+// JMP tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(controlFlow_jmp)
+{
+	unsigned char code[] = {
+		0x70, 0x15,                           //   moveq #21, d0
+		0x4e, 0xf9, 0x00, 0x00, 0x10, 0x0c,   //   jmp label
+		0x70, 0x2a,                           //   moveq #42,d0
+		0x4e, 0x40,                           //   trap #0
+                                              // label:
+		0x70, 0x40,                           //   moveq #64,d0
+		0x4e, 0x40,                           //   trap #0
+		0xff, 0xff };
+
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Arrange
+	BOOST_CHECK_EQUAL(64, cpu.d0);
+}
+
+// ===================================================
+// JSR tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(controlFlow_jsr)
+{
+	unsigned char code[] =
+	{
+		// start:
+		0x4f, 0xf8, 0x10, 0x64,              // lea (start + 100), a7
+		0x4e, 0xb9, 0x00, 0x00, 0x10, 0x16,  // bsr sub1
+		0x76, 0x03,                          // moveq #3, d3
+		0x4e, 0x40,                          // trap #0
+		0xff, 0xff, 0xff, 0xff,              //
+ 		                                     // sub2:
+		0x74, 0x02,	                         // moveq #2, d2
+		0x4e, 0x75,                          // rts
+		                                     // sub1:
+		0x72, 0x01,                          // moveq #1, d1
+		0x4e, 0xb8, 0x10, 0x12,              // bsr sub2
+		0x4e, 0x75,                          // rts
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	BOOST_CHECK_EQUAL(0x1, cpu.d1);
+	BOOST_CHECK_EQUAL(0x2, cpu.d2);
+	BOOST_CHECK_EQUAL(0x3, cpu.d3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

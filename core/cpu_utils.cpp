@@ -540,6 +540,128 @@ namespace mc68000
 	template uint16_t Cpu::readAt<uint16_t>(uint16_t ea);
 	template uint32_t Cpu::readAt<uint32_t>(uint16_t ea);
 
+	/// <summary>
+	/// Retrieves the target address from the effective address
+	/// </summary>
+	/// <param name="ea">The instruction code or the address effective part of the instruction code</param>
+	/// <returns>The final address</returns>
+	uint32_t Cpu::getEffectiveAddress(uint16_t opcode)
+	{
+		unsigned short eam = (opcode >> 3) & 0b111;
+		unsigned short reg = opcode & 0b111;
+		uint32_t address;
+
+		switch (eam)
+		{
+			case 2:
+			{
+				address = aRegisters[reg];
+				break;
+			}
+			case 5:
+			{
+				uint32_t baseAddress = aRegisters[reg];
+
+				uint16_t extension = localMemory.get<uint16_t>(pc);
+				pc += 2;
+				int32_t offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
+
+				address = (baseAddress + offset);
+				break;
+			}
+			case 6:
+			{
+				uint32_t baseAddress = aRegisters[reg];
+
+				uint16_t extension = localMemory.get<uint16_t>(pc);
+				pc += 2;
+
+				// calculate the index
+				bool isAddressRegister = extension & 0x8000;
+				unsigned short extensionReg = (extension >> 12) & 7;
+				bool isLongIndexSize = (extension & 0x0800);
+				int32_t index;
+				if (isLongIndexSize)
+				{
+					index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+				}
+				else
+				{
+					index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+				}
+
+				// Calculate the displacement
+				int32_t displacement = (int16_t)(extension & 0xff);
+
+				address = baseAddress + displacement + index;
+				break;
+			}
+			case 7:
+			{
+				switch (reg)
+				{
+					case 0:
+					{
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+						address = (int16_t)extension;
+						break;
+					}
+					case 1:
+					{
+						address = localMemory.get<uint32_t>(pc);
+						pc += 4;
+						break;
+					}
+					case 2:
+					{
+						uint32_t baseAddress = pc;
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+						int32_t offset = (int16_t)extension;
+						address = baseAddress + offset;
+						break;
+					}
+					case 3:
+					{
+						uint32_t baseAddress = pc;
+
+						uint16_t extension = localMemory.get<uint16_t>(pc);
+						pc += 2;
+
+						// calculate the index
+						bool isAddressRegister = extension & 0x8000;
+						unsigned short extensionReg = (extension >> 12) & 7;
+						bool isLongIndexSize = (extension & 0x0800);
+						int32_t index;
+						if (isLongIndexSize)
+						{
+							index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
+						}
+						else
+						{
+							index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
+						}
+
+						// Calculate the displacement
+						int32_t displacement = (int16_t)(extension & 0xff);
+
+						address = baseAddress + displacement + index;
+						break;
+					}
+					default:
+						throw "lea: incorrect addressing mode";
+						break;
+					}
+				break;
+			}
+			default:
+				throw "getTargetAddress: incorrect addressing mode";
+				break;
+		}
+		return address;
+	}
+
 	uint32_t maskDRegister(uint32_t& reg, size_t size)
 	{
 		switch (size)

@@ -1020,19 +1020,35 @@ namespace mc68000
 		return instructions::EXT;
 	}
 
+	// ==========
+	// ILLEGAL
+	// ==========
 	unsigned short Cpu::illegal(unsigned short)
 	{
 		handleException(Exceptions::ILLEGAL_INSTRUCTION);
 		return instructions::ILLEGAL;
 	}
 
-	unsigned short Cpu::jmp(unsigned short)
+	// ==========
+	// JMP
+	// ==========
+	unsigned short Cpu::jmp(unsigned short opcode)
 	{
+		uint32_t address = getEffectiveAddress(opcode);
+		pc = address;
+
 		return instructions::JMP;
 	}
 
-	unsigned short Cpu::jsr(unsigned short)
+	// ==========
+	// JSR
+	// ==========
+	unsigned short Cpu::jsr(unsigned short opcode)
 	{
+		uint32_t address = getEffectiveAddress(opcode);
+		writeAt<uint32_t>(0b100'111, pc);
+		pc = address;
+
 		return instructions::JSR;
 	}
 
@@ -1041,118 +1057,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::lea(unsigned short opcode)
 	{
-		unsigned short eam = (opcode >> 3) & 0b111;
-		unsigned short reg = opcode & 0b111;
-		uint32_t address;
-
-		switch (eam)
-		{
-			case 2:
-			{
-				address = aRegisters[reg];
-				break;
-			}
-			case 5:
-			{
-				uint32_t baseAddress = aRegisters[reg];
-
-				uint16_t extension = localMemory.get<uint16_t>(pc);
-				pc += 2;
-				int32_t offset = (int16_t)extension; // Displacements are always sign-extended to 32 bits prior to being used
-
-				address = (baseAddress + offset);
-				break;
-			}
-			case 6:
-			{
-				uint32_t baseAddress = aRegisters[reg];
-
-				uint16_t extension = localMemory.get<uint16_t>(pc);
-				pc += 2;
-
-				// calculate the index
-				bool isAddressRegister = extension & 0x8000;
-				unsigned short extensionReg = (extension >> 12) & 7;
-				bool isLongIndexSize = (extension & 0x0800);
-				int32_t index;
-				if (isLongIndexSize)
-				{
-					index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
-				}
-				else
-				{
-					index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
-				}
-
-				// Calculate the displacement
-				int32_t displacement = (int16_t)(extension & 0xff);
-
-				address = baseAddress + displacement + index;
-				break;
-			}
-			case 7:
-			{
-				switch (reg)
-				{
-					case 0:
-					{
-						uint16_t extension = localMemory.get<uint16_t>(pc);
-						pc += 2;
-						address = (int16_t)extension;
-						break;
-					}
-					case 1:
-					{
-						address = localMemory.get<uint32_t>(pc);
-						pc += 4;
-						break;
-					}
-					case 2:
-					{
-						uint32_t baseAddress = pc;
-						uint16_t extension = localMemory.get<uint16_t>(pc);
-						pc += 2;
-						int32_t offset = (int16_t)extension;
-						address = baseAddress + offset;
-						break;
-					}
-					case 3:
-					{
-						uint32_t baseAddress = pc;
-
-						uint16_t extension = localMemory.get<uint16_t>(pc);
-						pc += 2;
-
-						// calculate the index
-						bool isAddressRegister = extension & 0x8000;
-						unsigned short extensionReg = (extension >> 12) & 7;
-						bool isLongIndexSize = (extension & 0x0800);
-						int32_t index;
-						if (isLongIndexSize)
-						{
-							index = (isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]);
-						}
-						else
-						{
-							index = (int16_t)((isAddressRegister ? aRegisters[extensionReg] : dRegisters[extensionReg]) & 0xffff);
-						}
-
-						// Calculate the displacement
-						int32_t displacement = (int16_t)(extension & 0xff);
-
-						address = baseAddress + displacement + index;
-						break;
-					}
-					default:
-						throw "lea: incorrect addressing mode";
-						break;
-				}
-				break;
-			}
-			default:
-				throw "lea: incorrect addressing mode";
-				break;
-		}
+		uint32_t address = getEffectiveAddress(opcode);
 
 		uint16_t destinationRegister = (opcode >> 9) & 0b111;
 		aRegisters[destinationRegister] = address;
