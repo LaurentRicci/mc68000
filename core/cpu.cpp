@@ -1020,12 +1020,18 @@ namespace mc68000
 		return instructions::EXT;
 	}
 
+	// ==========
+	// ILLEGAL
+	// ==========
 	unsigned short Cpu::illegal(unsigned short)
 	{
 		handleException(Exceptions::ILLEGAL_INSTRUCTION);
 		return instructions::ILLEGAL;
 	}
 
+	// ==========
+	// JMP
+	// ==========
 	unsigned short Cpu::jmp(unsigned short opcode)
 	{
 		uint32_t address = getEffectiveAddress(opcode);
@@ -1034,8 +1040,15 @@ namespace mc68000
 		return instructions::JMP;
 	}
 
-	unsigned short Cpu::jsr(unsigned short)
+	// ==========
+	// JSR
+	// ==========
+	unsigned short Cpu::jsr(unsigned short opcode)
 	{
+		uint32_t address = getEffectiveAddress(opcode);
+		writeAt<uint32_t>(0b100'111, pc);
+		pc = address;
+
 		return instructions::JSR;
 	}
 
