@@ -558,6 +558,18 @@ namespace mc68000
 				address = aRegisters[reg];
 				break;
 			}
+			case 3:
+			{
+				// Post increment : the address is incremented after the operation
+				address = aRegisters[reg];
+				break;
+			}
+			case 4:
+			{
+				// Pre decrement : return the current address. Don't decrement the address since the size is unknown
+				address = aRegisters[reg];
+				break;
+			}
 			case 5:
 			{
 				uint32_t baseAddress = aRegisters[reg];
