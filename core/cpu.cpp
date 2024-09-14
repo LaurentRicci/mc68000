@@ -1210,8 +1210,153 @@ namespace mc68000
 		return instructions::MOVESR;
 	}
 
-	unsigned short Cpu::movem(unsigned short)
+	// ==========
+	// MOVEM
+	// ==========
+	unsigned short Cpu::movem(unsigned short opcode)
 	{
+		uint16_t direction = (opcode >> 10) & 1;
+		uint16_t size = (opcode >> 6) & 1;
+		uint32_t effectiveAddress = getEffectiveAddress(opcode);
+		uint16_t registerList = localMemory.get<uint16_t>(pc);
+		pc += 2;
+
+		if (direction == 0)
+		{
+			// Register to memory
+			bool isPredecrement = (opcode & 0b111'000) == 0b100'000;
+			if (isPredecrement)
+			{
+				// If the effective address is specified by the predecrement mode, The registers are stored 
+				// starting at the specified address minus the operand length(2 or 4), and the address is 
+				// decremented by the operand length following each transfer.The order of storing is 
+				// from A7 to A0, then from D7 to D0.
+				for (int i = 0; i < 8; i++)
+				{
+					if (registerList & (1 << i))
+					{
+						if (size == 0)
+						{
+							effectiveAddress -= 2;
+							localMemory.set<uint16_t>(effectiveAddress, aRegisters[7-i]);
+						}
+						else
+						{
+							effectiveAddress -= 4;
+							localMemory.set<uint32_t>(effectiveAddress, aRegisters[7-i]);
+						}
+					}
+				}
+				for (int i = 0; i < 8; i++)
+				{
+					if (registerList & (1 << (8+i)))
+					{
+						if (size == 0)
+						{
+							effectiveAddress -= 2;
+							localMemory.set<uint16_t>(effectiveAddress, dRegisters[7-i]);
+						}
+						else
+						{
+							effectiveAddress -= 4;
+							localMemory.set<uint32_t>(effectiveAddress, dRegisters[7-i]);
+						}
+					}
+				}
+				// When the instruction has completed, the decremented address register contains the address of 
+				// the last operand stored.
+				aRegisters[opcode & 0b111] = effectiveAddress; // TODO : check if this is correct
+			}
+			else
+			{
+				// If the effective address is specified by one of the control modes, the registers are 
+				// transferred starting at the specified address, and the address is incremented by the 
+				// operand length(2 or 4) following each transfer.The order of the registers is from D0 
+				// to D7, then from A0 to A7.
+				for (int i = 0; i < 8; i++)
+				{
+					if (registerList & (1 << i))
+					{
+						if (size == 0)
+						{
+							localMemory.set<uint16_t>(effectiveAddress, dRegisters[i]);
+							//writeAt<uint16_t>(effectiveAddress, dRegisters[i]);
+							effectiveAddress += 2;
+						}
+						else
+						{
+							localMemory.set<uint32_t>(effectiveAddress, dRegisters[i]);
+							//writeAt<uint32_t>(effectiveAddress, dRegisters[i]);
+							effectiveAddress += 4;
+						}
+					}
+				}
+				for (int i = 0; i < 8; i++)
+				{
+					if (registerList & (1 << (8 + i)))
+					{
+						if (size == 0)
+						{
+							localMemory.set<uint16_t>(effectiveAddress, aRegisters[i]);
+							//writeAt<uint16_t>(effectiveAddress, aRegisters[i]);
+							effectiveAddress += 2;
+						}
+						else
+						{
+							localMemory.set<uint32_t>(effectiveAddress, aRegisters[i]);
+							//writeAt<uint32_t>(effectiveAddress, aRegisters[i]);
+							effectiveAddress += 4;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			// Memory to register
+			for (int i = 0; i < 8; i++)
+			{
+				if (registerList & (1 << i))
+				{
+					if (size == 0)
+					{
+						dRegisters[i] = static_cast<int16_t>(localMemory.get<uint16_t>(effectiveAddress));
+						effectiveAddress += 2;
+					}
+					else
+					{
+						dRegisters[i] = localMemory.get<uint32_t>(effectiveAddress);
+						effectiveAddress += 4;
+					}
+				}
+			}
+			for (int i = 0; i < 8; i++)
+			{
+				if (registerList & (1 << i))
+				{
+					if (size == 0)
+					{
+						aRegisters[i] = static_cast<int16_t>(localMemory.get<uint16_t>(effectiveAddress));
+						effectiveAddress += 2;
+					}
+					else
+					{
+						aRegisters[i] = localMemory.get<uint32_t>(effectiveAddress);
+						effectiveAddress += 4;
+					}
+				}
+			}
+			bool isPostincrement = (opcode & 0b111'000) == 0b011'000;
+			if (isPostincrement)
+			{
+				// When the instruction has completed, the incremented address register contains the address of 
+				// the last operand loaded plus the operand length.If the addressing register is also loaded from
+				// memory, the memory value is ignored and the register is written with the postincremented
+				// effective address.
+				aRegisters[opcode & 0b111] = effectiveAddress; // TODO : check if this is correct
+			}
+		}
+
 		return instructions::MOVEM;
 	}
 
