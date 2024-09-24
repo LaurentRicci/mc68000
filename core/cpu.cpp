@@ -1280,13 +1280,11 @@ namespace mc68000
 						if (size == 0)
 						{
 							localMemory.set<uint16_t>(effectiveAddress, dRegisters[i]);
-							//writeAt<uint16_t>(effectiveAddress, dRegisters[i]);
 							effectiveAddress += 2;
 						}
 						else
 						{
 							localMemory.set<uint32_t>(effectiveAddress, dRegisters[i]);
-							//writeAt<uint32_t>(effectiveAddress, dRegisters[i]);
 							effectiveAddress += 4;
 						}
 					}
@@ -1298,13 +1296,11 @@ namespace mc68000
 						if (size == 0)
 						{
 							localMemory.set<uint16_t>(effectiveAddress, aRegisters[i]);
-							//writeAt<uint16_t>(effectiveAddress, aRegisters[i]);
 							effectiveAddress += 2;
 						}
 						else
 						{
 							localMemory.set<uint32_t>(effectiveAddress, aRegisters[i]);
-							//writeAt<uint32_t>(effectiveAddress, aRegisters[i]);
 							effectiveAddress += 4;
 						}
 					}
@@ -1360,8 +1356,51 @@ namespace mc68000
 		return instructions::MOVEM;
 	}
 
-	unsigned short Cpu::movep(unsigned short)
+	unsigned short Cpu::movep(unsigned short opcode)
 	{
+		uint16_t dRegister = (opcode >> 9) & 0b111;
+		uint16_t aRegister = opcode & 0b111;
+		uint16_t opmode = (opcode >> 6) & 0b111;
+		uint16_t displacement = localMemory.get<uint16_t>(pc);
+		pc += 2;
+
+		uint32_t effectiveAddress = aRegisters[aRegister] + displacement;
+		switch (opmode)
+		{
+			case 0b100: // Transfer word from memory to register.
+			{
+				uint8_t m1 = localMemory.get<uint8_t>(effectiveAddress);
+				uint8_t m2 = localMemory.get<uint8_t>(effectiveAddress + 2 );
+				dRegisters[dRegister] &= 0xffff0000;
+				dRegisters[dRegister] |= (m1 << 8) | m2;
+				break;
+			}
+			case 0b101: // Transfer long from memory to register.
+			{
+				uint8_t m1 = localMemory.get<uint8_t>(effectiveAddress);
+				uint8_t m2 = localMemory.get<uint8_t>(effectiveAddress + 2);
+				uint8_t m3 = localMemory.get<uint8_t>(effectiveAddress + 4);
+				uint8_t m4 = localMemory.get<uint8_t>(effectiveAddress + 6);
+				dRegisters[dRegister] = (m1 << 24) | (m2 << 16) | (m3 << 8) | m4;
+				break;
+			}
+			case 0b110: // Transfer word from register to memory.
+			{
+				localMemory.set<uint8_t>(effectiveAddress + 0, (dRegisters[dRegister] & 0xff00) >> 8);
+				localMemory.set<uint8_t>(effectiveAddress + 2, (dRegisters[dRegister] & 0x00ff) >> 0);
+				break;
+			}
+			case 0b111: // Transfer long from register to memory.
+			{
+				localMemory.set<uint8_t>(effectiveAddress + 0, (dRegisters[dRegister] & 0xff000000) >> 24);
+				localMemory.set<uint8_t>(effectiveAddress + 2, (dRegisters[dRegister] & 0x00ff0000) >> 16);
+				localMemory.set<uint8_t>(effectiveAddress + 4, (dRegisters[dRegister] & 0x0000ff00) >> 8);
+				localMemory.set<uint8_t>(effectiveAddress + 6, (dRegisters[dRegister] & 0x000000ff) >> 0);
+				break;
+			}
+			default:
+				throw "movep: invalid opmode";
+		}
 		return instructions::MOVEP;
 	}
 
