@@ -1420,19 +1420,65 @@ namespace mc68000
 
 		return instructions::MOVEQ;
 	}
-
-	unsigned short Cpu::muls(unsigned short)
+	
+	/// <summary>
+	/// MULS: Signed multiply
+	/// </summary>
+	unsigned short Cpu::muls(unsigned short opcode)
 	{
+		int32_t source = static_cast<int16_t>(readAt<uint16_t>(opcode & 0b111'111));
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int32_t destination = static_cast<int16_t>(dRegisters[reg] & 0xffff);
+
+		destination *= source;
+		dRegisters[reg] = destination;
+		statusRegister.n = (destination < 0);
+		statusRegister.z = (destination == 0);
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+
 		return instructions::MULS;
 	}
 
-	unsigned short Cpu::mulu(unsigned short)
+	/// <summary>
+	/// MULU: Unsigned multiply
+	/// </summary>
+	unsigned short Cpu::mulu(unsigned short opcode)
 	{
+		uint32_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint8_t reg = (opcode >> 9) & 0b111;
+		uint32_t destination = dRegisters[reg] & 0xffff;
+
+		destination *= source;
+		dRegisters[reg] = destination;
+		statusRegister.n = (destination < 0);
+		statusRegister.z = (destination == 0);
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+
 		return instructions::MULU;
 	}
 
-	unsigned short Cpu::nbcd(unsigned short)
+	/// <summary>
+	/// NBCD: Negate Decimal with Extend
+	/// </summary>
+	unsigned short Cpu::nbcd(unsigned short opcode)
 	{
+		uint8_t value = readAt<uint8_t>(opcode & 0b111'111);
+		uint16_t m1 = value & 0x0f;
+		uint16_t m2 = value & 0xf0;
+
+		int16_t decimalValue = 10 * (m2 >> 4) + m1 + statusRegister.x;
+		decimalValue = 100 - decimalValue;
+		if (decimalValue == 100) decimalValue = 0;
+		m1 = decimalValue % 10;
+		m2 = decimalValue / 10;
+		value = (m2 << 4) | m1;
+		writeAt<uint8_t>(opcode & 0b111'111, value);
+
+		statusRegister.x = statusRegister.c = (decimalValue == 0 ? 0 : 1);
+		if (value != 0) statusRegister.z = 0; // Z is cleared if the result is nonzero; unchanged otherwise.
+
 		return instructions::NBCD;
 	}
 
