@@ -1420,14 +1420,42 @@ namespace mc68000
 
 		return instructions::MOVEQ;
 	}
-
-	unsigned short Cpu::muls(unsigned short)
+	
+	/// <summary>
+	/// MULS: Signed multiply
+	/// </summary>
+	unsigned short Cpu::muls(unsigned short opcode)
 	{
+		int32_t source = static_cast<int16_t>(readAt<uint16_t>(opcode & 0b111'111));
+		uint8_t reg = (opcode >> 9) & 0b111;
+		int32_t destination = static_cast<int16_t>(dRegisters[reg] & 0xffff);
+
+		destination *= source;
+		dRegisters[reg] = destination;
+		statusRegister.n = (destination < 0);
+		statusRegister.z = (destination == 0);
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+
 		return instructions::MULS;
 	}
 
-	unsigned short Cpu::mulu(unsigned short)
+	/// <summary>
+	/// MULU: Unsigned multiply
+	/// </summary>
+	unsigned short Cpu::mulu(unsigned short opcode)
 	{
+		uint32_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint8_t reg = (opcode >> 9) & 0b111;
+		uint32_t destination = dRegisters[reg] & 0xffff;
+
+		destination *= source;
+		dRegisters[reg] = destination;
+		statusRegister.n = (destination < 0);
+		statusRegister.z = (destination == 0);
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+
 		return instructions::MULU;
 	}
 
