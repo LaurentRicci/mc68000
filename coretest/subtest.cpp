@@ -334,5 +334,70 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_0x)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
+BOOST_AUTO_TEST_CASE(sub_neg)
+{
+	unsigned char code[] = {
+	0x70, 0x2a,             // moveq #42, d0
+	0x72, 0x24,             // moveq #36, d1
+	0x74, 0x4a,             // moveq #74, d2
+	0x44, 0x00,             // neg.b d0
+	0x44, 0x41,             // neg.w d1
+	0x44, 0x82,             // neg.l d2
+	0x4e, 0x40,             // trap #0
+	0xff, 0xff, 0xff, 0xff  // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0xd6, cpu.d0);
+	BOOST_CHECK_EQUAL(0xffdc, cpu.d1);
+	BOOST_CHECK_EQUAL(0xffffffb6, cpu.d2);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+
+BOOST_AUTO_TEST_CASE(sub_neg_neg)
+{
+	unsigned char code[] = {
+	0x70, 0xd6,             // moveq #-42, d0
+	0x72, 0xdc,             // moveq #-36, d1
+	0x74, 0xb6,             // moveq #-74, d2
+	0x44, 0x00,             // neg.b d0
+	0x44, 0x41,             // neg.w d1
+	0x44, 0x82,             // neg.l d2
+	0x4e, 0x40,             // trap #0
+	0xff, 0xff, 0xff, 0xff  // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(42, (cpu.d0 & 0xff));
+	BOOST_CHECK_EQUAL(36, (cpu.d1 & 0xffff));
+	BOOST_CHECK_EQUAL(74, cpu.d2);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
