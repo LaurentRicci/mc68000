@@ -551,6 +551,7 @@ BOOST_AUTO_TEST_CASE(a_addq_increment)
 
 	// Assert
 	BOOST_CHECK_EQUAL(0x12, cpu.a0);
+	BOOST_CHECK_EQUAL(43, cpu.mem.get<uint16_t>(0x10));
 }
 
 
