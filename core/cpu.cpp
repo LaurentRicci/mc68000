@@ -106,8 +106,8 @@ namespace mc68000
 		uint8_t op2;
 		if (useAddressRegister)
 		{
-			op1 = readAt<uint8_t>(0b100'000u | register1);
-			op2 = readAt<uint8_t>(0b100'000u | register2);
+			op1 = readAt<uint8_t>(0b100'000u | register1, false);
+			op2 = readAt<uint8_t>(0b100'000u | register2, true);
 		}
 		else
 		{
@@ -138,7 +138,7 @@ namespace mc68000
 		}
 		if (useAddressRegister)
 		{
-			writeAt<uint8_t>(0b010'000u | register2, static_cast<uint8_t>(result));
+			writeAt<uint8_t>(0b010'000u | register2, static_cast<uint8_t>(result), true);
 		}
 		else
 		{
@@ -160,12 +160,12 @@ namespace mc68000
 		bool isLongOperation = (opcode & 0x100) == 0x100;
 		if (isLongOperation)
 		{
-			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress);
+			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress, false);
 			aRegisters[destinationRegister] += operand;
 		}
 		else
 		{
-			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress);
+			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress, false);
 			uint32_t extended = (int16_t) operand;
 			aRegisters[destinationRegister] += extended;
 		}
@@ -312,7 +312,7 @@ namespace mc68000
 	unsigned short Cpu::andi2ccr(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
 		statusRegister.c &= (source & 1);
 		statusRegister.v &= (source >> 1) & 1;
 		statusRegister.z &= (source >> 2) & 1;
@@ -344,7 +344,7 @@ namespace mc68000
 	unsigned short Cpu::asr_memory(unsigned short opcode)
 	{
 		uint16_t effectiveAddress = opcode & 0b111'111;
-		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t memory = readAt<uint16_t>(effectiveAddress, true);
 		uint16_t bit15 = memory & 0x8000;
 		uint16_t bit0 = memory & 1;
 		memory >>= 1;
@@ -352,7 +352,7 @@ namespace mc68000
 		{
 			memory |= 0x8000;
 		}
-		writeAt<uint16_t>(effectiveAddress, memory);
+		writeAt<uint16_t>(effectiveAddress, memory, true);
 		statusRegister.c = statusRegister.x = bit0;
 		return instructions::ASR;
 	}
@@ -535,18 +535,7 @@ namespace mc68000
 		{
 			// a memory access is being used. The size is byte.
 			uint8_t bitToTest = 1 << (bit & 0x7);
-			uint8_t data;
-
-			uint16_t mode = opcode & 0b111'000;
-			if (mode == 0b011'000 || mode == 0b100'000)
-			{
-				uint16_t effectiveAddress = 0b010'000 | (opcode & 0b111);
-				data = readAt<uint8_t>(effectiveAddress);
-			}
-			else
-			{
-				data = readAt<uint8_t>(opcode & 0b111'111);
-			}
+			uint8_t data = readAt<uint8_t>(opcode & 0b111'111, true);
 			statusRegister.z = (data & bitToTest) == 0;
 			switch (operation)
 			{
@@ -555,7 +544,7 @@ namespace mc68000
 				case BCHG: data ^= bitToTest; break;
 				case BTST: break;
 			}
-			writeAt<uint8_t>(opcode & 0b111'111, data);
+			writeAt<uint8_t>(opcode & 0b111'111, data, true);
 		}
 	}
 
@@ -569,7 +558,7 @@ namespace mc68000
 
 	unsigned short Cpu::bchg_i(unsigned short opcode)
 	{
-		uint8_t bit = readAt<uint8_t>(0b111'100);
+		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BCHG);
 		return instructions::BCHG_I;
 	}
@@ -587,7 +576,7 @@ namespace mc68000
 
 	unsigned short Cpu::bclr_i(unsigned short opcode)
 	{
-		uint8_t bit = readAt<uint8_t>(0b111'100);
+		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BCLR);
 		return instructions::BCLR_I;
 	}
@@ -605,7 +594,7 @@ namespace mc68000
 
 	unsigned short Cpu::bset_i(unsigned short opcode)
 	{
-		uint8_t bit = readAt<uint8_t>(0b111'100);
+		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BSET);
 		return instructions::BSET_I;
 	}
@@ -629,7 +618,7 @@ namespace mc68000
 			displacement = (int16_t)extension;
 		}
 		// The PC has been adjusted before being pushed onto the stack
-		writeAt<uint32_t>(0b100'111, pc);
+		writeAt<uint32_t>(0b100'111, pc, false);
 
 		pc = currentPc + displacement;
 		return instructions::BSR;
@@ -648,7 +637,7 @@ namespace mc68000
 
 	unsigned short Cpu::btst_i(unsigned short opcode)
 	{
-		uint8_t bit = readAt<uint8_t>(0b111'100);
+		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BTST);
 		return instructions::BTST_I;
 	}
@@ -660,7 +649,7 @@ namespace mc68000
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		int16_t value = (int16_t)(dRegisters[reg] & 0xffff);
-		uint16_t upperBound = readAt<uint16_t>(opcode & 0b111'111);
+		uint16_t upperBound = readAt<uint16_t>(opcode & 0b111'111, false);
 		if (value < 0 || value > upperBound)
 		{
 			// The condition codes are set according to the result of the comparison.
@@ -689,13 +678,13 @@ namespace mc68000
 		switch (size)
 		{
 		case 0:
-			writeAt<uint8_t>(destinationEffectiveAddress, 0);
+			writeAt<uint8_t>(destinationEffectiveAddress, 0, false);
 			break;
 		case 1:
-			writeAt<uint16_t>(destinationEffectiveAddress, 0);
+			writeAt<uint16_t>(destinationEffectiveAddress, 0, false);
 			break;
 		case 2:
-			writeAt<uint32_t>(destinationEffectiveAddress, 0);
+			writeAt<uint32_t>(destinationEffectiveAddress, 0, false);
 			break;
 		default:
 			throw "clr: invalid size";
@@ -850,7 +839,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::divs(unsigned short opcode)
 	{
-		uint16_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint16_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
 		int32_t destination = dRegisters[reg];
 
@@ -887,7 +876,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::divu(unsigned short opcode)
 	{
-		uint16_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint16_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
 		int32_t destination = dRegisters[reg];
 
@@ -943,7 +932,7 @@ namespace mc68000
 	unsigned short Cpu::eori2ccr(unsigned short opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
 		statusRegister.c ^= (source & 1);
 		statusRegister.v ^= (source >> 1) & 1;
 		statusRegister.z ^= (source >> 2) & 1;
@@ -1046,7 +1035,7 @@ namespace mc68000
 	unsigned short Cpu::jsr(unsigned short opcode)
 	{
 		uint32_t address = getEffectiveAddress(opcode);
-		writeAt<uint32_t>(0b100'111, pc);
+		writeAt<uint32_t>(0b100'111, pc, false);
 		pc = address;
 
 		return instructions::JSR;
@@ -1102,11 +1091,11 @@ namespace mc68000
 	unsigned short Cpu::lsr_memory(unsigned short opcode)
 	{
 		uint16_t effectiveAddress = opcode & 0b111'111;
-		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t memory = readAt<uint16_t>(effectiveAddress, true);
 		uint16_t bit0 = memory & 1;
 		memory >>= 1;
 		memory &= 0x7fff;
-		writeAt<uint16_t>(effectiveAddress, memory);
+		writeAt<uint16_t>(effectiveAddress, memory, true);
 		statusRegister.c = statusRegister.x = bit0;
 		return instructions::LSR;
 	}
@@ -1164,15 +1153,15 @@ namespace mc68000
 		{
 			case 3: // Word operation; the source operand is sign-extended to a long operand and all 32 bits are loaded into the address register.
 			{
-				uint16_t source = readAt<uint16_t>(sourceEffectiveAddress);
+				uint16_t source = readAt<uint16_t>(sourceEffectiveAddress, false);
 				int32_t extendedSource = (int16_t)source;
-				writeAt<uint32_t>(destinationEffectiveAddress, extendedSource);
+				writeAt<uint32_t>(destinationEffectiveAddress, extendedSource, false);
 				break;
 			}
 			case 2:
 			{
-				uint32_t source = readAt<uint32_t>(sourceEffectiveAddress);
-				writeAt<uint32_t>(destinationEffectiveAddress, source);
+				uint32_t source = readAt<uint32_t>(sourceEffectiveAddress, false);
+				writeAt<uint32_t>(destinationEffectiveAddress, source, false);
 				break;
 			}
 			default:
@@ -1205,7 +1194,7 @@ namespace mc68000
 	unsigned short Cpu::movesr(unsigned short opcode)
 	{
 		unsigned short effectiveAddress = opcode & 0b111'111u;
-		writeAt<uint16_t>(effectiveAddress, sr);
+		writeAt<uint16_t>(effectiveAddress, sr, false);
 
 		return instructions::MOVESR;
 	}
@@ -1426,7 +1415,7 @@ namespace mc68000
 	/// </summary>
 	unsigned short Cpu::muls(unsigned short opcode)
 	{
-		int32_t source = static_cast<int16_t>(readAt<uint16_t>(opcode & 0b111'111));
+		int32_t source = static_cast<int16_t>(readAt<uint16_t>(opcode & 0b111'111, false));
 		uint8_t reg = (opcode >> 9) & 0b111;
 		int32_t destination = static_cast<int16_t>(dRegisters[reg] & 0xffff);
 
@@ -1445,7 +1434,7 @@ namespace mc68000
 	/// </summary>
 	unsigned short Cpu::mulu(unsigned short opcode)
 	{
-		uint32_t source = readAt<uint16_t>(opcode & 0b111'111);
+		uint32_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t destination = dRegisters[reg] & 0xffff;
 
@@ -1464,7 +1453,7 @@ namespace mc68000
 	/// </summary>
 	unsigned short Cpu::nbcd(unsigned short opcode)
 	{
-		uint8_t value = readAt<uint8_t>(opcode & 0b111'111);
+		uint8_t value = readAt<uint8_t>(opcode & 0b111'111, false);
 		uint16_t m1 = value & 0x0f;
 		uint16_t m2 = value & 0xf0;
 
@@ -1474,7 +1463,7 @@ namespace mc68000
 		m1 = decimalValue % 10;
 		m2 = decimalValue / 10;
 		value = (m2 << 4) | m1;
-		writeAt<uint8_t>(opcode & 0b111'111, value);
+		writeAt<uint8_t>(opcode & 0b111'111, value, false);
 
 		statusRegister.x = statusRegister.c = (decimalValue == 0 ? 0 : 1);
 		if (value != 0) statusRegister.z = 0; // Z is cleared if the result is nonzero; unchanged otherwise.
@@ -1482,8 +1471,29 @@ namespace mc68000
 		return instructions::NBCD;
 	}
 
-	unsigned short Cpu::neg(unsigned short)
+	/// <summary>
+	/// NEG: Negate
+	/// </summary>
+	/// <param name=""></param>
+	/// <returns></returns>
+	unsigned short Cpu::neg(unsigned short opcode)
 	{
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			neg<uint8_t>(destinationEffectiveAddress);
+			break;
+		case 1:
+			neg<uint16_t>(destinationEffectiveAddress);
+			break;
+		case 2:
+			neg<uint32_t>(destinationEffectiveAddress);
+			break;
+		default:
+			throw "neg: invalid size";
+		}
 		return instructions::NEG;
 	}
 	unsigned short Cpu::negx(unsigned short)
@@ -1525,7 +1535,7 @@ namespace mc68000
 	unsigned short Cpu::ori2ccr(unsigned short)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
-		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress);
+		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
 		statusRegister.c |= (source & 1);
 		statusRegister.v |= (source >> 1) & 1;
 		statusRegister.z |= (source >> 2) & 1;
@@ -1595,7 +1605,7 @@ namespace mc68000
 	// ==========
 	unsigned short Cpu::rts(unsigned short opcode)
 	{
-		pc = readAt<uint32_t>(0b011'111);
+		pc = readAt<uint32_t>(0b011'111, false);
 		return instructions::RTS;
 	}
 

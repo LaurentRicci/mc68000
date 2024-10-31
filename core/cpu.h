@@ -176,8 +176,8 @@ namespace mc68000
 		// internal helpers
 		//
 	private:
-		template <typename T> T readAt(uint16_t ea);
-		template <typename T> void writeAt(uint16_t ea, T data);
+		template <typename T> T readAt(uint16_t ea, bool readModifyWrite);
+		template <typename T> void writeAt(uint16_t ea, T data, bool readModifyWrite);
 		template <typename T> void move(uint16_t from, uint16_t to);
 		uint32_t getTargetAddress(uint16_t opcode);
 		uint32_t getEffectiveAddress(uint16_t opcode);
@@ -196,6 +196,8 @@ namespace mc68000
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void bchg(uint16_t opcode, uint32_t bit, BitOperation operation);
+
+		template <typename T> void neg(uint16_t effectiveAdress);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void handleException(uint16_t vector);

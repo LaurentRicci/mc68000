@@ -493,6 +493,7 @@ BOOST_AUTO_TEST_CASE(a_addq_dataRegister_wl)
 	BOOST_CHECK_EQUAL(0x12340004, cpu.d0);
 	BOOST_CHECK_EQUAL(0x12350004, cpu.d1);
 }
+
 BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
 {
 	unsigned char code[] = {
@@ -528,5 +529,31 @@ BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
 	BOOST_CHECK_EQUAL(0, cpu.sr.v);
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
+
+BOOST_AUTO_TEST_CASE(a_addq_increment)
+{
+	unsigned char code[] = {
+	0x41, 0xfa, 0x00, 0x0e,    // lea data(pc), a0
+	0x30, 0xbc, 0x00, 0x2a,    // move #42, (a0)
+	0x52, 0x58,                // addq.w #1, (a0)+
+	0x4e, 0x40,                // trap #0
+	0xff, 0xff, 0xff, 0xff 
+	                           // data ds.l 16
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x12, cpu.a0);
+	BOOST_CHECK_EQUAL(43, cpu.mem.get<uint16_t>(0x10));
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()

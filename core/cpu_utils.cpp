@@ -38,10 +38,10 @@ namespace mc68000
 	// ==========
 	template <typename T> void Cpu::add(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
 		uint64_t result = (uint64_t)destination + (uint64_t)source;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
 
 		statusRegister.n = signed_cast<T>(result) < 0;
 		statusRegister.z = static_cast<T>(result) == 0;
@@ -58,9 +58,9 @@ namespace mc68000
 	// ==========
 	template <typename T> void Cpu::addq(uint32_t data, uint16_t destinationEffectiveAdress)
 	{
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
 		uint64_t result = (uint64_t)destination + (uint64_t)data;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
 
 		// When adding to address registers, the condition codes are not altered, and the entire destination address
 		// register is used regardless of the operation size.
@@ -133,10 +133,10 @@ namespace mc68000
 	uint16_t Cpu::shiftLeftMemory(uint16_t opcode, uint16_t instruction)
 	{
 		uint16_t effectiveAddress = opcode & 0b111'111;
-		uint16_t memory = readAt<uint16_t>(effectiveAddress);
+		uint16_t memory = readAt<uint16_t>(effectiveAddress, true);
 		uint16_t bit15 = memory & 0x8000;
 		memory <<= 1;
-		writeAt<uint16_t>(effectiveAddress, memory);
+		writeAt<uint16_t>(effectiveAddress, memory, true);
 		statusRegister.c = statusRegister.x = bit15 ? 1 : 0;
 
 		return instruction;
@@ -221,10 +221,10 @@ namespace mc68000
 	// =========
 	template <typename T> void Cpu::logical(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress, uint32_t (*op)(uint32_t lhs, uint32_t rhs))
 	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
 		uint32_t result = op(source, destination);
-		writeAt<T>(destinationEffectiveAdress, result);
+		writeAt<T>(destinationEffectiveAdress, result, true);
 
 		statusRegister.n = signed_cast<T>(result) < 0;
 		statusRegister.z = static_cast<T>(result) == 0;
@@ -310,10 +310,10 @@ namespace mc68000
 	// ==========
 	template <typename T> void Cpu::sub(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
 		uint64_t result = (uint64_t)destination - (uint64_t)source;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result));
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
 
 		statusRegister.n = signed_cast<T>(result) < 0;
 		statusRegister.z = static_cast<T>(result) == 0;
@@ -353,8 +353,8 @@ namespace mc68000
 	// ==========
 	template <typename T> void Cpu::cmp(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
 	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress);
+		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, false);
 		uint64_t result = (uint64_t)destination - (uint64_t)source;
 
 		statusRegister.n = signed_cast<T>(result) < 0;
@@ -366,41 +366,75 @@ namespace mc68000
 	template void Cpu::cmp<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 	template void Cpu::cmp<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
+	// ==========
+	// NEG
+	// ==========
+	template <typename T> void Cpu::neg(uint16_t effectiveAdress)
+	{
+		uint32_t destination = readAt<T>(effectiveAdress, true);
+		uint64_t result = 0 - (uint64_t)destination;
+		writeAt<T>(effectiveAdress, static_cast<T>(result), true);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((destination ^ 0) & (0 ^ result)) < 0;
+	}
+	template void Cpu::neg<uint8_t>(uint16_t effectiveAdress);
+	template void Cpu::neg<uint16_t>(uint16_t effectiveAdress);
+	template void Cpu::neg<uint32_t>(uint16_t effectiveAdress);
+
 	// ========================================
 	// Memory access through effective address
 	// ========================================
-	template <typename T> T Cpu::readAt(uint16_t ea)
+
+	/// <summary>
+	/// Read the value described by the effective address
+	/// </summary>
+	/// <typeparam name="T">Either a 8, 16 or 32 bits integer type</typeparam>
+	/// <param name="ea">The effective address</param>
+	/// <param name="readModifyWrite">
+	/// If true the on-going operation is a read modify write operation and 
+	/// in case of post increment or pre decrement operation the address register should be modifier only
+	/// once either before (pre-decrement) or after (post-increment) the operation.
+	/// </param>
+	/// <returns>The value at the effctive address</returns>
+	template <typename T> T Cpu::readAt(uint16_t ea, bool readModifyWrite)
 	{
 		unsigned short eam = ea >> 3;
 		unsigned short reg = ea & 7u;
 		switch (eam)
 		{
-		case 0:
+		case 0b000:
 			return static_cast<T>(dRegisters[reg]);
-		case 1:
+		case 0b001:
 			return static_cast<T>(aRegisters[reg]);
-		case 2:
+		case 0b010:
 		{
 			uint32_t address = aRegisters[reg];
 			T x = localMemory.get<T>(address);
 			return x;
 		}
-		case 3:
+		case 0b011:
 		{
 			uint32_t address = aRegisters[reg];
 			T x = localMemory.get<T>(address);
-			if (reg != 7)
+			if (!readModifyWrite)
 			{
-				aRegisters[reg] += sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] += sizeof(T) == 1 ? 2 : sizeof(T);
+				if (reg != 7)
+				{
+					aRegisters[reg] += sizeof(T);
+				}
+				else
+				{
+					// If the address register is the stack pointer and the operand size is byte, the address is incremented by two to keep the stack pointer aligned to a word boundary
+					aRegisters[reg] += sizeof(T) == 1 ? 2 : sizeof(T);
+				}
 			}
 			return x;
 		}
-		case 4:
+		case 0b100:
 		{
 			if (reg != 7)
 			{
@@ -536,9 +570,9 @@ namespace mc68000
 		}
 		throw "readAt: incorrect addressing mode";
 	}
-	template uint8_t Cpu::readAt<uint8_t>(uint16_t ea);
-	template uint16_t Cpu::readAt<uint16_t>(uint16_t ea);
-	template uint32_t Cpu::readAt<uint32_t>(uint16_t ea);
+	template uint8_t Cpu::readAt<uint8_t>(uint16_t ea, bool readModifyWrite);
+	template uint16_t Cpu::readAt<uint16_t>(uint16_t ea, bool readModifyWrite);
+	template uint32_t Cpu::readAt<uint32_t>(uint16_t ea, bool readModifyWrite);
 
 	/// <summary>
 	/// Retrieves the target address from the effective address
@@ -553,24 +587,24 @@ namespace mc68000
 
 		switch (eam)
 		{
-			case 2:
+			case 0b010:
 			{
 				address = aRegisters[reg];
 				break;
 			}
-			case 3:
+			case 0b011:
 			{
 				// Post increment : the address is incremented after the operation
 				address = aRegisters[reg];
 				break;
 			}
-			case 4:
+			case 0b100:
 			{
 				// Pre decrement : return the current address. Don't decrement the address since the size is unknown
 				address = aRegisters[reg];
 				break;
 			}
-			case 5:
+			case 0b101:
 			{
 				uint32_t baseAddress = aRegisters[reg];
 
@@ -581,7 +615,7 @@ namespace mc68000
 				address = (baseAddress + offset);
 				break;
 			}
-			case 6:
+			case 0b110:
 			{
 				uint32_t baseAddress = aRegisters[reg];
 
@@ -608,24 +642,24 @@ namespace mc68000
 				address = baseAddress + displacement + index;
 				break;
 			}
-			case 7:
+			case 0b111:
 			{
 				switch (reg)
 				{
-					case 0:
+					case 0b000:
 					{
 						uint16_t extension = localMemory.get<uint16_t>(pc);
 						pc += 2;
 						address = (int16_t)extension;
 						break;
 					}
-					case 1:
+					case 0b001:
 					{
 						address = localMemory.get<uint32_t>(pc);
 						pc += 4;
 						break;
 					}
-					case 2:
+					case 0b010:
 					{
 						uint32_t baseAddress = pc;
 						uint16_t extension = localMemory.get<uint16_t>(pc);
@@ -634,7 +668,7 @@ namespace mc68000
 						address = baseAddress + offset;
 						break;
 					}
-					case 3:
+					case 0b011:
 					{
 						uint32_t baseAddress = pc;
 
@@ -690,25 +724,36 @@ namespace mc68000
 		return reg;
 	}
 
-	template <typename T> void Cpu::writeAt(uint16_t  ea, T data)
+	/// <summary>
+	/// Store the value at the effective address
+	/// </summary>
+	/// <typeparam name="T">Either a 8, 16 or 32 bits integer type</typeparam>
+	/// <param name="ea">The effective address</param>
+	/// <param name="data">The value to store</param>
+	/// <param name="readModifyWrite">
+	/// If true the on-going operation is a read modify write operation and 
+	/// in case of post increment or pre decrement operation the address register should be modifier only
+	/// once either before (pre-decrement) or after (post-increment) the operation.
+	/// </param>
+	template <typename T> void Cpu::writeAt(uint16_t  ea, T data, bool readModifyWrite)
 	{
 		unsigned short eam = ea >> 3;
 		unsigned short reg = ea & 7u;
 		switch (eam)
 		{
-		case 0:
+		case 0b000:
 			dRegisters[reg] = maskDRegister(dRegisters[reg], sizeof(T)) | data;
 			break;
-		case 1:
+		case 0b001:
 			aRegisters[reg] = data;
 			break;
-		case 2:
+		case 0b010:
 		{
 			uint32_t address = aRegisters[reg];
 			localMemory.set<T>(address, data);
 			break;
 		}
-		case 3:
+		case 0b011:
 		{
 			uint32_t address = aRegisters[reg];
 			localMemory.set<T>(address, data);
@@ -723,22 +768,25 @@ namespace mc68000
 			}
 			break;
 		}
-		case 4:
+		case 0b100:
 		{
-			if (reg != 7)
+			if (!readModifyWrite)
 			{
-				aRegisters[reg] -= sizeof(T);
-			}
-			else
-			{
-				// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
-				aRegisters[reg] -= sizeof(T) == 1 ? 2 : sizeof(T);
+				if (reg != 7)
+				{
+					aRegisters[reg] -= sizeof(T);
+				}
+				else
+				{
+					// If the address register is the stack pointer and the operand size is byte, the address is decremented by two to keep the stack pointer aligned to a word boundary
+					aRegisters[reg] -= sizeof(T) == 1 ? 2 : sizeof(T);
+				}
 			}
 			uint32_t address = aRegisters[reg];
 			localMemory.set<T>(address, data);
 			break;
 		}
-		case 5:
+		case 0b101:
 		{
 			uint32_t address = aRegisters[reg];
 
@@ -749,7 +797,7 @@ namespace mc68000
 			localMemory.set<T>(address + offset, data);
 			break;
 		}
-		case 6:
+		case 0b110:
 		{
 			uint32_t address = aRegisters[reg];
 
@@ -776,7 +824,7 @@ namespace mc68000
 			localMemory.set<T>(address + displacement + index, data);
 			break;
 		}
-		case 7:
+		case 0b111:
 		{
 			switch (reg)
 			{
@@ -807,14 +855,14 @@ namespace mc68000
 			throw "writeAt: incorrect addressing mode";
 		}
 	}
-	template void Cpu::writeAt<uint8_t>(uint16_t ea, uint8_t data);
-	template void Cpu::writeAt<uint16_t>(uint16_t ea, uint16_t data);
-	template void Cpu::writeAt<uint32_t>(uint16_t ea, uint32_t data);
+	template void Cpu::writeAt<uint8_t>(uint16_t ea, uint8_t data, bool readModifyWrite);
+	template void Cpu::writeAt<uint16_t>(uint16_t ea, uint16_t data, bool readModifyWrite);
+	template void Cpu::writeAt<uint32_t>(uint16_t ea, uint32_t data, bool readModifyWrite);
 
 	template<typename T> void Cpu::move(uint16_t sourceEffectiveAddress, uint16_t  destinationEffectiveAddress)
 	{
-		T source = readAt<T>(sourceEffectiveAddress);
-		writeAt<T>(destinationEffectiveAddress, source);
+		T source = readAt<T>(sourceEffectiveAddress, false);
+		writeAt<T>(destinationEffectiveAddress, source, false);
 		statusRegister.c = 0;
 		statusRegister.v = 0;
 		statusRegister.z = source == 0 ? 1 : 0;

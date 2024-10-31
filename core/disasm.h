@@ -1,9 +1,28 @@
 #pragma once
 #include <string>
+#include <iostream>
+#include <sstream>
+
 #include "core.h"
 
 namespace mc68000
 {
+	inline std::string toHex(unsigned short value)
+	{
+		// return std::format("{x}", value);
+
+		std::ostringstream stream;
+		stream << std::hex << value;
+		return stream.str();
+	}
+
+	inline std::string toHexDollar(uint16_t value)
+	{
+		char buff[32];
+		sprintf(buff, "$%x", value);
+		return buff;
+	}
+
 	class DisAsm
 	{
 	private:
@@ -155,6 +174,7 @@ namespace mc68000
 		std::string decodeEffectiveAddress(unsigned short ea, bool isLongOperation = false);
 		unsigned short disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
 		unsigned short disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
+		uint16_t disassembleAddxSubx(const char* instructionName, uint16_t instructionId, uint16_t opcode);
 		void reset(const unsigned short* memory);
 
 	private:

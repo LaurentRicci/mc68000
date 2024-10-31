@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 namespace mc68000
 {
@@ -102,16 +103,16 @@ namespace mc68000
 		}
 
 		// ADDX SUBX
-		for (int rx = 0; rx <= 7; rx++)
+		for (uint16_t rx = 0; rx <= 7; rx++)
 		{
-			for (int size = 0; size <= 2; size++)
+			for (uint16_t size = 0; size <= 2; size++)
 			{
-				for (int rm = 0; rm <= 1; rm++)
+				for (uint16_t rm = 0; rm <= 1; rm++)
 				{
-					for (int ry = 0; ry <= 7; ry++)
+					for (uint16_t ry = 0; ry <= 7; ry++)
 					{
-						handlers[0xd000 + (rx << 9) + (1 << 8) + (size << 6) + (rm << 3) + rx] = &T::addx;
-						handlers[0x9000 + (rx << 9) + (1 << 8) + (size << 6) + (rm << 3) + rx] = &T::subx;
+						handlers[0xd000 + (rx << 9) + (1 << 8) + (size << 6) + (rm << 3) + ry] = &T::addx;
+						handlers[0x9000 + (rx << 9) + (1 << 8) + (size << 6) + (rm << 3) + ry] = &T::subx;
 					}
 				}
 			}
