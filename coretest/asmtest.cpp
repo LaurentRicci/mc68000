@@ -126,11 +126,89 @@ BOOST_AUTO_TEST_CASE(d_add)
     verifyDisassembly(0b1101'010'1'10'010'010u, "add.l d2,(a2)");
 }
 
+BOOST_AUTO_TEST_CASE(d_adda)
+{
+    verifyDisassembly(0b1101'110'0'11'010'010u, "adda.w (a2),a6");
+    verifyDisassembly(0b1101'110'1'11'000'010u, "adda.l d2,a6");
+}
+
+BOOST_AUTO_TEST_CASE(d_addi)
+{
+    verifyDisassembly(0b0000'0110'00'000'010u, 0x42, "addi.b #$42,d2");
+    verifyDisassembly(0b0000'0110'01'011'010u, 0x1234, "addi.w #$1234,(a2)+");
+    verifyDisassembly(0b0000'0110'10'100'110u, 0xabcd, 0x1234, "addi.l #$abcd1234,-(a6)");
+}
+
+BOOST_AUTO_TEST_CASE(d_addq)
+{
+    verifyDisassembly(0b0101'110'0'00'010'010u, "addq.b #6,(a2)");
+    verifyDisassembly(0b0101'011'0'01'000'010u, "addq.w #3,d2");
+    verifyDisassembly(0b0101'101'0'10'011'010u, "addq.l #5,(a2)+");
+}
+
+BOOST_AUTO_TEST_CASE(d_addx)
+{
+    verifyDisassembly(0b1101'110'1'00'00'0'010u, "addx.b d2,d6");
+    verifyDisassembly(0b1101'011'1'01'00'1'010u, "addx.w -(a2),-(a3)");
+    verifyDisassembly(0b1101'101'1'10'00'0'010u, "addx.l d2,d5");
+}
+
+BOOST_AUTO_TEST_CASE(d_and)
+{
+    verifyDisassembly(0b1100'011'000'000'010u, 0x42, "and.b d2,d3");
+    verifyDisassembly(0b1100'011'001'010'010u, 0x42, "and.w (a2),d3");
+    verifyDisassembly(0b1100'011'101'011'010u, 0x42, "and.w d3,(a2)+");
+    verifyDisassembly(0b1100'011'110'010'010u, 0x42, "and.l d3,(a2)");
+}
+
+BOOST_AUTO_TEST_CASE(d_andi)
+{
+    verifyDisassembly(0b0000'0010'00'000'010u, 0x42, "andi.b #$42,d2");
+    verifyDisassembly(0b0000'0010'01'011'010u, 0x1234, "andi.w #$1234,(a2)+");
+    verifyDisassembly(0b0000'0010'10'100'110u, 0xabcd, 0x1234, "andi.l #$abcd1234,-(a6)");
+}
+
+BOOST_AUTO_TEST_CASE(d_bcc)
+{
+    verifyDisassembly(0b0110'0100'0000'0000, 0x3456, "bcc $3456");
+    verifyDisassembly(0b0110'0101'0000'1000, "bcs $8");
+    verifyDisassembly(0b0110'0111'0000'1000, "beq $8");
+    verifyDisassembly(0b0110'0110'0000'1000, "bne $8");
+    verifyDisassembly(0b0110'1100'0000'1000, "bge $8");
+    verifyDisassembly(0b0110'1110'0000'1000, "bgt $8");
+    verifyDisassembly(0b0110'0010'0000'1000, "bhi $8");
+    verifyDisassembly(0b0110'1111'0000'1000, "ble $8");
+    verifyDisassembly(0b0110'0011'0000'1000, "bls $8");
+    verifyDisassembly(0b0110'1101'0000'1000, "blt $8");
+    verifyDisassembly(0b0110'1011'0000'1000, "bmi $8");
+    verifyDisassembly(0b0110'1010'0000'1000, "bpl $8");
+    verifyDisassembly(0b0110'1000'0000'1000, "bvc $8");
+    verifyDisassembly(0b0110'1001'0000'1000, "bvs $8");
+//    verifyDisassembly(0b0110'0000'0000'1000, "bt $8");
+//    verifyDisassembly(0b0110'0001'0000'1000, "bf $8");
+}
+
+BOOST_AUTO_TEST_CASE(d_bchg_r)
+{
+    verifyDisassembly(0x0141, "bchg d0,d1");
+}
+
+BOOST_AUTO_TEST_CASE(d_bchg_i)
+{
+    verifyDisassembly(0x0853, 0x000c, "bchg #$c,(a3)");
+}
+
 BOOST_AUTO_TEST_CASE(d_movea_l)
 {
     verifyDisassembly(0x206e, 0x0008, "movea.l 8(a6),a0");
 }
 
+BOOST_AUTO_TEST_CASE(d_subx)
+{
+    verifyDisassembly(0b1001'110'1'00'00'0'010u, "subx.b d2,d6");
+    verifyDisassembly(0b1001'011'1'01'00'1'010u, "subx.w -(a2),-(a3)");
+    verifyDisassembly(0b1001'101'1'10'00'0'010u, "subx.l d2,d5");
+}
 
 /*=================================================================================================
                                     org     $00100000       ;Start at 00100000

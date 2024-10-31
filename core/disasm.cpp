@@ -8,23 +8,14 @@
 
 namespace mc68000
 {
-	const char* const dregisters[8] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7" };
-	const char* const aregisters[8] = { "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7" };
-	const char* const AddressRegisterIndirect[8] = { "(a0)", "(a1)", "(a2)", "(a3)", "(a4)", "(a5)", "(a6)", "(a7)" };
-	const char* const AddressRegisterIndirectPost[8] = { "(a0)+", "(a1)+", "(a2)+", "(a3)+", "(a4)+", "(a5)+", "(a6)+", "(a7)+" };
-	const char* const AddressRegisterIndirectPre[8] = { "-(a0)", "-(a1)", "-(a2)", "-(a3)", "-(a4)", "-(a5)", "-(a6)", "-(a7)" };
-	const char* const SizesForImmediateInstructions[] = { ".b #$", ".w #$", ".l #$" };
-	const char* const Sizes[] = { ".b ", ".w ", ".l " };
+	extern const char* const dregisters[8] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7" };
+	extern const char* const aregisters[8] = { "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7" };
+	extern const char* const AddressRegisterIndirect[8] = { "(a0)", "(a1)", "(a2)", "(a3)", "(a4)", "(a5)", "(a6)", "(a7)" };
+	extern const char* const AddressRegisterIndirectPost[8] = { "(a0)+", "(a1)+", "(a2)+", "(a3)+", "(a4)+", "(a5)+", "(a6)+", "(a7)+" };
+	extern const char* const AddressRegisterIndirectPre[8] = { "-(a0)", "-(a1)", "-(a2)", "-(a3)", "-(a4)", "-(a5)", "-(a6)", "-(a7)" };
+	extern const char* const SizesForImmediateInstructions[] = { ".b #$", ".w #$", ".l #$" };
+	extern const char* const Sizes[] = { ".b ", ".w ", ".l " };
 
-
-	std::string toHex(unsigned short value)
-	{
-		// return std::format("{x}", value);
-
-		std::ostringstream stream;
-		stream << std::hex << value;
-		return stream.str();
-	}
 
 	DisAsm::DisAsm() : pc(nullptr), memory(nullptr)
 	{
@@ -36,7 +27,7 @@ namespace mc68000
 		delete handlers;
 	}
 
-	std::string DisAsm::disassemble(const unsigned short* code)
+	std::string DisAsm::disassemble(const uint16_t* code)
 	{
 		reset(code);
 
@@ -44,142 +35,14 @@ namespace mc68000
 		return disassembly;
 	}
 
-	std::string DisAsm::decodeEffectiveAddress(unsigned short ea, bool isLongOperation)
-	{
-		unsigned short eam = ea >> 3;
-		unsigned short reg = ea & 7u;
-		switch (eam)
-		{
-		case 0:
-			return dregisters[reg];
-		case 1:
-			return aregisters[reg];
-		case 2:
-			return AddressRegisterIndirect[reg];
-		case 3:
-			return AddressRegisterIndirectPost[reg];
-		case 4:
-			return AddressRegisterIndirectPre[reg];
-		case 5:
-		{
-			auto displacement = fetchNextWord();
-			return std::to_string(displacement) + AddressRegisterIndirect[reg];
-		}
-		case 6:
-		{
-			auto extension = fetchNextWord();
-			bool isAddressRegister = extension & 0x8000;
-			unsigned short extensionReg = (extension >> 12) & 7;
-			bool isLongIndexSize = (extension & 0x0800);
-			unsigned short scale = (extension >> 9) & 3;
-			auto displacement = (extension & 0xff);
-
-			std::string result = std::to_string(displacement) + "(";
-			result += aregisters[reg];
-			result += ",";
-			result += isAddressRegister ? aregisters[extensionReg] : dregisters[extensionReg];
-			result += ")";
-			return result;
-		}
-		case 7:
-		{
-			switch (reg)
-			{
-				case 0: // (xxx).w
-				{
-					std::string result = "$";
-					result += toHex( fetchNextWord());
-					result += ".w";
-					return result;
-				}
-				case 1: // (xxx).l
-				{
-					std::string result = "$";
-					result += toHex( fetchNextWord());
-					result += toHex(fetchNextWord());
-					result += ".l";
-					return result;
-				}
-				case 2: // d16(PC)
-				{
-					auto displacement = fetchNextWord();
-					std::string result = std::to_string(displacement) + "(pc)";
-					return result;
-				}
-				case 3: // d8(pc,xn)
-				{
-					auto extension = fetchNextWord();
-					bool isAddressRegister = extension & 0x8000;
-					unsigned short extensionReg = (extension >> 12) & 7;
-					bool isLongIndexSize = (extension & 0x0800);
-					unsigned short scale = (extension >> 9) & 3;
-					auto displacement = (extension & 0xff);
-
-					std::string result = std::to_string(displacement) + "(pc,";
-					result += isAddressRegister ? aregisters[extensionReg] : dregisters[extensionReg];
-					result += ")";
-					return result;
-				}
-				case 4: // #
-				{
-					std::string result = "#$";
-					result += toHex(fetchNextWord());
-					if (isLongOperation)
-					{
-						result += toHex(fetchNextWord());
-						result += ".l";
-					}
-					else
-					{
-						result += ".w";
-					}
-					return result;
-				}
-				default:
-					return "<ea>";
-			}
-		}
-		default:
-			return "<ea>";
-		}
-	}
-
-	unsigned short DisAsm::disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
-	{
-		const char* sizes[] = { ".b #$", ".w #$", ".l #$" };
-
-		unsigned short lsb = (opcode & 0xff);
-		unsigned short size = lsb >> 6;
-		unsigned short effectiveAddress = lsb & 0b111111u;
-
-		disassembly = instructionName;
-		disassembly += sizes[size];
-
-		unsigned short immediate = fetchNextWord();
-		if (size == 0)
-		{
-			disassembly += toHex(immediate & 0xff);
-		}
-		else if (size == 1)
-		{
-			disassembly += toHex(immediate);
-		}
-		else
-		{
-			disassembly += toHex(immediate);
-			disassembly += toHex(fetchNextWord());
-		}
-		disassembly += ",";
-		disassembly += decodeEffectiveAddress(effectiveAddress);
-
-		return instructions::CMPI;
-	}
-
-	unsigned short DisAsm::abcd(unsigned short opcode)
+	/// <summary>
+	/// ABCD: Add Binary Coded Decimal
+	/// </summary>
+	uint16_t DisAsm::abcd(uint16_t opcode)
 	{
 		disassembly = "abcd ";
-		unsigned short registerX = (opcode >> 9) & 7;
-		unsigned short registerY = opcode & 7;
+		uint16_t registerX = (opcode >> 9) & 7;
+		uint16_t registerY = opcode & 7;
 		bool isMemoryOperation = opcode & 8;
 
 		if (isMemoryOperation)
@@ -198,12 +61,15 @@ namespace mc68000
 		return instructions::ABCD;
 	}
 
-	unsigned short DisAsm::add(unsigned short opcode)
+	/// <summary>
+	/// ADD: Add
+	/// </summary>
+	uint16_t DisAsm::add(uint16_t opcode)
 	{
 		disassembly = "add";
-		unsigned short reg = (opcode >> 9) & 7;
+		uint16_t reg = (opcode >> 9) & 7;
 		bool isMemoryDestination = opcode & 0x100;
-		unsigned short size = (opcode >> 6) & 3;
+		uint16_t size = (opcode >> 6) & 3;
 
 		disassembly += Sizes[size];
 		if (isMemoryDestination)
@@ -221,288 +87,328 @@ namespace mc68000
 		return instructions::ADD;
 	}
 
-	unsigned short DisAsm::adda(unsigned short)
+	/// <summary>
+	/// ADDA: Add Address
+	/// </summary>
+	uint16_t DisAsm::adda(uint16_t opcode)
 	{
+		disassembly = "adda";
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t size = (opcode >> 8) & 1;
+		disassembly += Sizes[size+1];
+		disassembly += decodeEffectiveAddress(opcode & 0b111111u, size);
+		disassembly += ",";
+		disassembly += aregisters[reg];
+
 		return instructions::ADDA;
 	}
 
-	unsigned short DisAsm::addi(unsigned short opcode)
+	/// <summary>
+	/// ADDI: Add Immediate
+	/// </summary>
+	uint16_t DisAsm::addi(uint16_t opcode)
 	{
 		return disassembleImmediateInstruction("addi", instructions::ADDI, opcode);
 	}
 
-	unsigned short DisAsm::addq(unsigned short)
+	/// <summary>
+	/// ADDQ: Add Quick
+	/// </summary>
+	uint16_t DisAsm::addq(uint16_t opcode)
 	{
+		disassembly = "addq";
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t data = (opcode >> 9) & 0b111;
+		disassembly += Sizes[size];
+		disassembly += "#" + std::to_string(data);
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(opcode & 0b111111u);
 		return instructions::ADDQ;
 	}
 
-	unsigned short DisAsm::addx(unsigned short)
+	/// <summary>
+	/// ADDX: Add extended
+	/// </summary>
+	uint16_t DisAsm::addx(uint16_t opcode)
 	{
-		return instructions::ADDX;
+		return disassembleAddxSubx("addx", instructions::ADDX, opcode);
 	}
 
-	unsigned short DisAsm::and_(unsigned short)
+	/// <summary>
+	/// AND: And logical
+	/// </summary>
+	uint16_t DisAsm::and_(uint16_t opcode)
 	{
-		return instructions::AND;
-	}
+		disassembly = "and";
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
 
-	unsigned short DisAsm::andi(unsigned short)
-	{
-		return instructions::ANDI;
-	}
-
-	unsigned short DisAsm::andi2ccr(unsigned short)
-	{
-		return instructions::ANDI2CCR;
-	}
-	unsigned short DisAsm::andi2sr(unsigned short)
-	{
-		return instructions::ANDI2SR;
-	}
-	unsigned short DisAsm::asl_memory(unsigned short)
-	{
-		return instructions::ASL;
-	}
-
-	unsigned short DisAsm::asl_register(unsigned short)
-	{
-		return instructions::ASL;
-	}
-
-	unsigned short DisAsm::asr_memory(unsigned short)
-	{
-		return instructions::ASR;
-	}
-
-	unsigned short DisAsm::asr_register(unsigned short)
-	{
-		return instructions::ASR;
-	}
-
-	unsigned short DisAsm::disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode)
-	{
-		disassembly = instructionName;
-		disassembly += " $";
-
-		unsigned short offset = opcode & 0xff;
-		if (offset == 0)
+		uint16_t reg = (opcode >> 9) & 0b111;
+		bool fromRegister = opcode & (1 << 8);
+		if (fromRegister)
 		{
-			disassembly += toHex(fetchNextWord());
-		}
-		else if (offset == 0xff)
-		{
-			disassembly += toHex(fetchNextWord());
-			disassembly += toHex(fetchNextWord());
+			disassembly += dregisters[reg];
+			disassembly += ",";
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111);
 		}
 		else
 		{
-			disassembly += toHex(offset);
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111);
+			disassembly += ",";
+			disassembly += dregisters[reg];
 		}
-
-		return instructionId;
+		return instructions::AND;
 	}
 
-	unsigned short DisAsm::bra(unsigned short)
+	/// <summary>
+	/// ANDI: And immediate
+	/// </summary>
+	uint16_t DisAsm::andi(uint16_t opcode)
+	{
+		return disassembleImmediateInstruction("andi", instructions::ANDI, opcode);
+	}
+
+	uint16_t DisAsm::andi2ccr(uint16_t)
+	{
+		return instructions::ANDI2CCR;
+	}
+	uint16_t DisAsm::andi2sr(uint16_t)
+	{
+		return instructions::ANDI2SR;
+	}
+	uint16_t DisAsm::asl_memory(uint16_t)
+	{
+		return instructions::ASL;
+	}
+
+	uint16_t DisAsm::asl_register(uint16_t)
+	{
+		return instructions::ASL;
+	}
+
+	uint16_t DisAsm::asr_memory(uint16_t)
+	{
+		return instructions::ASR;
+	}
+
+	uint16_t DisAsm::asr_register(uint16_t)
+	{
+		return instructions::ASR;
+	}
+
+	uint16_t DisAsm::bra(uint16_t)
 	{
 		return instructions::BRA;
 	}
-	unsigned short DisAsm::bhi(unsigned short opcode)
+	uint16_t DisAsm::bhi(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bhi", instructions::BHI, opcode);
 	}
-	unsigned short DisAsm::bls(unsigned short opcode)
+	uint16_t DisAsm::bls(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bls", instructions::BLS, opcode);
 	}
-	unsigned short DisAsm::bcc(unsigned short opcode)
+	uint16_t DisAsm::bcc(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bcc", instructions::BCC, opcode);
 	}
-	unsigned short DisAsm::bcs(unsigned short opcode)
+	uint16_t DisAsm::bcs(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bcs", instructions::BCS, opcode);
 	}
-	unsigned short DisAsm::bne(unsigned short opcode)
+	uint16_t DisAsm::bne(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bne", instructions::BNE, opcode);
 	}
-	unsigned short DisAsm::beq(unsigned short opcode)
+	uint16_t DisAsm::beq(uint16_t opcode)
 	{
 		return disassembleBccInstruction("beq", instructions::BEQ, opcode);
 	}
-	unsigned short DisAsm::bvc(unsigned short opcode)
+	uint16_t DisAsm::bvc(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bvc", instructions::BVC, opcode);
 	}
-	unsigned short DisAsm::bvs(unsigned short opcode)
+	uint16_t DisAsm::bvs(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bvs", instructions::BVS, opcode);
 	}
-	unsigned short DisAsm::bpl(unsigned short opcode)
+	uint16_t DisAsm::bpl(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bpl", instructions::BPL, opcode);
 	}
-	unsigned short DisAsm::bmi(unsigned short opcode)
+	uint16_t DisAsm::bmi(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bmi", instructions::BMI, opcode);
 	}
-	unsigned short DisAsm::bge(unsigned short opcode)
+	uint16_t DisAsm::bge(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bge", instructions::BGE, opcode);
 	}
-	unsigned short DisAsm::blt(unsigned short opcode)
+	uint16_t DisAsm::blt(uint16_t opcode)
 	{
 		return disassembleBccInstruction("blt", instructions::BLT, opcode);
 	}
-	unsigned short DisAsm::bgt(unsigned short opcode)
+	uint16_t DisAsm::bgt(uint16_t opcode)
 	{
 		return disassembleBccInstruction("bgt", instructions::BGT, opcode);
 	}
-	unsigned short DisAsm::ble(unsigned short opcode)
+	uint16_t DisAsm::ble(uint16_t opcode)
 	{
 		return disassembleBccInstruction("ble", instructions::BLE, opcode);
 	}
 
-	unsigned short DisAsm::bchg_r(unsigned short)
+	uint16_t DisAsm::bchg_r(uint16_t opcode)
 	{
+		disassembly = "bchg ";
+		uint16_t reg = (opcode >> 9) & 0b111;
+		disassembly += dregisters[reg];
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111);
+
 		return instructions::BCHG_R;
 	}
 
-	unsigned short DisAsm::bchg_i(unsigned short)
+	uint16_t DisAsm::bchg_i(uint16_t opcode)
 	{
+		disassembly = "bchg #";
+		uint16_t bit = fetchNextWord();
+		disassembly += toHexDollar(bit);
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111);
+
 		return instructions::BCHG_I;
 	}
 
-	unsigned short DisAsm::bclr_r(unsigned short)
+	uint16_t DisAsm::bclr_r(uint16_t)
 	{
 		return instructions::BCLR_R;
 	}
 
-	unsigned short DisAsm::bclr_i(unsigned short)
+	uint16_t DisAsm::bclr_i(uint16_t)
 	{
 		return instructions::BCLR_I;
 	}
 
-	unsigned short DisAsm::bset_r(unsigned short)
+	uint16_t DisAsm::bset_r(uint16_t)
 	{
 		return instructions::BSET_R;
 	}
 
-	unsigned short DisAsm::bset_i(unsigned short)
+	uint16_t DisAsm::bset_i(uint16_t)
 	{
 		return instructions::BSET_I;
 	}
 
-	unsigned short DisAsm::bsr(unsigned short)
+	uint16_t DisAsm::bsr(uint16_t)
 	{
 		return instructions::BSR;
 	}
 
-	unsigned short DisAsm::btst_r(unsigned short)
+	uint16_t DisAsm::btst_r(uint16_t)
 	{
 		return instructions::BTST_R;
 	}
 
-	unsigned short DisAsm::btst_i(unsigned short)
+	uint16_t DisAsm::btst_i(uint16_t)
 	{
 		return instructions::BTST_I;
 	}
 
-	unsigned short DisAsm::chk(unsigned short)
+	uint16_t DisAsm::chk(uint16_t)
 	{
 		return instructions::CHK;
 	}
 
-	unsigned short DisAsm::clr(unsigned short)
+	uint16_t DisAsm::clr(uint16_t)
 	{
 		return instructions::CLR;
 	}
 
 
-	unsigned short DisAsm::cmp(unsigned short)
+	uint16_t DisAsm::cmp(uint16_t)
 	{
 		return instructions::CMP;
 	}
 
-	unsigned short DisAsm::cmpa(unsigned short)
+	uint16_t DisAsm::cmpa(uint16_t)
 	{
 		return instructions::CMPA;
 	}
 
-	unsigned short DisAsm::cmpi(unsigned short opcode)
+	uint16_t DisAsm::cmpi(uint16_t opcode)
 	{
 		return disassembleImmediateInstruction("cmpi", instructions::CMPI, opcode);
 	}
 
-	unsigned short DisAsm::cmpm(unsigned short)
+	uint16_t DisAsm::cmpm(uint16_t)
 	{
 		return instructions::CMPM;
 	}
 
-	unsigned short DisAsm::dbcc(unsigned short)
+	uint16_t DisAsm::dbcc(uint16_t)
 	{
 		return instructions::DBCC;
 	}
 
-	unsigned short DisAsm::divs(unsigned short)
+	uint16_t DisAsm::divs(uint16_t)
 	{
 		return instructions::DIVS;
 	}
 
-	unsigned short DisAsm::divu(unsigned short)
+	uint16_t DisAsm::divu(uint16_t)
 	{
 		return instructions::DIVU;
 	}
 
-	unsigned short DisAsm::eor(unsigned short)
+	uint16_t DisAsm::eor(uint16_t)
 	{
 		return instructions::EOR;
 	}
 
-	unsigned short DisAsm::eori(unsigned short)
+	uint16_t DisAsm::eori(uint16_t)
 	{
 		return instructions::EORI;
 	}
 
-	unsigned short DisAsm::eori2ccr(unsigned short)
+	uint16_t DisAsm::eori2ccr(uint16_t)
 	{
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short DisAsm::exg(unsigned short)
+	uint16_t DisAsm::exg(uint16_t)
 	{
 		return instructions::EXG;
 	}
 
-	unsigned short DisAsm::ext(unsigned short)
+	uint16_t DisAsm::ext(uint16_t)
 	{
 		return instructions::EXT;
 	}
 
-	unsigned short DisAsm::illegal(unsigned short)
+	uint16_t DisAsm::illegal(uint16_t)
 	{
 		return instructions::ILLEGAL;
 	}
 
-	unsigned short DisAsm::jmp(unsigned short)
+	uint16_t DisAsm::jmp(uint16_t)
 	{
 		return instructions::JMP;
 	}
 
-	unsigned short DisAsm::jsr(unsigned short)
+	uint16_t DisAsm::jsr(uint16_t)
 	{
 		return instructions::JSR;
 	}
 
-	unsigned short DisAsm::lea(unsigned short)
+	uint16_t DisAsm::lea(uint16_t)
 	{
 		return instructions::LEA;
 	}
 
-	unsigned short DisAsm::link(unsigned short opcode)
+	uint16_t DisAsm::link(uint16_t opcode)
 	{
 		disassembly = "link ";
-		unsigned short reg = opcode & 7u;
+		uint16_t reg = opcode & 7u;
 		disassembly += aregisters[reg];
 		auto displacement = fetchNextWord();
 		disassembly += ",#";
@@ -510,39 +416,39 @@ namespace mc68000
 		return instructions::LINK;
 	}
 
-	unsigned short DisAsm::fetchNextWord()
+	uint16_t DisAsm::fetchNextWord()
 	{
 		pc++;
 		return *pc;
 	}
 
-	void DisAsm::reset(const unsigned short* mem)
+	void DisAsm::reset(const uint16_t* mem)
 	{
 		memory = mem;
 		pc = mem;
 	}
 
-	unsigned short DisAsm::lsl_memory(unsigned short)
+	uint16_t DisAsm::lsl_memory(uint16_t)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short DisAsm::lsl_register(unsigned short)
+	uint16_t DisAsm::lsl_register(uint16_t)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short DisAsm::lsr_memory(unsigned short)
+	uint16_t DisAsm::lsr_memory(uint16_t)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short DisAsm::lsr_register(unsigned short)
+	uint16_t DisAsm::lsr_register(uint16_t)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short DisAsm::move(unsigned short opcode)
+	uint16_t DisAsm::move(uint16_t opcode)
 	{
 		const char* sizes[4] = { "?", "b", "l", "w" };
 
@@ -550,230 +456,233 @@ namespace mc68000
 		disassembly += sizes[opcode >> 12];
 		disassembly += " ";
 
-		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+		uint16_t sourceEffectiveAddress = opcode & 0b111111u;
 		disassembly += decodeEffectiveAddress(sourceEffectiveAddress);
 		disassembly += ",";
 
-		unsigned short destination = (opcode >> 6) & 0b111111u;
+		uint16_t destination = (opcode >> 6) & 0b111111u;
 		// the destination is inverted: register - mode instead of mode - register
-		unsigned short destinationRegister = destination & 0b111u;
-		unsigned short destinationMode = destination >> 3;
-		unsigned short destinationEffectiveAddress = (destinationRegister << 3) | destinationMode;
+		uint16_t destinationRegister = destination & 0b111u;
+		uint16_t destinationMode = destination >> 3;
+		uint16_t destinationEffectiveAddress = (destinationRegister << 3) | destinationMode;
 
 		disassembly += decodeEffectiveAddress(destinationEffectiveAddress);
 
 		return instructions::MOVE;
 	}
 
-	unsigned short DisAsm::movea(unsigned short opcode)
+	uint16_t DisAsm::movea(uint16_t opcode)
 	{
 		disassembly = "movea";
 		bool isWordSize = opcode & 0b0001'0000'0000'0000u;
 		disassembly += isWordSize ? ".w " : ".l ";
 		disassembly += decodeEffectiveAddress(opcode & 0b111111u, !isWordSize);
 		disassembly += ",";
-		unsigned short reg = (opcode & 0b0000'1110'0000'0000u) >> 9;
+		uint16_t reg = (opcode & 0b0000'1110'0000'0000u) >> 9;
 		disassembly += aregisters[reg];
 
 		return instructions::MOVEA;
 	}
 
-	unsigned short DisAsm::move2ccr(unsigned short)
+	uint16_t DisAsm::move2ccr(uint16_t)
 	{
 		return instructions::MOVE2CCR;
 	}
 
-	unsigned short DisAsm::movesr(unsigned short)
+	uint16_t DisAsm::movesr(uint16_t)
 	{
 		return instructions::MOVESR;
 	}
 
-	unsigned short DisAsm::movem(unsigned short)
+	uint16_t DisAsm::movem(uint16_t)
 	{
 		return instructions::MOVEM;
 	}
 
-	unsigned short DisAsm::movep(unsigned short)
+	uint16_t DisAsm::movep(uint16_t)
 	{
 		return instructions::MOVEP;
 	}
 
-	unsigned short DisAsm::moveq(unsigned short)
+	uint16_t DisAsm::moveq(uint16_t)
 	{
 		return instructions::MOVEQ;
 	}
 
-	unsigned short DisAsm::muls(unsigned short)
+	uint16_t DisAsm::muls(uint16_t)
 	{
 		return instructions::MULS;
 	}
 
-	unsigned short DisAsm::mulu(unsigned short)
+	uint16_t DisAsm::mulu(uint16_t)
 	{
 		return instructions::MULU;
 	}
 
-	unsigned short DisAsm::nbcd(unsigned short)
+	uint16_t DisAsm::nbcd(uint16_t)
 	{
 		return instructions::NBCD;
 	}
 
-	unsigned short DisAsm::neg(unsigned short)
+	uint16_t DisAsm::neg(uint16_t)
 	{
 		return instructions::NEG;
 	}
-	unsigned short DisAsm::negx(unsigned short)
+	uint16_t DisAsm::negx(uint16_t)
 	{
 		return instructions::NEGX;
 	}
-	unsigned short DisAsm::nop(unsigned short)
+	uint16_t DisAsm::nop(uint16_t)
 	{
 		return instructions::NOP;
 	}
-	unsigned short DisAsm::not_(unsigned short)
+	uint16_t DisAsm::not_(uint16_t)
 	{
 		return instructions::NOT;
 	}
 
-	unsigned short DisAsm::or_(unsigned short)
+	uint16_t DisAsm::or_(uint16_t)
 	{
 		return instructions::OR;
 	}
 
-	unsigned short DisAsm::ori(unsigned short)
+	uint16_t DisAsm::ori(uint16_t)
 	{
 		return instructions::ORI;
 	}
 
-	unsigned short DisAsm::ori2ccr(unsigned short)
+	uint16_t DisAsm::ori2ccr(uint16_t)
 	{
 		return instructions::ORI2CCR;
 	}
 
-	unsigned short DisAsm::pea(unsigned short)
+	uint16_t DisAsm::pea(uint16_t)
 	{
 		return instructions::PEA;
 	}
 
-	unsigned short DisAsm::rol_memory(unsigned short)
+	uint16_t DisAsm::rol_memory(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short DisAsm::ror_memory(unsigned short)
+	uint16_t DisAsm::ror_memory(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short DisAsm::roxl_memory(unsigned short)
+	uint16_t DisAsm::roxl_memory(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short DisAsm::roxr_memory(unsigned short)
+	uint16_t DisAsm::roxr_memory(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short DisAsm::rol_register(unsigned short)
+	uint16_t DisAsm::rol_register(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short DisAsm::ror_register(unsigned short)
+	uint16_t DisAsm::ror_register(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short DisAsm::roxl_register(unsigned short)
+	uint16_t DisAsm::roxl_register(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short DisAsm::roxr_register(unsigned short)
+	uint16_t DisAsm::roxr_register(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short DisAsm::sbcd(unsigned short)
+	uint16_t DisAsm::sbcd(uint16_t)
 	{
 		return instructions::SBCD;
 	}
 
-	unsigned short DisAsm::rtr(unsigned short)
+	uint16_t DisAsm::rtr(uint16_t)
 	{
 		return instructions::RTR;
 	}
 
-	unsigned short DisAsm::rts(unsigned short)
+	uint16_t DisAsm::rts(uint16_t)
 	{
 		disassembly = "rts";
 		return instructions::RTS;
 	}
 
-	unsigned short DisAsm::scc(unsigned short)
+	uint16_t DisAsm::scc(uint16_t)
 	{
 		return instructions::SCC;
 	}
 
-	unsigned short DisAsm::sub(unsigned short)
+	uint16_t DisAsm::sub(uint16_t)
 	{
 		return instructions::SUB;
 	}
 
-	unsigned short DisAsm::subi(unsigned short)
+	uint16_t DisAsm::subi(uint16_t)
 	{
 		return instructions::SUBI;
 	}
 
-	unsigned short DisAsm::suba(unsigned short)
+	uint16_t DisAsm::suba(uint16_t)
 	{
 		return instructions::SUBA;
 	}
 
-	unsigned short DisAsm::subq(unsigned short)
+	uint16_t DisAsm::subq(uint16_t)
 	{
 		return instructions::SUBQ;
 	}
 
-	unsigned short DisAsm::subx(unsigned short)
+	/// <summary>
+	/// SUBX: Sub extended
+	/// </summary>
+	uint16_t DisAsm::subx(uint16_t opcode)
 	{
-		return instructions::SUBX;
+		return disassembleAddxSubx("subx", instructions::SUBX, opcode);
 	}
 
-	unsigned short DisAsm::swap(unsigned short)
+	uint16_t DisAsm::swap(uint16_t)
 	{
 		return instructions::SWAP;
 	}
 
-	unsigned short DisAsm::tas(unsigned short)
+	uint16_t DisAsm::tas(uint16_t)
 	{
 		return instructions::TAS;
 	}
 
-	unsigned short DisAsm::trap(unsigned short)
+	uint16_t DisAsm::trap(uint16_t)
 	{
 		return instructions::TRAP;
 	}
 
-	unsigned short DisAsm::trapv(unsigned short)
+	uint16_t DisAsm::trapv(uint16_t)
 	{
 		return instructions::TRAPV;
 	}
 
-	unsigned short DisAsm::tst(unsigned short)
+	uint16_t DisAsm::tst(uint16_t)
 	{
 		return instructions::TST;
 	}
 
-	unsigned short DisAsm::unlk(unsigned short opcode)
+	uint16_t DisAsm::unlk(uint16_t opcode)
 	{
 		disassembly = "unlk a";
 		disassembly += toHex(opcode & 0b111u);
 		return instructions::UNLK;
 	}
 
-	unsigned short DisAsm::unknown(unsigned short)
+	uint16_t DisAsm::unknown(uint16_t)
 	{
 		return instructions::UNKNOWN;
 	}
