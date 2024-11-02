@@ -96,7 +96,7 @@ namespace mc68000
 	// ABCD
 	// ==========
 
-	unsigned short Cpu::abcd(unsigned short opcode)
+	uint16_t Cpu::abcd(uint16_t opcode)
 	{
 		uint8_t register1 = opcode & 0b111;
 		uint8_t register2 = (opcode >> 9) & 0b111;
@@ -151,7 +151,7 @@ namespace mc68000
 	// ==========
 	// ADDA
 	// ==========
-	unsigned short Cpu::adda(unsigned short opcode)
+	uint16_t Cpu::adda(uint16_t opcode)
 	{
 		// The Condition Codes are unaffected so the template add<> method can't be used
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
@@ -175,7 +175,7 @@ namespace mc68000
 	// ==========
 	// ADD
 	// ==========
-	unsigned short Cpu::add(unsigned short opcode)
+	uint16_t Cpu::add(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
 		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
@@ -210,7 +210,7 @@ namespace mc68000
 	// ==========
 	// ADDI
 	// ==========
-	unsigned short Cpu::addi(unsigned short opcode)
+	uint16_t Cpu::addi(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
@@ -244,7 +244,7 @@ namespace mc68000
 	// ADDQ
 	// ==========
 
-	unsigned short Cpu::addq(unsigned short opcode)
+	uint16_t Cpu::addq(uint16_t opcode)
 	{
 		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
 		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
@@ -281,7 +281,7 @@ namespace mc68000
 		return instructions::ADDQ;
 	}
 
-	unsigned short Cpu::addx(unsigned short)
+	uint16_t Cpu::addx(uint16_t)
 	{
 		return instructions::ADDX;
 	}
@@ -290,7 +290,7 @@ namespace mc68000
 	// AND
 	// ==========
 
-	unsigned short Cpu::and_(unsigned short opcode)
+	uint16_t Cpu::and_(uint16_t opcode)
 	{
 		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::AND;
@@ -300,7 +300,7 @@ namespace mc68000
 	// ANDI
 	// ==========
 
-	unsigned short Cpu::andi(unsigned short opcode)
+	uint16_t Cpu::andi(uint16_t opcode)
 	{
 		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
 		return instructions::ANDI;
@@ -309,7 +309,7 @@ namespace mc68000
 	// ==========
 	// ANDI to CCR
 	// ==========
-	unsigned short Cpu::andi2ccr(unsigned short opcode)
+	uint16_t Cpu::andi2ccr(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
@@ -321,19 +321,19 @@ namespace mc68000
 
 		return instructions::ANDI2CCR;
 	}
-	unsigned short Cpu::andi2sr(unsigned short)
+	uint16_t Cpu::andi2sr(uint16_t)
 	{
 		return instructions::ANDI2SR;
 	}
 	// ==========
 	// ASL
 	// ==========
-	unsigned short Cpu::asl_memory(unsigned short opcode)
+	uint16_t Cpu::asl_memory(uint16_t opcode)
 	{
 		return shiftLeftMemory(opcode, instructions::ASL);
 	}
 
-	unsigned short Cpu::asl_register(unsigned short opcode)
+	uint16_t Cpu::asl_register(uint16_t opcode)
 	{
 		return shiftLeftRegister(opcode, instructions::ASL);
 	}
@@ -341,7 +341,7 @@ namespace mc68000
 	// ==========
 	// ASR
 	// ==========
-	unsigned short Cpu::asr_memory(unsigned short opcode)
+	uint16_t Cpu::asr_memory(uint16_t opcode)
 	{
 		uint16_t effectiveAddress = opcode & 0b111'111;
 		uint16_t memory = readAt<uint16_t>(effectiveAddress, true);
@@ -357,7 +357,7 @@ namespace mc68000
 		return instructions::ASR;
 	}
 
-	unsigned short Cpu::asr_register(unsigned short opcode)
+	uint16_t Cpu::asr_register(uint16_t opcode)
 	{
 		return shiftRightRegister(opcode, instructions::ASR, false);
 	}
@@ -365,13 +365,13 @@ namespace mc68000
 	// ==========
 	// Bcc
 	// ==========
-	unsigned short Cpu::bra(unsigned short opcode)
+	uint16_t Cpu::bra(uint16_t opcode)
 	{
 		pc = getTargetAddress(opcode);
 		return instructions::BRA;
 	}
 
-	unsigned short Cpu::bhi(unsigned short opcode)
+	uint16_t Cpu::bhi(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.hi())
@@ -381,7 +381,7 @@ namespace mc68000
 		return instructions::BHI;
 	}
 
-	unsigned short Cpu::bls(unsigned short opcode)
+	uint16_t Cpu::bls(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.ls())
@@ -391,7 +391,7 @@ namespace mc68000
 		return instructions::BLS;
 	}
 
-	unsigned short Cpu::bcc(unsigned short opcode)
+	uint16_t Cpu::bcc(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.cc())
@@ -401,7 +401,7 @@ namespace mc68000
 		return instructions::BCC;
 	}
 
-	unsigned short Cpu::bcs(unsigned short opcode)
+	uint16_t Cpu::bcs(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.cs())
@@ -411,7 +411,7 @@ namespace mc68000
 		return instructions::BCS;
 	
 	}
-	unsigned short Cpu::bne(unsigned short opcode)
+	uint16_t Cpu::bne(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.ne())
@@ -421,7 +421,7 @@ namespace mc68000
 		return instructions::BNE;
 	}
 
-	unsigned short Cpu::beq(unsigned short opcode)
+	uint16_t Cpu::beq(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.eq())
@@ -431,7 +431,7 @@ namespace mc68000
 		return instructions::BEQ;
 	}
 
-	unsigned short Cpu::bvc(unsigned short opcode)
+	uint16_t Cpu::bvc(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.vc())
@@ -441,7 +441,7 @@ namespace mc68000
 		return instructions::BVC;
 	}
 
-	unsigned short Cpu::bvs(unsigned short opcode)
+	uint16_t Cpu::bvs(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.vs())
@@ -451,7 +451,7 @@ namespace mc68000
 		return instructions::BVS;
 	}
 
-	unsigned short Cpu::bpl(unsigned short opcode)
+	uint16_t Cpu::bpl(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.pl())
@@ -461,7 +461,7 @@ namespace mc68000
 		return instructions::BPL;
 	}
 
-	unsigned short Cpu::bmi(unsigned short opcode)
+	uint16_t Cpu::bmi(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.mi())
@@ -471,7 +471,7 @@ namespace mc68000
 		return instructions::BMI;
 	}
 
-	unsigned short Cpu::bge(unsigned short opcode)
+	uint16_t Cpu::bge(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.ge())
@@ -481,7 +481,7 @@ namespace mc68000
 		return instructions::BGE;
 	}
 
-	unsigned short Cpu::blt(unsigned short opcode)
+	uint16_t Cpu::blt(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.lt())
@@ -491,7 +491,7 @@ namespace mc68000
 		return instructions::BLT;
 	}
 
-	unsigned short Cpu::bgt(unsigned short opcode)
+	uint16_t Cpu::bgt(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.gt())
@@ -501,7 +501,7 @@ namespace mc68000
 		return instructions::BGT;
 	}
 
-	unsigned short Cpu::ble(unsigned short opcode)
+	uint16_t Cpu::ble(uint16_t opcode)
 	{
 		auto targetAddress = getTargetAddress(opcode);
 		if (sr.le())
@@ -548,7 +548,7 @@ namespace mc68000
 		}
 	}
 
-	unsigned short Cpu::bchg_r(unsigned short opcode)
+	uint16_t Cpu::bchg_r(uint16_t opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t bit = dRegisters[reg];
@@ -556,7 +556,7 @@ namespace mc68000
 		return instructions::BCHG_R;
 	}
 
-	unsigned short Cpu::bchg_i(unsigned short opcode)
+	uint16_t Cpu::bchg_i(uint16_t opcode)
 	{
 		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BCHG);
@@ -566,7 +566,7 @@ namespace mc68000
 	// ==========
 	// BCLR
 	// ==========
-	unsigned short Cpu::bclr_r(unsigned short opcode)
+	uint16_t Cpu::bclr_r(uint16_t opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t bit = dRegisters[reg];
@@ -574,7 +574,7 @@ namespace mc68000
 		return instructions::BCLR_R;
 	}
 
-	unsigned short Cpu::bclr_i(unsigned short opcode)
+	uint16_t Cpu::bclr_i(uint16_t opcode)
 	{
 		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BCLR);
@@ -584,7 +584,7 @@ namespace mc68000
 	// ==========
 	// BSET
 	// ==========
-	unsigned short Cpu::bset_r(unsigned short opcode)
+	uint16_t Cpu::bset_r(uint16_t opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t bit = dRegisters[reg];
@@ -592,7 +592,7 @@ namespace mc68000
 		return instructions::BSET_R;
 	}
 
-	unsigned short Cpu::bset_i(unsigned short opcode)
+	uint16_t Cpu::bset_i(uint16_t opcode)
 	{
 		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BSET);
@@ -602,7 +602,7 @@ namespace mc68000
 	// ==========
 	// BSR
 	// ==========
-	unsigned short Cpu::bsr(unsigned short opcode)
+	uint16_t Cpu::bsr(uint16_t opcode)
 	{
 		uint32_t currentPc = pc;
 		int32_t displacement;
@@ -627,7 +627,7 @@ namespace mc68000
 	// ==========
 	// BTST
 	// ==========
-	unsigned short Cpu::btst_r(unsigned short opcode)
+	uint16_t Cpu::btst_r(uint16_t opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		uint32_t bit = dRegisters[reg];
@@ -635,7 +635,7 @@ namespace mc68000
 		return instructions::BTST_R;
 	}
 
-	unsigned short Cpu::btst_i(unsigned short opcode)
+	uint16_t Cpu::btst_i(uint16_t opcode)
 	{
 		uint8_t bit = readAt<uint8_t>(0b111'100, false);
 		bchg(opcode, bit, BTST);
@@ -645,7 +645,7 @@ namespace mc68000
 	// ==========
 	// CHK
 	// ==========
-	unsigned short Cpu::chk(unsigned short opcode)
+	uint16_t Cpu::chk(uint16_t opcode)
 	{
 		uint8_t reg = (opcode >> 9) & 0b111;
 		int16_t value = (int16_t)(dRegisters[reg] & 0xffff);
@@ -670,7 +670,7 @@ namespace mc68000
 	// ==========
 	// CLR
 	// ==========
-	unsigned short Cpu::clr(unsigned short opcode)
+	uint16_t Cpu::clr(uint16_t opcode)
 	{
 		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
 
@@ -700,7 +700,7 @@ namespace mc68000
 	// ==========
 	// CMP
 	// ==========
-	unsigned short Cpu::cmp(unsigned short opcode)
+	uint16_t Cpu::cmp(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
@@ -727,7 +727,7 @@ namespace mc68000
 	// ==========
 	// CMPA
 	// ==========
-	unsigned short Cpu::cmpa(unsigned short opcode)
+	uint16_t Cpu::cmpa(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
@@ -751,7 +751,7 @@ namespace mc68000
 	// ==========
 	// CMPI
 	// ==========
-	unsigned short Cpu::cmpi(unsigned short opcode)
+	uint16_t Cpu::cmpi(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
@@ -778,7 +778,7 @@ namespace mc68000
 	// ==========
 	// CMPM
 	// ==========
-	unsigned short Cpu::cmpm(unsigned short opcode)
+	uint16_t Cpu::cmpm(uint16_t opcode)
 	{
 		uint16_t rx = (opcode >> 9) & 0b111;
 		uint16_t ry = opcode & 0b111;
@@ -808,7 +808,7 @@ namespace mc68000
 	// ==========
 	// DBCC
 	// ==========
-	unsigned short Cpu::dbcc(unsigned short opcode)
+	uint16_t Cpu::dbcc(uint16_t opcode)
 	{
 		// get the target address 
 		uint32_t address = pc;
@@ -837,7 +837,7 @@ namespace mc68000
 	// ==========
 	// DIVS
 	// ==========
-	unsigned short Cpu::divs(unsigned short opcode)
+	uint16_t Cpu::divs(uint16_t opcode)
 	{
 		uint16_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
@@ -874,7 +874,7 @@ namespace mc68000
 	// ==========
 	// DIVU
 	// ==========
-	unsigned short Cpu::divu(unsigned short opcode)
+	uint16_t Cpu::divu(uint16_t opcode)
 	{
 		uint16_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
@@ -911,7 +911,7 @@ namespace mc68000
 	// ==========
 	// EOR
 	// ==========
-	unsigned short Cpu::eor(unsigned short opcode)
+	uint16_t Cpu::eor(uint16_t opcode)
 	{
 		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EOR;
@@ -920,7 +920,7 @@ namespace mc68000
 	// ==========
 	// EORI
 	// ==========
-	unsigned short Cpu::eori(unsigned short opcode)
+	uint16_t Cpu::eori(uint16_t opcode)
 	{
 		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs ^ rhs; });
 		return instructions::EORI;
@@ -929,7 +929,7 @@ namespace mc68000
 	// ==========
 	// EORI to CCR
 	// ==========
-	unsigned short Cpu::eori2ccr(unsigned short opcode)
+	uint16_t Cpu::eori2ccr(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
@@ -945,7 +945,7 @@ namespace mc68000
 	// ==========
 	// EXG
 	// ==========
-	unsigned short Cpu::exg(unsigned short opcode)
+	uint16_t Cpu::exg(uint16_t opcode)
 	{
 		uint16_t mode = (opcode >> 3) & 0b11111;
 		uint16_t regx = (opcode >> 9) & 0b111;
@@ -983,7 +983,7 @@ namespace mc68000
 	// ==========
 	// EXT
 	// ==========
-	unsigned short Cpu::ext(unsigned short opcode)
+	uint16_t Cpu::ext(uint16_t opcode)
 	{
 		uint16_t reg = opcode & 0b111;
 		bool isLong = (opcode >> 6) & 0b1;
@@ -1012,7 +1012,7 @@ namespace mc68000
 	// ==========
 	// ILLEGAL
 	// ==========
-	unsigned short Cpu::illegal(unsigned short)
+	uint16_t Cpu::illegal(uint16_t)
 	{
 		handleException(Exceptions::ILLEGAL_INSTRUCTION);
 		return instructions::ILLEGAL;
@@ -1021,7 +1021,7 @@ namespace mc68000
 	// ==========
 	// JMP
 	// ==========
-	unsigned short Cpu::jmp(unsigned short opcode)
+	uint16_t Cpu::jmp(uint16_t opcode)
 	{
 		uint32_t address = getEffectiveAddress(opcode);
 		pc = address;
@@ -1032,7 +1032,7 @@ namespace mc68000
 	// ==========
 	// JSR
 	// ==========
-	unsigned short Cpu::jsr(unsigned short opcode)
+	uint16_t Cpu::jsr(uint16_t opcode)
 	{
 		uint32_t address = getEffectiveAddress(opcode);
 		writeAt<uint32_t>(0b100'111, pc, false);
@@ -1044,7 +1044,7 @@ namespace mc68000
 	// ==========
 	// LEA
 	// ==========
-	unsigned short Cpu::lea(unsigned short opcode)
+	uint16_t Cpu::lea(uint16_t opcode)
 	{
 		uint32_t address = getEffectiveAddress(opcode);
 
@@ -1057,7 +1057,7 @@ namespace mc68000
 	// ==========
 	// LINK
 	// ==========
-	unsigned short Cpu::link(unsigned short opcode)
+	uint16_t Cpu::link(uint16_t opcode)
 	{
 		uint8_t reg = opcode & 0b111;
 		int16_t displacement = static_cast<int16_t>(localMemory.get<uint16_t>(pc));
@@ -1075,12 +1075,12 @@ namespace mc68000
 	// ==========
 	// LSL
 	// ==========
-	unsigned short Cpu::lsl_memory(unsigned short opcode)
+	uint16_t Cpu::lsl_memory(uint16_t opcode)
 	{
 		return shiftLeftMemory(opcode, instructions::LSL);
 	}
 
-	unsigned short Cpu::lsl_register(unsigned short opcode)
+	uint16_t Cpu::lsl_register(uint16_t opcode)
 	{
 		return shiftLeftRegister(opcode, instructions::LSL);
 	}
@@ -1088,7 +1088,7 @@ namespace mc68000
 	// ==========
 	// LSR
 	// ==========
-	unsigned short Cpu::lsr_memory(unsigned short opcode)
+	uint16_t Cpu::lsr_memory(uint16_t opcode)
 	{
 		uint16_t effectiveAddress = opcode & 0b111'111;
 		uint16_t memory = readAt<uint16_t>(effectiveAddress, true);
@@ -1100,7 +1100,7 @@ namespace mc68000
 		return instructions::LSR;
 	}
 
-	unsigned short Cpu::lsr_register(unsigned short opcode)
+	uint16_t Cpu::lsr_register(uint16_t opcode)
 	{
 		return shiftRightRegister(opcode, instructions::LSR, true);
 	}
@@ -1108,16 +1108,16 @@ namespace mc68000
 	// ==========
 	// MOVE
 	// ==========
-	unsigned short Cpu::move(unsigned short opcode)
+	uint16_t Cpu::move(uint16_t opcode)
 	{
-		unsigned short size = opcode >> 12;
-		unsigned short sourceEffectiveAddress = opcode & 0b111111u;
+		uint16_t size = opcode >> 12;
+		uint16_t sourceEffectiveAddress = opcode & 0b111111u;
 
 		// the destination is inverted: register - mode instead of mode - register
-		unsigned short destination = (opcode >> 6) & 0b111111u;
-		unsigned short destinationMode = destination & 0b111u;
-		unsigned short destinationRegister = destination >> 3;
-		unsigned short destinationEffectiveAddress = (destinationMode << 3) | destinationRegister;
+		uint16_t destination = (opcode >> 6) & 0b111111u;
+		uint16_t destinationMode = destination & 0b111u;
+		uint16_t destinationRegister = destination >> 3;
+		uint16_t destinationEffectiveAddress = (destinationMode << 3) | destinationRegister;
 
 		switch (size)
 		{
@@ -1140,10 +1140,10 @@ namespace mc68000
 	// ==========
 	// MOVEA
 	// ==========
-	unsigned short Cpu::movea(unsigned short opcode)
+	uint16_t Cpu::movea(uint16_t opcode)
 	{
-		unsigned short size = opcode >> 12;
-		unsigned short sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t size = opcode >> 12;
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
 
 		// the destination is inverted: register - mode instead of mode - register
 		uint16_t destinationRegister = (opcode >> 9) & 0b111u;
@@ -1174,7 +1174,7 @@ namespace mc68000
 	// ==========
 	// MOVE to CCR
 	// ==========
-	unsigned short Cpu::move2ccr(unsigned short)
+	uint16_t Cpu::move2ccr(uint16_t)
 	{
 		uint16_t extension = localMemory.get<uint16_t>(pc);
 		pc += 2;
@@ -1191,9 +1191,9 @@ namespace mc68000
 	// ==========
 	// MOVE from SR
 	// ==========
-	unsigned short Cpu::movesr(unsigned short opcode)
+	uint16_t Cpu::movesr(uint16_t opcode)
 	{
-		unsigned short effectiveAddress = opcode & 0b111'111u;
+		uint16_t effectiveAddress = opcode & 0b111'111u;
 		writeAt<uint16_t>(effectiveAddress, sr, false);
 
 		return instructions::MOVESR;
@@ -1202,7 +1202,7 @@ namespace mc68000
 	// ==========
 	// MOVEM
 	// ==========
-	unsigned short Cpu::movem(unsigned short opcode)
+	uint16_t Cpu::movem(uint16_t opcode)
 	{
 		uint16_t direction = (opcode >> 10) & 1;
 		uint16_t size = (opcode >> 6) & 1;
@@ -1344,8 +1344,10 @@ namespace mc68000
 
 		return instructions::MOVEM;
 	}
-
-	unsigned short Cpu::movep(unsigned short opcode)
+	/// <summary>
+	/// MOVEP: Move Peripheral
+	/// </summary>
+	uint16_t Cpu::movep(uint16_t opcode)
 	{
 		uint16_t dRegister = (opcode >> 9) & 0b111;
 		uint16_t aRegister = opcode & 0b111;
@@ -1396,7 +1398,7 @@ namespace mc68000
 	// ==========
 	// MOVEQ
 	// ==========
-	unsigned short Cpu::moveq(unsigned short opcode)
+	uint16_t Cpu::moveq(uint16_t opcode)
 	{
 		uint16_t reg = (opcode >> 9) & 0x07;
 		int32_t data = (int8_t) (opcode & 0xff);
@@ -1413,7 +1415,7 @@ namespace mc68000
 	/// <summary>
 	/// MULS: Signed multiply
 	/// </summary>
-	unsigned short Cpu::muls(unsigned short opcode)
+	uint16_t Cpu::muls(uint16_t opcode)
 	{
 		int32_t source = static_cast<int16_t>(readAt<uint16_t>(opcode & 0b111'111, false));
 		uint8_t reg = (opcode >> 9) & 0b111;
@@ -1432,7 +1434,7 @@ namespace mc68000
 	/// <summary>
 	/// MULU: Unsigned multiply
 	/// </summary>
-	unsigned short Cpu::mulu(unsigned short opcode)
+	uint16_t Cpu::mulu(uint16_t opcode)
 	{
 		uint32_t source = readAt<uint16_t>(opcode & 0b111'111, false);
 		uint8_t reg = (opcode >> 9) & 0b111;
@@ -1451,7 +1453,7 @@ namespace mc68000
 	/// <summary>
 	/// NBCD: Negate Decimal with Extend
 	/// </summary>
-	unsigned short Cpu::nbcd(unsigned short opcode)
+	uint16_t Cpu::nbcd(uint16_t opcode)
 	{
 		uint8_t value = readAt<uint8_t>(opcode & 0b111'111, false);
 		uint16_t m1 = value & 0x0f;
@@ -1476,7 +1478,7 @@ namespace mc68000
 	/// </summary>
 	/// <param name=""></param>
 	/// <returns></returns>
-	unsigned short Cpu::neg(unsigned short opcode)
+	uint16_t Cpu::neg(uint16_t opcode)
 	{
 		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
 		uint16_t size = (opcode >> 6) & 0b11;
@@ -1496,15 +1498,36 @@ namespace mc68000
 		}
 		return instructions::NEG;
 	}
-	unsigned short Cpu::negx(unsigned short)
+
+	/// <summary>
+	/// NEGX: Negate with Extend
+	/// </summary>
+	uint16_t Cpu::negx(uint16_t opcode)
 	{
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			negx<uint8_t>(destinationEffectiveAddress);
+			break;
+		case 1:
+			negx<uint16_t>(destinationEffectiveAddress);
+			break;
+		case 2:
+			negx<uint32_t>(destinationEffectiveAddress);
+			break;
+		default:
+			throw "negx: invalid size";
+		}
 		return instructions::NEGX;
 	}
-	unsigned short Cpu::nop(unsigned short)
+
+	uint16_t Cpu::nop(uint16_t)
 	{
 		return instructions::NOP;
 	}
-	unsigned short Cpu::not_(unsigned short)
+	uint16_t Cpu::not_(uint16_t)
 	{
 		return instructions::NOT;
 	}
@@ -1513,7 +1536,7 @@ namespace mc68000
 	// OR
 	// ==========
 
-	unsigned short Cpu::or_(unsigned short opcode)
+	uint16_t Cpu::or_(uint16_t opcode)
 	{
 		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::OR;
@@ -1523,7 +1546,7 @@ namespace mc68000
 	// ORI
 	// ==========
 
-	unsigned short Cpu::ori(unsigned short opcode)
+	uint16_t Cpu::ori(uint16_t opcode)
 	{
 		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
 		return instructions::ORI;
@@ -1532,7 +1555,7 @@ namespace mc68000
 	// ==========
 	// ORI to CCR
 	// ==========
-	unsigned short Cpu::ori2ccr(unsigned short)
+	uint16_t Cpu::ori2ccr(uint16_t)
 	{
 		uint16_t sourceEffectiveAddress = 0b111'100;
 		uint8_t source = readAt<uint8_t>(sourceEffectiveAddress, false);
@@ -1545,57 +1568,57 @@ namespace mc68000
 		return instructions::ORI2CCR;
 	}
 
-	unsigned short Cpu::pea(unsigned short)
+	uint16_t Cpu::pea(uint16_t)
 	{
 		return instructions::PEA;
 	}
 
-	unsigned short Cpu::rol_memory(unsigned short)
+	uint16_t Cpu::rol_memory(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short Cpu::ror_memory(unsigned short)
+	uint16_t Cpu::ror_memory(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short Cpu::roxl_memory(unsigned short)
+	uint16_t Cpu::roxl_memory(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short Cpu::roxr_memory(unsigned short)
+	uint16_t Cpu::roxr_memory(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short Cpu::rol_register(unsigned short)
+	uint16_t Cpu::rol_register(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short Cpu::ror_register(unsigned short)
+	uint16_t Cpu::ror_register(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short Cpu::roxl_register(unsigned short)
+	uint16_t Cpu::roxl_register(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short Cpu::roxr_register(unsigned short)
+	uint16_t Cpu::roxr_register(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short Cpu::sbcd(unsigned short)
+	uint16_t Cpu::sbcd(uint16_t)
 	{
 		return instructions::SBCD;
 	}
 
-	unsigned short Cpu::rtr(unsigned short)
+	uint16_t Cpu::rtr(uint16_t)
 	{
 		return instructions::RTR;
 	}
@@ -1603,13 +1626,13 @@ namespace mc68000
 	// ==========
 	// RTS
 	// ==========
-	unsigned short Cpu::rts(unsigned short opcode)
+	uint16_t Cpu::rts(uint16_t opcode)
 	{
 		pc = readAt<uint32_t>(0b011'111, false);
 		return instructions::RTS;
 	}
 
-	unsigned short Cpu::scc(unsigned short)
+	uint16_t Cpu::scc(uint16_t)
 	{
 		return instructions::SCC;
 	}
@@ -1617,7 +1640,7 @@ namespace mc68000
 	// ==========
 	// SUB
 	// ==========
-	unsigned short Cpu::sub(unsigned short opcode)
+	uint16_t Cpu::sub(uint16_t opcode)
 	{
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
 		uint16_t destinationEffectiveAdress = (opcode >> 9) & 0b111;
@@ -1650,32 +1673,32 @@ namespace mc68000
 		return instructions::SUB;
 	}
 
-	unsigned short Cpu::subi(unsigned short)
+	uint16_t Cpu::subi(uint16_t)
 	{
 		return instructions::SUBI;
 	}
 
-	unsigned short Cpu::suba(unsigned short)
+	uint16_t Cpu::suba(uint16_t)
 	{
 		return instructions::SUBA;
 	}
 
-	unsigned short Cpu::subq(unsigned short)
+	uint16_t Cpu::subq(uint16_t)
 	{
 		return instructions::SUBQ;
 	}
 
-	unsigned short Cpu::subx(unsigned short)
+	uint16_t Cpu::subx(uint16_t)
 	{
 		return instructions::SUBX;
 	}
 
-	unsigned short Cpu::swap(unsigned short)
+	uint16_t Cpu::swap(uint16_t)
 	{
 		return instructions::SWAP;
 	}
 
-	unsigned short Cpu::tas(unsigned short)
+	uint16_t Cpu::tas(uint16_t)
 	{
 		return instructions::TAS;
 	}
@@ -1683,29 +1706,29 @@ namespace mc68000
 	// ==========
 	// TRAP
 	// ==========
-	unsigned short Cpu::trap(unsigned short opcode)
+	uint16_t Cpu::trap(uint16_t opcode)
 	{
 		uint8_t trapNumber = opcode & 0b1111;
 		handleException(Exceptions::TRAP + trapNumber);
 		return instructions::TRAP;
 	}
 
-	unsigned short Cpu::trapv(unsigned short)
+	uint16_t Cpu::trapv(uint16_t)
 	{
 		return instructions::TRAPV;
 	}
 
-	unsigned short Cpu::tst(unsigned short)
+	uint16_t Cpu::tst(uint16_t)
 	{
 		return instructions::TST;
 	}
 
-	unsigned short Cpu::unlk(unsigned short opcode)
+	uint16_t Cpu::unlk(uint16_t opcode)
 	{
 		return instructions::UNLK;
 	}
 
-	unsigned short Cpu::unknown(unsigned short)
+	uint16_t Cpu::unknown(uint16_t)
 	{
 		throw "unknown instruction";
 		return instructions::UNKNOWN;
