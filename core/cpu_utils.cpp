@@ -404,6 +404,24 @@ namespace mc68000
 	template void Cpu::negx<uint16_t>(uint16_t effectiveAdress);
 	template void Cpu::negx<uint32_t>(uint16_t effectiveAdress);
 
+	// ==========
+	// NOT
+	// ==========
+	template <typename T> void Cpu::not_(uint16_t effectiveAdress)
+	{
+		uint32_t destination = readAt<T>(effectiveAdress, true);
+		uint32_t result = ~destination;
+		writeAt<T>(effectiveAdress, result, true);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = result == 0;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
+	}
+	template void Cpu::not_<uint8_t>(uint16_t effectiveAdress);
+	template void Cpu::not_<uint16_t>(uint16_t effectiveAdress);
+	template void Cpu::not_<uint32_t>(uint16_t effectiveAdress);
+
 	// ========================================
 	// Memory access through effective address
 	// ========================================

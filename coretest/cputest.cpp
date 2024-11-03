@@ -858,5 +858,23 @@ BOOST_AUTO_TEST_CASE(a_link)
 		});
 }
 
+// ===================================================
+// NOP tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_nop)
+{
+	unsigned char code[] = {
+		0x4e, 0x71, // nop
+		0x4e, 0x40, // trap #0
+		0xff, 0xff
+	};
 
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()

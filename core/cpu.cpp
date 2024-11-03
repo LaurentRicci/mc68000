@@ -1523,12 +1523,35 @@ namespace mc68000
 		return instructions::NEGX;
 	}
 
+	/// <summary>
+	/// NOP: No Operation
+	/// </summary>
 	uint16_t Cpu::nop(uint16_t)
 	{
 		return instructions::NOP;
 	}
-	uint16_t Cpu::not_(uint16_t)
+
+	/// <summary>
+	/// NOT: Complement
+	/// </summary>
+	uint16_t Cpu::not_(uint16_t opcode)
 	{
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			not_<uint8_t>(destinationEffectiveAddress);
+			break;
+		case 1:
+			not_<uint16_t>(destinationEffectiveAddress);
+			break;
+		case 2:
+			not_<uint32_t>(destinationEffectiveAddress);
+			break;
+		default:
+			throw "not: invalid size";
+		}
 		return instructions::NOT;
 	}
 

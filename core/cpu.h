@@ -199,6 +199,7 @@ namespace mc68000
 
 		template <typename T> void neg(uint16_t effectiveAdress);
 		template <typename T> void negx(uint16_t effectiveAdress);
+		template <typename T> void not_(uint16_t effectiveAdress);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void handleException(uint16_t vector);
