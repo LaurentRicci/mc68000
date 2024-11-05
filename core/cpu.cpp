@@ -1596,8 +1596,8 @@ namespace mc68000
 	/// </summary>
 	uint16_t Cpu::pea(uint16_t opcode)
 	{
-		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
-		move<uint32_t>(sourceEffectiveAddress, 0b100'111);
+		uint32_t address = getEffectiveAddress(opcode);
+		writeAt<uint32_t>(0b100'111, address, false);
 
 		return instructions::PEA;
 	}

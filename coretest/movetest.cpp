@@ -445,8 +445,8 @@ BOOST_AUTO_TEST_CASE(move_pea)
 {
 	unsigned char code[] = {
 		0x4F, 0xFA, 0x01, 0xA0, //   lea stack(pc),a7
-		0x20, 0x7A, 0x00, 0x0A, //   move.l data(pc),a0
-		0x48, 0x50,             //   pea(a0)
+		0x41, 0xfa, 0x00, 0x0A, //   lea data(pc),a0
+		0x48, 0x50,             //   pea (a0)
 		0x4E, 0x40,             //   trap #0
 		0xFF, 0xFF, 0xFF, 0xFF, //   
 		0x42, 0x42              //   data: dc.w $4242
@@ -463,7 +463,9 @@ BOOST_AUTO_TEST_CASE(move_pea)
 	cpu.start(0);
 
 	// Assert
-	BOOST_CHECK_EQUAL(0x12345678, cpu.d3);
+	BOOST_CHECK_EQUAL(0x10, cpu.a0);
+	BOOST_CHECK_EQUAL(0x19e, cpu.a7);
+	BOOST_CHECK_EQUAL(cpu.a0, cpu.mem.get<uint32_t>(cpu.a7));
 }
 
 
