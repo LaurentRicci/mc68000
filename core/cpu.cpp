@@ -1591,8 +1591,14 @@ namespace mc68000
 		return instructions::ORI2CCR;
 	}
 
-	uint16_t Cpu::pea(uint16_t)
+	/// <summary>
+	/// PEA: Push Effective Address
+	/// </summary>
+	uint16_t Cpu::pea(uint16_t opcode)
 	{
+		uint32_t address = getEffectiveAddress(opcode);
+		writeAt<uint32_t>(0b100'111, address, false);
+
 		return instructions::PEA;
 	}
 
