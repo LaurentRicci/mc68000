@@ -1558,7 +1558,6 @@ namespace mc68000
 	// ==========
 	// OR
 	// ==========
-
 	uint16_t Cpu::or_(uint16_t opcode)
 	{
 		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
@@ -1568,7 +1567,6 @@ namespace mc68000
 	// ==========
 	// ORI
 	// ==========
-
 	uint16_t Cpu::ori(uint16_t opcode)
 	{
 		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs | rhs; });
@@ -1602,13 +1600,42 @@ namespace mc68000
 		return instructions::PEA;
 	}
 
-	uint16_t Cpu::rol_memory(uint16_t)
+	/// <summary>
+	/// ROL: Rotate Left
+	/// </summary>
+	uint16_t Cpu::rol_memory(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t data = readAt<uint16_t>(effectiveAddress, true);
+		uint16_t bit15 = data >> 15;
+		data <<= 1;
+		data |= bit15;
+		writeAt<uint16_t>(effectiveAddress, data, true);
+		statusRegister.c = bit15;
+		statusRegister.v = 0;
+		statusRegister.z = data == 0;
+		statusRegister.n = (data & (1<<15)) ? 1 : 0;
+
+
 		return instructions::ROL;
 	}
 
-	uint16_t Cpu::ror_memory(uint16_t)
+	/// <summary>
+	/// ROR: Rotate Right
+	/// </summary>
+	uint16_t Cpu::ror_memory(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t data = readAt<uint16_t>(effectiveAddress, true);
+		uint16_t bit1 = data & 1;
+		data >>= 1;
+		data |= bit1 << 15;
+		writeAt<uint16_t>(effectiveAddress, data, true);
+		statusRegister.c = bit1;
+		statusRegister.v = 0;
+		statusRegister.z = data == 0;
+		statusRegister.n = (data & (1 << 15)) ? 1 : 0;
+
 		return instructions::ROR;
 	}
 
@@ -1622,13 +1649,78 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-	uint16_t Cpu::rol_register(uint16_t)
+	/// <summary>
+	/// ROL: Rotate Left
+	/// </summary>
+	uint16_t Cpu::rol_register(uint16_t opcode)
 	{
+		uint16_t destinationRegister = opcode & 0b111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t count;
+		if (opcode & (1 << 5))
+		{
+			// Rotate count is in the register
+			uint16_t reg = (opcode >> 9 ) & 0b111;
+			count = dRegisters[reg] & 0x3f;
+		}
+		else
+		{
+			// Rotate count is in the instruction
+			count = (opcode >> 9) & 0b111;
+			if (count == 0) count = 8;
+		}
+		switch (size)
+		{
+			case 0:
+				rotateLeft<uint8_t>(destinationRegister, count);
+				break;
+			case 1:
+				rotateLeft<uint16_t>(destinationRegister, count);
+				break;
+			case 2:
+				rotateLeft<uint32_t>(destinationRegister, count);
+				break;
+			default:
+				throw "rol: invalid size";
+		}
 		return instructions::ROL;
 	}
 
-	uint16_t Cpu::ror_register(uint16_t)
+	/// <summary>
+	/// ROR: Rotate Right
+	/// </summary>
+	uint16_t Cpu::ror_register(uint16_t opcode)
 	{
+		uint16_t destinationRegister = opcode & 0b111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t count;
+		if (opcode & (1 << 5))
+		{
+			// Rotate count is in the register
+			uint16_t reg = (opcode >> 9) & 0b111;
+			count = dRegisters[reg] & 0x3f;
+		}
+		else
+		{
+			// Rotate count is in the instruction
+			count = (opcode >> 9) & 0b111;
+			if (count == 0) count = 8;
+		}
+		switch (size)
+		{
+		case 0:
+			rotateRight<uint8_t>(destinationRegister, count);
+			break;
+		case 1:
+			rotateRight<uint16_t>(destinationRegister, count);
+			break;
+		case 2:
+			rotateRight<uint32_t>(destinationRegister, count);
+			break;
+		default:
+			throw "ror: invalid size";
+		}
+
 		return instructions::ROR;
 	}
 
