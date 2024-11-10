@@ -398,6 +398,106 @@ BOOST_AUTO_TEST_CASE(sub_neg_neg)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
+BOOST_AUTO_TEST_CASE(sub_negx)
+{
+	unsigned char code[] = {
+	0x70, 0x2a,             // moveq #42, d0
+	0x72, 0x24,             // moveq #36, d1
+	0x74, 0x4a,             // moveq #74, d2
+	0x44, 0xfc, 0x00, 0x10, // move  #$10, ccr
+	0x40, 0x00,             // negx.b d0
+	0x40, 0x41,             // negx.w d1
+	0x40, 0x82,             // negx.l d2
+	0x4e, 0x40,             // trap #0
+	0xff, 0xff, 0xff, 0xff  // 
+	};
 
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
 
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0xd5, cpu.d0);
+	BOOST_CHECK_EQUAL(0xffdb, cpu.d1);
+	BOOST_CHECK_EQUAL(0xffffffb5, cpu.d2);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+
+BOOST_AUTO_TEST_CASE(sub_negx_neg)
+{
+	unsigned char code[] = {
+	0x70, 0xd6,             // moveq #-42, d0
+	0x72, 0xdc,             // moveq #-36, d1
+	0x74, 0xb6,             // moveq #-74, d2
+	0x44, 0xfc, 0x00, 0x10, // move  #$10, ccr
+	0x40, 0x00,             // negx.b d0
+	0x40, 0x41,             // negx.w d1
+	0x40, 0x82,             // negx.l d2
+	0x4e, 0x40,             // trap #0
+	0xff, 0xff, 0xff, 0xff  // 
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(41, (cpu.d0 & 0xff));
+	BOOST_CHECK_EQUAL(35, (cpu.d1 & 0xffff));
+	BOOST_CHECK_EQUAL(73, cpu.d2);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
+
+BOOST_AUTO_TEST_CASE(sub_negx_zero)
+{
+	unsigned char code[] = {
+		0x70, 0x00,             //  moveq #0,d0
+		0x44, 0xfc, 0x00, 0x00, //  move #$00,ccr
+		0x40, 0x00,             //  negx.b d0
+		0x40, 0xc1,             //  move sr, d1
+		                        //  
+		0x74, 0x00,             //  moveq #0,d2
+		0x44, 0xfc, 0x00, 0x10, //  move #$10,ccr
+		0x40, 0x02,             //  negx.b d2
+		0x40, 0xc3,             //  move sr,d3
+		0x4e, 0x40,             //  trap #0
+		0xff, 0xff, 0xff, 0xff  //  
+	};
+
+	// Arrange
+	memory memory(256, 0x1000, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0x1000);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x00, cpu.d0);
+	BOOST_CHECK_EQUAL(0x00, cpu.d1);
+	BOOST_CHECK_EQUAL(0xff, cpu.d2);
+	BOOST_CHECK_EQUAL(0x19, cpu.d3);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
+	BOOST_CHECK_EQUAL(0, cpu.sr.v);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+
+}
 BOOST_AUTO_TEST_SUITE_END()

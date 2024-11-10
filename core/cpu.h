@@ -198,6 +198,11 @@ namespace mc68000
 		void bchg(uint16_t opcode, uint32_t bit, BitOperation operation);
 
 		template <typename T> void neg(uint16_t effectiveAdress);
+		template <typename T> void negx(uint16_t effectiveAdress);
+		template <typename T> void not_(uint16_t effectiveAdress);
+
+		template <typename T> void rotateLeft(uint16_t destinationRegister, uint32_t shift);
+		template <typename T> void rotateRight(uint16_t destinationRegister, uint32_t shift);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void handleException(uint16_t vector);

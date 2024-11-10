@@ -385,6 +385,90 @@ namespace mc68000
 	template void Cpu::neg<uint16_t>(uint16_t effectiveAdress);
 	template void Cpu::neg<uint32_t>(uint16_t effectiveAdress);
 
+	// ==========
+	// NEGX
+	// ==========
+	template <typename T> void Cpu::negx(uint16_t effectiveAdress)
+	{
+		uint32_t destination = readAt<T>(effectiveAdress, true);
+		uint64_t result = 0 - (uint64_t)destination - statusRegister.x;
+		writeAt<T>(effectiveAdress, static_cast<T>(result), true);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		if (result != 0) statusRegister.z = 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((destination ^ 0) & (0 ^ result)) < 0;
+	}
+	template void Cpu::negx<uint8_t>(uint16_t effectiveAdress);
+	template void Cpu::negx<uint16_t>(uint16_t effectiveAdress);
+	template void Cpu::negx<uint32_t>(uint16_t effectiveAdress);
+
+	// ==========
+	// NOT
+	// ==========
+	template <typename T> void Cpu::not_(uint16_t effectiveAdress)
+	{
+		uint32_t destination = readAt<T>(effectiveAdress, true);
+		uint32_t result = ~destination;
+		writeAt<T>(effectiveAdress, result, true);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = result == 0;
+		statusRegister.c = 0;
+		statusRegister.v = 0;
+	}
+	template void Cpu::not_<uint8_t>(uint16_t effectiveAdress);
+	template void Cpu::not_<uint16_t>(uint16_t effectiveAdress);
+	template void Cpu::not_<uint32_t>(uint16_t effectiveAdress);
+
+	// ==========
+	// Rotate left ROL
+	// ==========
+	template <typename T> void Cpu::rotateLeft(uint16_t destinationRegister, uint32_t shift)
+	{
+		T data = subPart<T>(dRegisters[destinationRegister]);
+		uint16_t count = shift % (sizeof(T) * 8);
+		uint16_t lastBitOut = (sizeof(T) * 8) - count;
+		T lastBit = (data >> lastBitOut) & 1;
+
+		T result = (data << count) | (data >> lastBitOut);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = result == 0;
+		statusRegister.c = lastBit;
+		statusRegister.v = 0;
+
+		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], result);
+	}
+	template void Cpu::rotateLeft<uint8_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::rotateLeft<uint16_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::rotateLeft<uint32_t>(uint16_t destinationRegister, uint32_t shift);
+
+	// ==========
+	// Rotate right ROR
+	// ==========
+	template <typename T> void Cpu::rotateRight(uint16_t destinationRegister, uint32_t shift)
+	{
+		T data = subPart<T>(dRegisters[destinationRegister]);
+		uint16_t count = shift % (sizeof(T) * 8);
+		uint16_t lastBitOut = (sizeof(T) * 8) - count;
+		T lastBit = (data >> (count - 1)) & 1;
+
+		T result = (data >> count) | (data << lastBitOut);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = result == 0;
+		statusRegister.c = lastBit;
+		statusRegister.v = 0;
+
+		dRegisters[destinationRegister] = setSubPart<T>(dRegisters[destinationRegister], result);
+	}
+	template void Cpu::rotateRight<uint8_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::rotateRight<uint16_t>(uint16_t destinationRegister, uint32_t shift);
+	template void Cpu::rotateRight<uint32_t>(uint16_t destinationRegister, uint32_t shift);
+
+
 	// ========================================
 	// Memory access through effective address
 	// ========================================

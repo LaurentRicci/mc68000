@@ -246,5 +246,39 @@ BOOST_AUTO_TEST_CASE(bit_btst_register_indirect)
 		});
 }
 
+// ===================================================
+// NOT Tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(bit_not)
+{
+	unsigned char code[] =
+	{
+		0x70, 0x2a,	   // moveq #42, d0
+		0x46, 0x00,    // not.b d0
+		0x40, 0xc1,    // move sr,d1
 
+		0x74, 0xd6,	   // moveq #-42, d2
+		0x46, 0x42,    // not.w d2
+		0x40, 0xc3,    // move sr,d3
+
+		0x78, 0xff,	   // moveq #$ff, d4
+		0x46, 0x84,    // not.l d4
+		0x40, 0xc5,    // move sr,d5
+
+		0x4e, 0x40 };  // trap #0
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0xd5, cpu.d0); // 0010 1010 -> 1101 0101 -> 0xD5
+			BOOST_CHECK_EQUAL(0x08, cpu.d1);
+
+			BOOST_CHECK_EQUAL(0xffff0029, cpu.d2); // 1101 0110 -> 0010 1001 -> 0x29
+			BOOST_CHECK_EQUAL(0x00, cpu.d3);
+
+			BOOST_CHECK_EQUAL(0x00, cpu.d4); // 1111 1111 -> 0000 0000 -> 0x00
+			BOOST_CHECK_EQUAL(0x04, cpu.d5);
+
+			BOOST_CHECK_EQUAL(0x1, cpu.sr.z);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()
