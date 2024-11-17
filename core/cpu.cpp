@@ -1616,7 +1616,6 @@ namespace mc68000
 		statusRegister.z = data == 0;
 		statusRegister.n = (data & (1<<15)) ? 1 : 0;
 
-
 		return instructions::ROL;
 	}
 
@@ -1639,60 +1638,9 @@ namespace mc68000
 		return instructions::ROR;
 	}
 
-	uint16_t Cpu::roxl_memory(uint16_t)
-	{
-		return instructions::ROXL;
-	}
-
-	uint16_t Cpu::roxr_memory(uint16_t)
-	{
-		return instructions::ROXR;
-	}
-
-	/// <summary>
-	/// ROL: Rotate Left
-	/// </summary>
-	uint16_t Cpu::rol_register(uint16_t opcode)
+	uint16_t Cpu::rotate_register(uint16_t opcode, rotateFunction fn)
 	{
 		uint16_t destinationRegister = opcode & 0b111;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint16_t count;
-		if (opcode & (1 << 5))
-		{
-			// Rotate count is in the register
-			uint16_t reg = (opcode >> 9 ) & 0b111;
-			count = dRegisters[reg] & 0x3f;
-		}
-		else
-		{
-			// Rotate count is in the instruction
-			count = (opcode >> 9) & 0b111;
-			if (count == 0) count = 8;
-		}
-		switch (size)
-		{
-			case 0:
-				rotateLeft<uint8_t>(destinationRegister, count);
-				break;
-			case 1:
-				rotateLeft<uint16_t>(destinationRegister, count);
-				break;
-			case 2:
-				rotateLeft<uint32_t>(destinationRegister, count);
-				break;
-			default:
-				throw "rol: invalid size";
-		}
-		return instructions::ROL;
-	}
-
-	/// <summary>
-	/// ROR: Rotate Right
-	/// </summary>
-	uint16_t Cpu::ror_register(uint16_t opcode)
-	{
-		uint16_t destinationRegister = opcode & 0b111;
-		uint16_t size = (opcode >> 6) & 0b11;
 		uint16_t count;
 		if (opcode & (1 << 5))
 		{
@@ -1706,31 +1654,144 @@ namespace mc68000
 			count = (opcode >> 9) & 0b111;
 			if (count == 0) count = 8;
 		}
+        (*this.*(fn))(destinationRegister, count);
+		return instructions::ROL;
+
+	}
+	/// <summary>
+	/// ROL: Rotate Left
+	/// </summary>
+	uint16_t Cpu::rol_register(uint16_t opcode)
+	{
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+			case 0:
+				rotate_register(opcode, &Cpu::rotateLeft<uint8_t>);
+				break;
+			case 1:
+				rotate_register(opcode, &Cpu::rotateLeft<uint16_t>);
+				break;
+			case 2:
+				rotate_register(opcode, &Cpu::rotateLeft<uint32_t>);
+				break;
+			default:
+				throw "rol: invalid size";
+		}
+		return instructions::ROL;
+	}
+
+	/// <summary>
+	/// ROR: Rotate Right
+	/// </summary>
+	uint16_t Cpu::ror_register(uint16_t opcode)
+	{
+		uint16_t size = (opcode >> 6) & 0b11;
 		switch (size)
 		{
 		case 0:
-			rotateRight<uint8_t>(destinationRegister, count);
+			rotate_register(opcode, &Cpu::rotateRight<uint8_t>);
 			break;
 		case 1:
-			rotateRight<uint16_t>(destinationRegister, count);
+			rotate_register(opcode, &Cpu::rotateRight<uint16_t>);
 			break;
 		case 2:
-			rotateRight<uint32_t>(destinationRegister, count);
+			rotate_register(opcode, &Cpu::rotateRight<uint32_t>);
 			break;
 		default:
 			throw "ror: invalid size";
 		}
-
 		return instructions::ROR;
 	}
 
-	uint16_t Cpu::roxl_register(uint16_t)
+	/// <summary>
+	/// ROXL: Rotate Left with Extend
+	/// </summary>
+	uint16_t Cpu::roxl_memory(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t data = readAt<uint16_t>(effectiveAddress, true);
+		uint16_t bit15 = data >> 15;
+		data <<= 1;
+		data |= statusRegister.x;
+		writeAt<uint16_t>(effectiveAddress, data, true);
+
+		statusRegister.x = bit15;
+		statusRegister.c = bit15;
+		statusRegister.v = 0;
+		statusRegister.z = data == 0;
+		statusRegister.n = (data & (1 << 15)) ? 1 : 0;
+
 		return instructions::ROXL;
 	}
 
-	uint16_t Cpu::roxr_register(uint16_t)
+	/// <summary>
+	/// ROXR: Rotate Right with Extend
+	/// </summary>
+	uint16_t Cpu::roxr_memory(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t data = readAt<uint16_t>(effectiveAddress, true);
+		uint16_t bit1 = data & 1;
+		data >>= 1;
+		data |= statusRegister.x << 15;
+		writeAt<uint16_t>(effectiveAddress, data, true);
+
+		statusRegister.x = bit1;
+		statusRegister.c = bit1;
+		statusRegister.v = 0;
+		statusRegister.z = data == 0;
+		statusRegister.n = (data & (1 << 15)) ? 1 : 0;
+
+		return instructions::ROXR;
+	}
+
+
+	/// <summary>
+	/// ROXL: Rotate Left with Extend
+	/// </summary>
+	uint16_t Cpu::roxl_register(uint16_t opcode)
+	{
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			rotate_register(opcode, &Cpu::rotateLeftWithExtend<uint8_t>);
+			break;
+		case 1:
+			rotate_register(opcode, &Cpu::rotateLeftWithExtend<uint16_t>);
+			break;
+		case 2:
+			rotate_register(opcode, &Cpu::rotateLeftWithExtend<uint32_t>);
+			break;
+		default:
+			throw "roxl: invalid size";
+		}
+
+		return instructions::ROXL;
+	}
+
+	/// <summary>
+	/// ROXR: Rotate Right with Extend
+	/// </summary>
+	uint16_t Cpu::roxr_register(uint16_t opcode)
+	{
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+		case 0:
+			rotate_register(opcode, &Cpu::rotateRightWithExtend<uint8_t>);
+			break;
+		case 1:
+			rotate_register(opcode, &Cpu::rotateRightWithExtend<uint16_t>);
+			break;
+		case 2:
+			rotate_register(opcode, &Cpu::rotateRightWithExtend<uint32_t>);
+			break;
+		default:
+			throw "roxl: invalid size";
+		}
+
 		return instructions::ROXR;
 	}
 

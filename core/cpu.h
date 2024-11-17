@@ -201,8 +201,13 @@ namespace mc68000
 		template <typename T> void negx(uint16_t effectiveAdress);
 		template <typename T> void not_(uint16_t effectiveAdress);
 
+		typedef void (Cpu::* rotateFunction)(uint16_t, uint32_t);
+		uint16_t rotate_register(uint16_t opcode, rotateFunction fn);
+
 		template <typename T> void rotateLeft(uint16_t destinationRegister, uint32_t shift);
 		template <typename T> void rotateRight(uint16_t destinationRegister, uint32_t shift);
+		template <typename T> void rotateLeftWithExtend(uint16_t destinationRegister, uint32_t shift);
+		template <typename T> void rotateRightWithExtend(uint16_t destinationRegister, uint32_t shift);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void handleException(uint16_t vector);
@@ -236,23 +241,23 @@ namespace mc68000
 		// public fields
 		//
 	public:
-		const unsigned int& d0;
-		const unsigned int& d1;
-		const unsigned int& d2;
-		const unsigned int& d3;
-		const unsigned int& d4;
-		const unsigned int& d5;
-		const unsigned int& d6;
-		const unsigned int& d7;
+		const uint32_t& d0;
+		const uint32_t& d1;
+		const uint32_t& d2;
+		const uint32_t& d3;
+		const uint32_t& d4;
+		const uint32_t& d5;
+		const uint32_t& d6;
+		const uint32_t& d7;
 
-		const unsigned int& a0;
-		const unsigned int& a1;
-		const unsigned int& a2;
-		const unsigned int& a3;
-		const unsigned int& a4;
-		const unsigned int& a5;
-		const unsigned int& a6;
-		const unsigned int& a7;
+		const uint32_t& a0;
+		const uint32_t& a1;
+		const uint32_t& a2;
+		const uint32_t& a3;
+		const uint32_t& a4;
+		const uint32_t& a5;
+		const uint32_t& a6;
+		const uint32_t& a7;
 		const StatusRegister& sr;
 		const memory& mem;
 	};
