@@ -285,4 +285,194 @@ BOOST_AUTO_TEST_CASE(rot_rorregister_long72)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
+enum size { BYTE = 0x33, WORD = 0x73, LONG = 0xb3 };
+
+void verifyRoxlExecution(uint8_t value, uint8_t rotation, uint8_t ccr, uint32_t expected, uint8_t ccrExpected, size sz=BYTE )
+{
+	unsigned char code[] = {
+		0x76, value,           // moveq VALUE,d3
+		0x70, rotation,        // moveq ROTATION,d0
+		0x44, 0xfc, 0x00, ccr, // move CCR, ccr
+		0xe1, (uint8_t)sz,     // roxl.b d0,d3
+		0x4e, 0x40,            // trap #0
+		0xff, 0xff, 0xff, 0xff,
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(rotation, cpu.d0);
+	BOOST_CHECK_EQUAL(expected, cpu.d3);
+	BOOST_CHECK_EQUAL(ccrExpected, (uint8_t) cpu.sr);
+
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte3)
+{
+	verifyRoxlExecution(0xcd, 0x03, 0x00, 0xffffff6b, 0x00);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte0)
+{
+	verifyRoxlExecution(0xcd, 0x00, 0x00, 0xffffffcd, 0x08);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte3x)
+{
+	verifyRoxlExecution(0xcd, 0x03, 0x10, 0xffffff6f, 0x00);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte0x)
+{
+	verifyRoxlExecution(0xcd, 0x00, 0x10, 0xffffffcd, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte8x)
+{
+	verifyRoxlExecution(0xcd, 0x08, 0x10, 0xffffffe6, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte18x)
+{
+	verifyRoxlExecution(0xcd, 0x12, 0x10, 0xffffffcd, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_byte24x)
+{
+	verifyRoxlExecution(0xcd, 0x18, 0x10, 0xffffff79, 0x11);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_word23x)
+{
+	verifyRoxlExecution(0xcd, 0x17, 0x10, 0xfffff37f, 0x19, WORD);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlregister_long42x)
+{
+	verifyRoxlExecution(0xcd, 0x2a, 0x10, 0xffff9bff, 0x19, LONG);
+}
+
+void verifyRoxrExecution(uint8_t value, uint8_t rotation, uint8_t ccr, uint32_t expected, uint8_t ccrExpected, size sz=BYTE)
+{
+	unsigned char code[] = {
+		0x76, value,           // moveq VALUE,d3
+		0x70, rotation,        // moveq ROTATION,d0
+		0x44, 0xfc, 0x00, ccr, // move CCR, ccr
+		0xe0, (uint8_t)sz,     // roxl.b d0,d3
+		0x4e, 0x40,            // trap #0
+		0xff, 0xff, 0xff, 0xff,
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(rotation, cpu.d0);
+	BOOST_CHECK_EQUAL(expected, cpu.d3);
+	BOOST_CHECK_EQUAL(ccrExpected, (uint8_t)cpu.sr);
+
+}
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte3)
+{
+	verifyRoxrExecution(0xcd, 0x03, 0x00, 0xffffff59, 0x11);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte0)
+{
+	verifyRoxrExecution(0xcd, 0x00, 0x00, 0xffffffcd, 0x08);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte3x)
+{
+	verifyRoxrExecution(0xcd, 0x03, 0x10, 0xffffff79, 0x11);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte0x)
+{
+	verifyRoxrExecution(0xcd, 0x00, 0x10, 0xffffffcd, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte8x)
+{
+	verifyRoxrExecution(0xcd, 0x08, 0x10, 0xffffff9b, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte18x)
+{
+	verifyRoxrExecution(0xcd, 0x12, 0x10, 0xffffffcd, 0x19);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_byte24x)
+{
+	verifyRoxrExecution(0xcd, 0x18, 0x10, 0xffffff6f, 0x00);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_word23x)
+{
+	verifyRoxrExecution(0x75, 0x17, 0x10, 0xac01, 0x19, WORD);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrregister_long42x)
+{
+	verifyRoxrExecution(0xcd, 0x2a, 0x10, 0xcdffffff, 0x19, LONG);
+}
+
+
+enum direction { LEFT = 0xe5, RIGHT = 0xe4 };
+void verifyRotateMemoryExecution(direction dir, uint16_t value, uint8_t ccr, uint16_t expected, uint8_t ccrExpected)
+{
+	unsigned char code[] = {
+	0x41, 0xfa, 0x00, 0x0e,    // lea data(pc), a0
+	0x44, 0xfc, 0x00, ccr,     // move CCR, ccr
+	(uint8_t)dir, 0xd0,        // roxDIR (a0)
+	0x4e, 0x40,                // trap #0
+	0xff, 0xff, 0xff, 0xff,
+	(uint8_t)(value >> 8),     // data: dc.w VALUE
+	(uint8_t)(value & 0xff)   
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x10, cpu.a0);
+	BOOST_CHECK_EQUAL(expected, cpu.mem.get<uint16_t>(cpu.a0));
+	BOOST_CHECK_EQUAL(ccrExpected, (uint8_t)cpu.sr);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlmemory)
+{
+	verifyRotateMemoryExecution(LEFT, 0xcd, 0x00, 0x19a, 0x00);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxlmemoryX)
+{
+	verifyRotateMemoryExecution(LEFT, 0x7654, 0x10, 0xeca9, 0x08);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrmemory)
+{
+	verifyRotateMemoryExecution(RIGHT, 0xcd, 0x00, 0x66, 0x11);
+}
+
+BOOST_AUTO_TEST_CASE(rot_roxrmemoryX)
+{
+	verifyRotateMemoryExecution(RIGHT, 0x7654, 0x10, 0xbb2a, 0x08);
+}
 BOOST_AUTO_TEST_SUITE_END()
