@@ -114,7 +114,7 @@ namespace mc68000
 			op1 = dRegisters[register1];
 			op2 = dRegisters[register2];
 		}
-		uint16_t m1 = (op1 & 0x0f) + (op2 & 0x0f);
+		uint16_t m1 = (op1 & 0x0f) + (op2 & 0x0f) + statusRegister.x;
 		uint16_t m2 = (op1 & 0xf0) + (op2 & 0xf0);
 		uint16_t result = m2 + m1;
 		if (m1 >= 10)
@@ -1795,8 +1795,82 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-	uint16_t Cpu::sbcd(uint16_t)
+	/// <summary>
+	/// SBCD:
+	/// </summary>
+	/// <param name=""></param>
+	/// <returns></returns>
+	uint16_t Cpu::sbcd(uint16_t opcode)
 	{
+		uint8_t register1 = opcode & 0b111;
+		uint8_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+
+		uint8_t op1;
+		uint8_t op2;
+		if (useAddressRegister)
+		{
+			op1 = readAt<uint8_t>(0b100'000u | register1, false);
+			op2 = readAt<uint8_t>(0b100'000u | register2, true);
+		}
+		else
+		{
+			op1 = dRegisters[register1];
+			op2 = dRegisters[register2];
+		}
+		uint16_t op1_low = (op1 & 0x0f) + statusRegister.x;
+		uint16_t op1_high = op1 & 0xf0;
+		uint16_t op2_low = op2 & 0x0f;
+		uint16_t op2_high = op2 & 0xf0;
+
+		uint16_t m1;
+		uint16_t m2;
+		if (op1_low <= op2_low)
+		{
+			m1 = op2_low - op1_low;
+			if (op1_high <= op2_high)
+			{
+				m2 = op2_high - op1_high;
+				statusRegister.x = 0;
+				statusRegister.c = 0;
+			}
+			else
+			{
+				m2 = (op2_high + 10 * 0x10) - op1_high;
+				statusRegister.x = 1;
+				statusRegister.c = 1;
+			}
+		}
+		else
+		{
+			m1 = (op2_low + 10) - op1_low;
+			if (op1_high-0x10 <= op2_high)
+			{
+				m2 = op2_high-0x10 - op1_high;
+				statusRegister.x = 0;
+				statusRegister.c = 0;
+			}
+			else
+			{
+				m2 = (op2_high + 10*0x10 - 0x10) - op1_high;
+				statusRegister.x = 1;
+				statusRegister.c = 1;
+			}
+		}
+
+		uint16_t result = m2 + m1;
+		if (result != 0)
+		{
+			statusRegister.z = 0;
+		}
+		if (useAddressRegister)
+		{
+			writeAt<uint8_t>(0b010'000u | register2, static_cast<uint8_t>(result), true);
+		}
+		else
+		{
+			dRegisters[register2] = (dRegisters[register2] & 0xffffff00) | (result & 0xff);
+		}
 		return instructions::SBCD;
 	}
 
