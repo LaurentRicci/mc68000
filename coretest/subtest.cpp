@@ -498,6 +498,113 @@ BOOST_AUTO_TEST_CASE(sub_negx_zero)
 	BOOST_CHECK_EQUAL(0, cpu.sr.z);
 	BOOST_CHECK_EQUAL(0, cpu.sr.v);
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+}
 
+void verifySbcdExecution(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t expected, uint8_t carry, uint8_t zero)
+{
+	unsigned char code[] = {
+	0x70, op1,             // moveq.l #op1,d0
+	0x72, op2,             // moveq.l #op2,d1
+	0x44, 0xfc, 0x00, ccr, // move #ccr, ccr
+	0x83, 0x00,            // sbcd d0,d1
+	0x4e, 0x40,            // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(op1, (uint8_t)cpu.d0);
+	BOOST_CHECK_EQUAL(expected, (uint8_t)cpu.d1);
+	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
+	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
+}
+
+BOOST_AUTO_TEST_CASE(sub_sbcd_register_x0)
+{
+	verifySbcdExecution(0x31, 0x42, 0, 0x11, 0, 0);
+	verifySbcdExecution(0x34, 0x48, 0, 0x14, 0, 0);
+	verifySbcdExecution(0x62, 0x48, 0, 0x86, 1, 0);
+}
+
+BOOST_AUTO_TEST_CASE(sub_sbcd_register_x1)
+{
+	verifySbcdExecution(0x31, 0x42, 0x10, 0x10, 0, 0);
+	verifySbcdExecution(0x34, 0x48, 0x10, 0x13, 0, 0);
+	verifySbcdExecution(0x62, 0x48, 0x10, 0x85, 1, 0);
+}
+
+void verifySbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t expected, uint8_t carry, uint8_t zero)
+{
+	unsigned char code[] = {
+		0x43, 0xfa, 0x00,0x13,  // lea op1+1(pc), A1
+		0x45, 0xfa, 0x00,0x10,  // lea op2+1(pc), A2
+		0x44, 0xfc, 0x00, ccr,  // move #ccr, ccr
+		0x85, 0x09,             // sbcd -(A1), -(A2)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff,
+		0xff, 0xff,
+		op1,
+		op2
+	};
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x14, cpu.a1);
+	BOOST_CHECK_EQUAL(0x15, cpu.a2);
+	BOOST_CHECK_EQUAL(expected, cpu.mem.get<uint8_t>(0x15));
+	BOOST_CHECK_EQUAL(carry, cpu.sr.c);
+	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
+}
+
+BOOST_AUTO_TEST_CASE(sub_sbcd_memory_x0)
+{
+	verifySbcdExecutionMemory(0x31, 0x42, 0, 0x11, 0, 0);
+	verifySbcdExecutionMemory(0x34, 0x48, 0, 0x14, 0, 0);
+	verifySbcdExecutionMemory(0x62, 0x48, 0, 0x86, 1, 0);
+}
+
+BOOST_AUTO_TEST_CASE(sub_sbcd_memory_x1)
+{
+	verifySbcdExecutionMemory(0x31, 0x42, 0x10, 0x10, 0, 0);
+	verifySbcdExecutionMemory(0x34, 0x48, 0x10, 0x13, 0, 0);
+	verifySbcdExecutionMemory(0x62, 0x48, 0x10, 0x85, 1, 0);
+}
+
+BOOST_AUTO_TEST_CASE(sub_sbcd_overflow)
+{
+	unsigned char code[] = {
+	0x30, 0x3c, 0xff, 0x62,     // move #$ff62,d0
+	0x32, 0x3c, 0xff, 0x48,     // move #$ff48,d1
+	0x83, 0x00,                 // sbcd d0,d1
+	0x4e, 0x40,                 // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0xff62, cpu.d0);
+	BOOST_CHECK_EQUAL(0xff86, cpu.d1);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(0, cpu.sr.z);
 }
 BOOST_AUTO_TEST_SUITE_END()
