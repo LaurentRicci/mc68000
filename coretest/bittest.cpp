@@ -281,4 +281,23 @@ BOOST_AUTO_TEST_CASE(bit_not)
 			BOOST_CHECK_EQUAL(0x1, cpu.sr.z);
 		});
 }
+
+// ===================================================
+// SCC Tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(bit_scc)
+{
+	unsigned char code[] =
+	{
+		0x70, 0x00,	   // moveq #0, d0
+		0x57, 0xc1,    // seq d1
+		0x4e, 0x40,    // trap #0
+	};
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+	{
+		BOOST_CHECK_EQUAL(0x0, cpu.d0);
+		BOOST_CHECK_EQUAL(0xff, cpu.d1);
+		BOOST_CHECK_EQUAL(0x1, cpu.sr.z);
+	});
+}
 BOOST_AUTO_TEST_SUITE_END()
