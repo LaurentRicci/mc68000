@@ -1795,11 +1795,23 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
+	uint16_t Cpu::rtr(uint16_t)
+	{
+		return instructions::RTR;
+	}
+
+	// ==========
+	// RTS
+	// ==========
+	uint16_t Cpu::rts(uint16_t opcode)
+	{
+		pc = readAt<uint32_t>(0b011'111, false);
+		return instructions::RTS;
+	}
+
 	/// <summary>
 	/// SBCD:
 	/// </summary>
-	/// <param name=""></param>
-	/// <returns></returns>
 	uint16_t Cpu::sbcd(uint16_t opcode)
 	{
 		uint8_t register1 = opcode & 0b111;
@@ -1874,22 +1886,26 @@ namespace mc68000
 		return instructions::SBCD;
 	}
 
-	uint16_t Cpu::rtr(uint16_t)
+	/// <summary>
+	/// Scc: Set Condition Code
+	/// </summary>
+	uint16_t Cpu::scc(uint16_t opcode)
 	{
-		return instructions::RTR;
-	}
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		auto data = readAt<uint8_t>(effectiveAddress, true);
 
-	// ==========
-	// RTS
-	// ==========
-	uint16_t Cpu::rts(uint16_t opcode)
-	{
-		pc = readAt<uint32_t>(0b011'111, false);
-		return instructions::RTS;
-	}
-
-	uint16_t Cpu::scc(uint16_t)
-	{
+		// evaluate the condition
+		uint16_t conditionCode = (opcode >> 8) & 0b1111;
+		bool condition = sr.condition(conditionCode);
+		if (condition)
+		{
+			data = 0xff;
+		}
+		else
+		{
+			data = 0;
+		}
+		writeAt<uint8_t>(effectiveAddress, data, true);
 		return instructions::SCC;
 	}
 
