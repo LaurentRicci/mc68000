@@ -94,17 +94,18 @@ namespace mc68000
         static const unsigned short RTS = 85;
         static const unsigned short SBCD = 86;
         static const unsigned short SCC = 87;
-        static const unsigned short SUB = 88;
-        static const unsigned short SUBA = 89;
-        static const unsigned short SUBI = 90;
-        static const unsigned short SUBQ = 91;
-        static const unsigned short SUBX = 92;
-        static const unsigned short SWAP = 93;
-        static const unsigned short TAS = 94;
-        static const unsigned short TRAP = 95;
-        static const unsigned short TRAPV = 96;
-        static const unsigned short TST = 97;
-        static const unsigned short UNLK = 98;
+        static const unsigned short STOP = 88;
+        static const unsigned short SUB = 89;
+        static const unsigned short SUBA = 90;
+        static const unsigned short SUBI = 91;
+        static const unsigned short SUBQ = 92;
+        static const unsigned short SUBX = 93;
+        static const unsigned short SWAP = 94;
+        static const unsigned short TAS = 95;
+        static const unsigned short TRAP = 96;
+        static const unsigned short TRAPV = 97;
+        static const unsigned short TST = 98;
+        static const unsigned short UNLK = 99;
 
 
         static const size_t MAX_INSTRUCTIONS = 100;
@@ -201,6 +202,7 @@ namespace mc68000
             names[RTS] = L"RTS";
             names[SBCD] = L"SBCD";
             names[SCC] = L"SCC";
+            names[STOP] = L"STOP";
             names[SUB] = L"SUB";
             names[SUBA] = L"SUBA";
             names[SUBI] = L"SUBI";

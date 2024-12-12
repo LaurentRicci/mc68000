@@ -6,499 +6,504 @@
 namespace mc68000
 {
 
-	unsigned short NoOpCpu::abcd(unsigned short)
+	uint16_t NoOpCpu::abcd(uint16_t)
 	{
 		return instructions::ABCD;
 	}
 
-	unsigned short NoOpCpu::add(unsigned short)
+	uint16_t NoOpCpu::add(uint16_t)
 	{
 		return instructions::ADD;
 	}
 
-	unsigned short NoOpCpu::adda(unsigned short)
+	uint16_t NoOpCpu::adda(uint16_t)
 	{
 		return instructions::ADDA;
 	}
 
-	unsigned short NoOpCpu::addi(unsigned short)
+	uint16_t NoOpCpu::addi(uint16_t)
 	{
 		return instructions::ADDI;
 	}
 
-	unsigned short NoOpCpu::addq(unsigned short)
+	uint16_t NoOpCpu::addq(uint16_t)
 	{
 		return instructions::ADDQ;
 	}
 
-	unsigned short NoOpCpu::addx(unsigned short)
+	uint16_t NoOpCpu::addx(uint16_t)
 	{
 		return instructions::ADDX;
 	}
 
-	unsigned short NoOpCpu::and_(unsigned short)
+	uint16_t NoOpCpu::and_(uint16_t)
 	{
 		return instructions::AND;
 	}
 
-	unsigned short NoOpCpu::andi(unsigned short)
+	uint16_t NoOpCpu::andi(uint16_t)
 	{
 		return instructions::ANDI;
 	}
 
-	unsigned short NoOpCpu::andi2ccr(unsigned short)
+	uint16_t NoOpCpu::andi2ccr(uint16_t)
 	{
 		return instructions::ANDI2CCR;
 	}
-	unsigned short NoOpCpu::andi2sr(unsigned short)
+	uint16_t NoOpCpu::andi2sr(uint16_t)
 	{
 		return instructions::ANDI2SR;
 	}
-	unsigned short NoOpCpu::asl_memory(unsigned short)
+	uint16_t NoOpCpu::asl_memory(uint16_t)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short NoOpCpu::asl_register(unsigned short)
+	uint16_t NoOpCpu::asl_register(uint16_t)
 	{
 		return instructions::ASL;
 	}
 
-	unsigned short NoOpCpu::asr_memory(unsigned short)
+	uint16_t NoOpCpu::asr_memory(uint16_t)
 	{
 		return instructions::ASR;
 	}
 
-	unsigned short NoOpCpu::asr_register(unsigned short)
+	uint16_t NoOpCpu::asr_register(uint16_t)
 	{
 		return instructions::ASR;
 	}
 
-	unsigned short NoOpCpu::bra(unsigned short)
+	uint16_t NoOpCpu::bra(uint16_t)
 	{
 		return instructions::BRA;
 	}
-	unsigned short NoOpCpu::bhi(unsigned short)
+	uint16_t NoOpCpu::bhi(uint16_t)
 	{
 		return instructions::BHI;
 	}
-	unsigned short NoOpCpu::bls(unsigned short)
+	uint16_t NoOpCpu::bls(uint16_t)
 	{
 		return instructions::BLS;
 	}
-	unsigned short NoOpCpu::bcc(unsigned short)
+	uint16_t NoOpCpu::bcc(uint16_t)
 	{
 		return instructions::BCC;
 	}
-	unsigned short NoOpCpu::bcs(unsigned short)
+	uint16_t NoOpCpu::bcs(uint16_t)
 	{
 		return instructions::BCS;
 	}
-	unsigned short NoOpCpu::bne(unsigned short)
+	uint16_t NoOpCpu::bne(uint16_t)
 	{
 		return instructions::BNE;
 	}
-	unsigned short NoOpCpu::beq(unsigned short)
+	uint16_t NoOpCpu::beq(uint16_t)
 	{
 		return instructions::BEQ;
 	}
-	unsigned short NoOpCpu::bvc(unsigned short)
+	uint16_t NoOpCpu::bvc(uint16_t)
 	{
 		return instructions::BVC;
 	}
-	unsigned short NoOpCpu::bvs(unsigned short)
+	uint16_t NoOpCpu::bvs(uint16_t)
 	{
 		return instructions::BVS;
 	}
-	unsigned short NoOpCpu::bpl(unsigned short)
+	uint16_t NoOpCpu::bpl(uint16_t)
 	{
 		return instructions::BPL;
 	}
-	unsigned short NoOpCpu::bmi(unsigned short)
+	uint16_t NoOpCpu::bmi(uint16_t)
 	{
 		return instructions::BMI;
 	}
-	unsigned short NoOpCpu::bge(unsigned short)
+	uint16_t NoOpCpu::bge(uint16_t)
 	{
 		return instructions::BGE;
 	}
-	unsigned short NoOpCpu::blt(unsigned short)
+	uint16_t NoOpCpu::blt(uint16_t)
 	{
 		return instructions::BLT;
 	}
-	unsigned short NoOpCpu::bgt(unsigned short)
+	uint16_t NoOpCpu::bgt(uint16_t)
 	{
 		return instructions::BGT;
 	}
-	unsigned short NoOpCpu::ble(unsigned short)
+	uint16_t NoOpCpu::ble(uint16_t)
 	{
 		return instructions::BLE;
 	}
 
-	unsigned short NoOpCpu::bchg_r(unsigned short)
+	uint16_t NoOpCpu::bchg_r(uint16_t)
 	{
 		return instructions::BCHG_R;
 	}
 
-	unsigned short NoOpCpu::bchg_i(unsigned short)
+	uint16_t NoOpCpu::bchg_i(uint16_t)
 	{
 		return instructions::BCHG_I;
 	}
 
-	unsigned short NoOpCpu::bclr_r(unsigned short)
+	uint16_t NoOpCpu::bclr_r(uint16_t)
 	{
 		return instructions::BCLR_R;
 	}
 
-	unsigned short NoOpCpu::bclr_i(unsigned short)
+	uint16_t NoOpCpu::bclr_i(uint16_t)
 	{
 		return instructions::BCLR_I;
 	}
 
-	unsigned short NoOpCpu::bset_r(unsigned short)
+	uint16_t NoOpCpu::bset_r(uint16_t)
 	{
 		return instructions::BSET_R;
 	}
 
-	unsigned short NoOpCpu::bset_i(unsigned short)
+	uint16_t NoOpCpu::bset_i(uint16_t)
 	{
 		return instructions::BSET_I;
 	}
 
-	unsigned short NoOpCpu::bsr(unsigned short)
+	uint16_t NoOpCpu::bsr(uint16_t)
 	{
 		return instructions::BSR;
 	}
 
-	unsigned short NoOpCpu::btst_r(unsigned short)
+	uint16_t NoOpCpu::btst_r(uint16_t)
 	{
 		return instructions::BTST_R;
 	}
 
-	unsigned short NoOpCpu::btst_i(unsigned short)
+	uint16_t NoOpCpu::btst_i(uint16_t)
 	{
 		return instructions::BTST_I;
 	}
 
-	unsigned short NoOpCpu::chk(unsigned short)
+	uint16_t NoOpCpu::chk(uint16_t)
 	{
 		return instructions::CHK;
 	}
 
-	unsigned short NoOpCpu::clr(unsigned short)
+	uint16_t NoOpCpu::clr(uint16_t)
 	{
 		return instructions::CLR;
 	}
 
 
-	unsigned short NoOpCpu::cmp(unsigned short)
+	uint16_t NoOpCpu::cmp(uint16_t)
 	{
 		return instructions::CMP;
 	}
 
-	unsigned short NoOpCpu::cmpa(unsigned short)
+	uint16_t NoOpCpu::cmpa(uint16_t)
 	{
 		return instructions::CMPA;
 	}
 
-	unsigned short NoOpCpu::cmpi(unsigned short)
+	uint16_t NoOpCpu::cmpi(uint16_t)
 	{
 		return instructions::CMPI;
 	}
 
-	unsigned short NoOpCpu::cmpm(unsigned short)
+	uint16_t NoOpCpu::cmpm(uint16_t)
 	{
 		return instructions::CMPM;
 	}
 
-	unsigned short NoOpCpu::dbcc(unsigned short)
+	uint16_t NoOpCpu::dbcc(uint16_t)
 	{
 		return instructions::DBCC;
 	}
 
-	unsigned short NoOpCpu::divs(unsigned short)
+	uint16_t NoOpCpu::divs(uint16_t)
 	{
 		return instructions::DIVS;
 	}
 
-	unsigned short NoOpCpu::divu(unsigned short)
+	uint16_t NoOpCpu::divu(uint16_t)
 	{
 		return instructions::DIVU;
 	}
 
-	unsigned short NoOpCpu::eor(unsigned short)
+	uint16_t NoOpCpu::eor(uint16_t)
 	{
 		return instructions::EOR;
 	}
 
-	unsigned short NoOpCpu::eori(unsigned short)
+	uint16_t NoOpCpu::eori(uint16_t)
 	{
 		return instructions::EORI;
 	}
 
-	unsigned short NoOpCpu::eori2ccr(unsigned short)
+	uint16_t NoOpCpu::eori2ccr(uint16_t)
 	{
 		return instructions::EORI2CCR;
 	}
 
-	unsigned short NoOpCpu::exg(unsigned short)
+	uint16_t NoOpCpu::exg(uint16_t)
 	{
 		return instructions::EXG;
 	}
 
-	unsigned short NoOpCpu::ext(unsigned short)
+	uint16_t NoOpCpu::ext(uint16_t)
 	{
 		return instructions::EXT;
 	}
 
-	unsigned short NoOpCpu::illegal(unsigned short)
+	uint16_t NoOpCpu::illegal(uint16_t)
 	{
 		return instructions::ILLEGAL;
 	}
 
-	unsigned short NoOpCpu::jmp(unsigned short)
+	uint16_t NoOpCpu::jmp(uint16_t)
 	{
 		return instructions::JMP;
 	}
 
-	unsigned short NoOpCpu::jsr(unsigned short)
+	uint16_t NoOpCpu::jsr(uint16_t)
 	{
 		return instructions::JSR;
 	}
 
-	unsigned short NoOpCpu::lea(unsigned short)
+	uint16_t NoOpCpu::lea(uint16_t)
 	{
 		return instructions::LEA;
 	}
 
-	unsigned short NoOpCpu::link(unsigned short)
+	uint16_t NoOpCpu::link(uint16_t)
 	{
 		return instructions::LINK;
 	}
 
-	unsigned short NoOpCpu::lsl_memory(unsigned short)
+	uint16_t NoOpCpu::lsl_memory(uint16_t)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short NoOpCpu::lsl_register(unsigned short)
+	uint16_t NoOpCpu::lsl_register(uint16_t)
 	{
 		return instructions::LSL;
 	}
 
-	unsigned short NoOpCpu::lsr_memory(unsigned short)
+	uint16_t NoOpCpu::lsr_memory(uint16_t)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short NoOpCpu::lsr_register(unsigned short)
+	uint16_t NoOpCpu::lsr_register(uint16_t)
 	{
 		return instructions::LSR;
 	}
 
-	unsigned short NoOpCpu::move(unsigned short)
+	uint16_t NoOpCpu::move(uint16_t)
 	{
 		return instructions::MOVE;
 	}
 
-	unsigned short NoOpCpu::movea(unsigned short)
+	uint16_t NoOpCpu::movea(uint16_t)
 	{
 		return instructions::MOVEA;
 	}
 
-	unsigned short NoOpCpu::move2ccr(unsigned short)
+	uint16_t NoOpCpu::move2ccr(uint16_t)
 	{
 		return instructions::MOVE2CCR;
 	}
 
-	unsigned short NoOpCpu::movesr(unsigned short)
+	uint16_t NoOpCpu::movesr(uint16_t)
 	{
 		return instructions::MOVESR;
 	}
 
-	unsigned short NoOpCpu::movem(unsigned short)
+	uint16_t NoOpCpu::movem(uint16_t)
 	{
 		return instructions::MOVEM;
 	}
 
-	unsigned short NoOpCpu::movep(unsigned short)
+	uint16_t NoOpCpu::movep(uint16_t)
 	{
 		return instructions::MOVEP;
 	}
 
-	unsigned short NoOpCpu::moveq(unsigned short)
+	uint16_t NoOpCpu::moveq(uint16_t)
 	{
 		return instructions::MOVEQ;
 	}
 
-	unsigned short NoOpCpu::muls(unsigned short)
+	uint16_t NoOpCpu::muls(uint16_t)
 	{
 		return instructions::MULS;
 	}
 
-	unsigned short NoOpCpu::mulu(unsigned short)
+	uint16_t NoOpCpu::mulu(uint16_t)
 	{
 		return instructions::MULU;
 	}
 
-	unsigned short NoOpCpu::nbcd(unsigned short)
+	uint16_t NoOpCpu::nbcd(uint16_t)
 	{
 		return instructions::NBCD;
 	}
 
-	unsigned short NoOpCpu::neg(unsigned short)
+	uint16_t NoOpCpu::neg(uint16_t)
 	{
 		return instructions::NEG;
 	}
-	unsigned short NoOpCpu::negx(unsigned short)
+	uint16_t NoOpCpu::negx(uint16_t)
 	{
 		return instructions::NEGX;
 	}
-	unsigned short NoOpCpu::nop(unsigned short)
+	uint16_t NoOpCpu::nop(uint16_t)
 	{
 		return instructions::NOP;
 	}
-	unsigned short NoOpCpu::not_(unsigned short)
+	uint16_t NoOpCpu::not_(uint16_t)
 	{
 		return instructions::NOT;
 	}
 
-	unsigned short NoOpCpu::or_(unsigned short)
+	uint16_t NoOpCpu::or_(uint16_t)
 	{
 		return instructions::OR;
 	}
 
-	unsigned short NoOpCpu::ori(unsigned short)
+	uint16_t NoOpCpu::ori(uint16_t)
 	{
 		return instructions::ORI;
 	}
 
-	unsigned short NoOpCpu::ori2ccr(unsigned short)
+	uint16_t NoOpCpu::ori2ccr(uint16_t)
 	{
 		return instructions::ORI2CCR;
 	}
 
-	unsigned short NoOpCpu::pea(unsigned short)
+	uint16_t NoOpCpu::pea(uint16_t)
 	{
 		return instructions::PEA;
 	}
 
-	unsigned short NoOpCpu::rol_memory(unsigned short)
+	uint16_t NoOpCpu::rol_memory(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short NoOpCpu::ror_memory(unsigned short)
+	uint16_t NoOpCpu::ror_memory(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short NoOpCpu::roxl_memory(unsigned short)
+	uint16_t NoOpCpu::roxl_memory(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short NoOpCpu::roxr_memory(unsigned short)
+	uint16_t NoOpCpu::roxr_memory(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short NoOpCpu::rol_register(unsigned short)
+	uint16_t NoOpCpu::rol_register(uint16_t)
 	{
 		return instructions::ROL;
 	}
 
-	unsigned short NoOpCpu::ror_register(unsigned short)
+	uint16_t NoOpCpu::ror_register(uint16_t)
 	{
 		return instructions::ROR;
 	}
 
-	unsigned short NoOpCpu::roxl_register(unsigned short)
+	uint16_t NoOpCpu::roxl_register(uint16_t)
 	{
 		return instructions::ROXL;
 	}
 
-	unsigned short NoOpCpu::roxr_register(unsigned short)
+	uint16_t NoOpCpu::roxr_register(uint16_t)
 	{
 		return instructions::ROXR;
 	}
 
-	unsigned short NoOpCpu::sbcd(unsigned short)
-	{
-		return instructions::SBCD;
-	}
-
-	unsigned short NoOpCpu::rtr(unsigned short)
+	uint16_t NoOpCpu::rtr(uint16_t)
 	{
 		return instructions::RTR;
 	}
 
-	unsigned short NoOpCpu::rts(unsigned short)
+	uint16_t NoOpCpu::rts(uint16_t)
 	{
 		return instructions::RTS;
 	}
 
-	unsigned short NoOpCpu::scc(unsigned short)
+	uint16_t NoOpCpu::sbcd(uint16_t)
+	{
+		return instructions::SBCD;
+	}
+
+	uint16_t NoOpCpu::scc(uint16_t)
 	{
 		return instructions::SCC;
 	}
 
-	unsigned short NoOpCpu::sub(unsigned short)
+	uint16_t NoOpCpu::stop(uint16_t)
+	{
+		return instructions::STOP;
+	}
+
+	uint16_t NoOpCpu::sub(uint16_t)
 	{
 		return instructions::SUB;
 	}
 
-	unsigned short NoOpCpu::subi(unsigned short)
+	uint16_t NoOpCpu::subi(uint16_t)
 	{
 		return instructions::SUBI;
 	}
 
-	unsigned short NoOpCpu::suba(unsigned short)
+	uint16_t NoOpCpu::suba(uint16_t)
 	{
 		return instructions::SUBA;
 	}
 
-	unsigned short NoOpCpu::subq(unsigned short)
+	uint16_t NoOpCpu::subq(uint16_t)
 	{
 		return instructions::SUBQ;
 	}
 
-	unsigned short NoOpCpu::subx(unsigned short)
+	uint16_t NoOpCpu::subx(uint16_t)
 	{
 		return instructions::SUBX;
 	}
 
-	unsigned short NoOpCpu::swap(unsigned short)
+	uint16_t NoOpCpu::swap(uint16_t)
 	{
 		return instructions::SWAP;
 	}
 
-	unsigned short NoOpCpu::tas(unsigned short)
+	uint16_t NoOpCpu::tas(uint16_t)
 	{
 		return instructions::TAS;
 	}
 
-	unsigned short NoOpCpu::trap(unsigned short)
+	uint16_t NoOpCpu::trap(uint16_t)
 	{
 		return instructions::TRAP;
 	}
 
-	unsigned short NoOpCpu::trapv(unsigned short)
+	uint16_t NoOpCpu::trapv(uint16_t)
 	{
 		return instructions::TRAPV;
 	}
 
-	unsigned short NoOpCpu::tst(unsigned short)
+	uint16_t NoOpCpu::tst(uint16_t)
 	{
 		return instructions::TST;
 	}
 
-	unsigned short NoOpCpu::unlk(unsigned short)
+	uint16_t NoOpCpu::unlk(uint16_t)
 	{
 		return instructions::UNLK;
 	}
 
-	unsigned short NoOpCpu::unknown(unsigned short)
+	uint16_t NoOpCpu::unknown(uint16_t)
 	{
 		return instructions::UNKNOWN;
 	}

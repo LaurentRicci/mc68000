@@ -33,9 +33,6 @@ void verifyExecution(const uint8_t* code, uint32_t size, uint32_t baseAddress, v
 	assertFunctor(cpu);
 }
 
-
-
-
 BOOST_AUTO_TEST_SUITE(cpuSuite)
 
 BOOST_AUTO_TEST_CASE(a_asm)
@@ -866,6 +863,26 @@ BOOST_AUTO_TEST_CASE(a_nop)
 	unsigned char code[] = {
 		0x4e, 0x71, // nop
 		0x4e, 0x40, // trap #0
+		0xff, 0xff
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+		});
+}
+
+// ===================================================
+// STOP
+// ===================================================
+BOOST_AUTO_TEST_CASE(a_stop)
+{
+	unsigned char code[] = {
+		0x4e, 0x72, 0x00, 0xff, // stop #$ff
+		0x4e, 0x40,             // trap #0
 		0xff, 0xff
 	};
 
