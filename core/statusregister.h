@@ -18,6 +18,7 @@ namespace mc68000
 			t = s = i = 0;
 			c = v = z = n = x = 0;
 		}
+
 		StatusRegister& operator=(int8_t ccr)
 		{
 			c = (ccr & 0x01);
@@ -27,6 +28,7 @@ namespace mc68000
 			x = (ccr & 0x10) >> 4;
 			return *this;
 		}
+
 		StatusRegister& operator=(int16_t sr)
 		{
 			c = sr & 0x1;

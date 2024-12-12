@@ -156,6 +156,7 @@ namespace mc68000
 		unsigned short rts(unsigned short);
 
 		unsigned short scc(unsigned short);
+		unsigned short stop(unsigned short);
 		unsigned short swap(unsigned short);
 		unsigned short tas(unsigned short);
 

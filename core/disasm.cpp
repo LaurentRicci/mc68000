@@ -622,6 +622,13 @@ namespace mc68000
 		return instructions::SCC;
 	}
 
+	uint16_t  DisAsm::stop(uint16_t)
+	{
+		disassembly = "stop #$";
+		disassembly += toHex(fetchNextWord());
+		return instructions::STOP;
+	}
+
 	uint16_t DisAsm::sub(uint16_t)
 	{
 		return instructions::SUB;

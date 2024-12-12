@@ -202,6 +202,10 @@ BOOST_AUTO_TEST_CASE(d_movea_l)
 {
     verifyDisassembly(0x206e, 0x0008, "movea.l 8(a6),a0");
 }
+BOOST_AUTO_TEST_CASE(d_stop)
+{
+	verifyDisassembly(0x4e72, 0x0042, "stop #$42");
+}
 
 BOOST_AUTO_TEST_CASE(d_subx)
 {

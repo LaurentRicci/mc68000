@@ -459,6 +459,11 @@ namespace noopcputest
         validateDecode(0b0101'0010'11'010'010u, instructions::SCC, L"SCC"); // SHI (A2)
     }
 
+	BOOST_AUTO_TEST_CASE(stop)
+	{
+		validateDecode(0b0100'1110'0111'0010u, instructions::STOP, L"STOP"); // STOP #0
+	}
+
     BOOST_AUTO_TEST_CASE(sub)
     {
         validateDecode(0b1001'001'001'010'010u, instructions::SUB, L"SUB"); // SUB.W (A2), D1

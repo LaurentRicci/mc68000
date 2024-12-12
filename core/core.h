@@ -508,6 +508,9 @@ namespace mc68000
 			}
 		}
 
+		// STOP
+		handlers[0b0100'1110'0111'0010u] = &T::stop;
+
 		// SWAP
 		for (unsigned reg = 0; reg <= 7; reg++)
 		{

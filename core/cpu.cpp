@@ -1910,6 +1910,26 @@ namespace mc68000
 	}
 
 	// ==========
+	// STOP
+	// ==========
+	uint16_t Cpu::stop(uint16_t opcode)
+	{
+		uint16_t extension = localMemory.get<uint16_t>(pc);
+		pc += 2;
+		if (sr.s)
+		{
+			statusRegister = (int16_t) extension;
+			done = true;
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
+
+		return instructions::STOP;
+	}
+
+	// ==========
 	// SUB
 	// ==========
 	uint16_t Cpu::sub(uint16_t opcode)
