@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_div)
 // DIVS tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(div_divs_plusplus)
+BOOST_AUTO_TEST_CASE(divs_plusplus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x00, 0x12, 0xd6, 0x80, // move.l #1234560,d0
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(div_divs_plusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divs_plusminus)
+BOOST_AUTO_TEST_CASE(divs_plusminus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x00, 0x12, 0xd6, 0x80, // move.l #1234560,d0
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(div_divs_plusminus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divs_minusplus)
+BOOST_AUTO_TEST_CASE(divs_minusplus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0xff, 0xed, 0x29, 0x80, // move.l #-1234560,d0
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(div_divs_minusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divs_minusminus)
+BOOST_AUTO_TEST_CASE(divs_minusminus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0xff, 0xed, 0x29, 0x80, // move.l #-1234560,d0
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(div_divs_minusminus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divs_overflow)
+BOOST_AUTO_TEST_CASE(divs_overflow)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78, // move.l #$12345678,d0
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(div_divs_overflow)
 // ===================================================
 // DIVU tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(div_divu_plusplus)
+BOOST_AUTO_TEST_CASE(divu_plusplus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x00, 0x12, 0xd6, 0x80, // move.l #1234560,d0
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(div_divu_plusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divu_plusminus)
+BOOST_AUTO_TEST_CASE(divu_plusminus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x00, 0x12, 0xd6, 0x80, // move.l #1234560,d0
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(div_divu_plusminus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divu_minusplus)
+BOOST_AUTO_TEST_CASE(divu_minusplus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0xff, 0xed, 0x29, 0x80, // move.l #-1234560,d0
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(div_divu_minusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divu_minusminus)
+BOOST_AUTO_TEST_CASE(divu_minusminus)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0xff, 0xed, 0x29, 0x80, // move.l #-1234560,d0
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(div_divu_minusminus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(div_divu_overflow)
+BOOST_AUTO_TEST_CASE(divu_overflow)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78, // move.l #$12345678,d0

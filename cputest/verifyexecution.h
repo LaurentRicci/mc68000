@@ -5,3 +5,4 @@
 using namespace mc68000;
 void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(const Cpu& c));
 void verifyExecution(const uint8_t* code, uint32_t size, uint32_t baseAddress, void (*assertFunctor)(const Cpu& c));
+void validateSR(const Cpu& cpu, int x, int n, int z, int v, int c);

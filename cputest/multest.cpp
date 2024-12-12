@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_mul)
 // MULS tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(mul_muls_plusplus)
+BOOST_AUTO_TEST_CASE(muls_plusplus)
 {
 	unsigned char code[] = {
 	0x70, 0x7b,            // moveq #123,d0
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(mul_muls_plusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(mul_muls_minusplus)
+BOOST_AUTO_TEST_CASE(muls_minusplus)
 {
 	unsigned char code[] = {
 	0x70, 0x7b,            // moveq #123,d0
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(mul_muls_minusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(mul_muls_plusminus)
+BOOST_AUTO_TEST_CASE(muls_plusminus)
 {
 	unsigned char code[] = {
 	0x70, 0x85,            // moveq #-123,d0
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(mul_muls_plusminus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(mul_muls_minusminus)
+BOOST_AUTO_TEST_CASE(muls_minusminus)
 {
 	unsigned char code[] = {
 	0x70, 0x85,            // moveq #-123,d0
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(mul_muls_minusminus)
 // MULU tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(mul_mulu_plusplus)
+BOOST_AUTO_TEST_CASE(mulu_plusplus)
 {
 	unsigned char code[] = {
 	0x70, 0x7b,            // moveq #123,d0
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(mul_mulu_plusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(mul_mulu_minusplus)
+BOOST_AUTO_TEST_CASE(mulu_minusplus)
 {
 	unsigned char code[] = {
 	0x70, 0x7b,            // moveq #123,d0
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(mul_mulu_minusplus)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(mul_mulu_plusminus)
+BOOST_AUTO_TEST_CASE(mulu_plusminus)
 {
 	unsigned char code[] = {
 	0x70, 0x85,            // moveq #-123,d0

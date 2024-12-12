@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_or)
 // ===================================================
 // OR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(a_or_to_dregister_b)
+BOOST_AUTO_TEST_CASE(or_to_dregister_b)
 {
 	unsigned char code[] = {
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(a_or_to_dregister_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_or_to_dregister_w)
+BOOST_AUTO_TEST_CASE(or_to_dregister_w)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x8a, 0x8f, //   move.w #$8a8f,d3
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(a_or_to_dregister_w)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_or_to_dregister_l)
+BOOST_AUTO_TEST_CASE(or_to_dregister_l)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x95, 0x36, 0x8a, 0x8f, //   move.l #$95368a8f,d3
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(a_or_to_dregister_l)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_or_from_dregister_b)
+BOOST_AUTO_TEST_CASE(or_from_dregister_b)
 {
 	unsigned char code[] = {
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(a_or_from_dregister_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_or_from_dregister_w)
+BOOST_AUTO_TEST_CASE(or_from_dregister_w)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x8a, 0x8f, //   move.w #$8a8f,d3
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(a_or_from_dregister_w)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_or_from_dregister_l)
+BOOST_AUTO_TEST_CASE(or_from_dregister_l)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x95, 0x36, 0x8a, 0x8f, //   move.l #$95368a8f,d3
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(a_or_from_dregister_l)
 // ===================================================
 // ORI tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(a_ori_b)
+BOOST_AUTO_TEST_CASE(ori_b)
 {
 	unsigned char code[] = {
 		0x16, 0x3c, 0x00, 0x32, //   move.b #$32,d3
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(a_ori_b)
 	BOOST_CHECK_EQUAL(0x3b, cpu.d3);
 }
 
-BOOST_AUTO_TEST_CASE(a_ori_w)
+BOOST_AUTO_TEST_CASE(ori_w)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x8a, 0x8f, //   move.w #$8a8f,d3
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(a_ori_w)
 	BOOST_CHECK_EQUAL(0x8B8f, cpu.d3);
 }
 
-BOOST_AUTO_TEST_CASE(a_ori_l)
+BOOST_AUTO_TEST_CASE(ori_l)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x95, 0x36, 0x8a, 0x8f, //   move.l #$95368a8f,d3
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(a_ori_l)
 // ===================================================
 // ORI to CCR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(a_ori2ccr_1)
+BOOST_AUTO_TEST_CASE(ori2ccr_1)
 {
 	unsigned char code[] = {
 		0x44, 0xfc, 0x00, 0x1f, // move #31,ccr
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(a_ori2ccr_1)
 	BOOST_CHECK_EQUAL(1, cpu.sr.v);
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
-BOOST_AUTO_TEST_CASE(a_ori2ccr_2)
+BOOST_AUTO_TEST_CASE(ori2ccr_2)
 {
 	unsigned char code[] = {
 		0x44, 0xfc, 0x00, 0x00, // move #0,ccr

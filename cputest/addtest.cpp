@@ -61,21 +61,21 @@ void verifyAbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t ex
 	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
 }
 
-BOOST_AUTO_TEST_CASE(a_abcd_register_x0)
+BOOST_AUTO_TEST_CASE(abcd_register_x0)
 {
 	verifyAbcdExecution(0x42, 0x31, 0, 0x73, 0, 0);
 	verifyAbcdExecution(0x48, 0x34, 0, 0x82, 0, 0);
 	verifyAbcdExecution(0x48, 0x62, 0, 0x10, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(a_abcd_register_x1)
+BOOST_AUTO_TEST_CASE(abcd_register_x1)
 {
 	verifyAbcdExecution(0x42, 0x31, 0x10, 0x74, 0, 0);
 	verifyAbcdExecution(0x48, 0x34, 0x10, 0x83, 0, 0);
 	verifyAbcdExecution(0x48, 0x62, 0x10, 0x11, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(a_abcd_overflow)
+BOOST_AUTO_TEST_CASE(abcd_overflow)
 {
 	unsigned char code[] = {
 	0x30, 0x3c, 0x00, 0x48,     // move #$48,d0
@@ -99,14 +99,14 @@ BOOST_AUTO_TEST_CASE(a_abcd_overflow)
 	BOOST_CHECK_EQUAL(0, cpu.sr.z);
 }
 
-BOOST_AUTO_TEST_CASE(a_abcd_memory_x0)
+BOOST_AUTO_TEST_CASE(abcd_memory_x0)
 {
 	verifyAbcdExecutionMemory(0x42, 0x31, 0, 0x73, 0, 0);
 	verifyAbcdExecutionMemory(0x48, 0x34, 0, 0x82, 0, 0);
 	verifyAbcdExecutionMemory(0x48, 0x62, 0, 0x10, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(a_abcd_memory_x1)
+BOOST_AUTO_TEST_CASE(abcd_memory_x1)
 {
 	verifyAbcdExecutionMemory(0x42, 0x31, 0x10, 0x74, 0, 0);
 	verifyAbcdExecutionMemory(0x48, 0x34, 0x10, 0x83, 0, 0);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(a_abcd_memory_x1)
 // ===================================================
 // ADD tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(a_add_to_dregister_b)
+BOOST_AUTO_TEST_CASE(add_to_dregister_b)
 {
 	unsigned char code[] = {
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
+BOOST_AUTO_TEST_CASE(add_from_dregister_b)
 {
 	unsigned char code[] = {
 		0x16, 0x3c, 0x00, 0x32,    //   move.b #$32, d3
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_to_dregister_w)
+BOOST_AUTO_TEST_CASE(add_to_dregister_w)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x90, 0x90,    //   move.w #$9090, d3
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_w)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_from_dregister_w)
+BOOST_AUTO_TEST_CASE(add_from_dregister_w)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x90, 0x90,    //   move.w #$9090, d3
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_w)
 //	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_to_dregister_l)
+BOOST_AUTO_TEST_CASE(add_to_dregister_l)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x90, 0x90, 0x90, 0x90,    //   move.l #$90909090, d3
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(a_add_to_dregister_l)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_add_from_dregister_l)
+BOOST_AUTO_TEST_CASE(add_from_dregister_l)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x90, 0x90, 0x90, 0x90,    //   move.l #$90909090, d3
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(a_add_from_dregister_l)
 // ADDA tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(a_adda_1)
+BOOST_AUTO_TEST_CASE(adda_1)
 {
 	unsigned char code[] = {
 	0x30, 0x7c, 0x00, 0x64,     // move #100,a0
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(a_adda_1)
 	BOOST_CHECK_EQUAL(168, cpu.a1);
 }
 
-BOOST_AUTO_TEST_CASE(a_adda_2)
+BOOST_AUTO_TEST_CASE(adda_2)
 {
 	unsigned char code[] = {
 	0x30, 0x7c, 0x01, 0x00,             // move   #$100,a0
@@ -432,7 +432,7 @@ void verifyAddiExecution_l(uint32_t destination, uint32_t source, uint32_t expec
 }
 
 
-BOOST_AUTO_TEST_CASE(a_addi_b)
+BOOST_AUTO_TEST_CASE(addi_b)
 {
 	verifyAddiExecution_b(  10,    5,   15, 0, 0, 0, 0, 0); // 10 + 5
 	verifyAddiExecution_b(  10, 0xf6,    0, 1, 0, 1, 0, 1); // 10 + -10
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(a_addi_b)
 
 }
 
-BOOST_AUTO_TEST_CASE(a_addi_w)
+BOOST_AUTO_TEST_CASE(addi_w)
 {
 	verifyAddiExecution_w(0x1010, 0x0505, 0x1515, 0, 0, 0, 0, 0); 
 	verifyAddiExecution_w(0x1010, 0xf6f6, 0x0706, 1, 0, 0, 0, 1); 
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(a_addi_w)
 	verifyAddiExecution_w(0x9090, 0x8181, 0x1211, 1, 0, 0, 1, 1); 
 }
 
-BOOST_AUTO_TEST_CASE(a_addi_l)
+BOOST_AUTO_TEST_CASE(addi_l)
 {
 	verifyAddiExecution_l(0x10101010, 0x05050505, 0x15151515, 0, 0, 0, 0, 0);
 	verifyAddiExecution_l(0x10101010, 0xf6f6f6f6, 0x07070706, 1, 0, 0, 0, 1);
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(a_addi_l)
 // ADDQ tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(a_addq_dataRegister_b)
+BOOST_AUTO_TEST_CASE(addq_dataRegister_b)
 {
 	unsigned char code[] = {
 	0x10, 0x3c, 0x00, 0xfe,    // move.b #21, d0
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(a_addq_dataRegister_b)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_addq_dataRegister_wl)
+BOOST_AUTO_TEST_CASE(addq_dataRegister_wl)
 {
 	unsigned char code[] = {
 	0x20, 0x3c, 0x12, 0x34, 0xff, 0xfe,    // move.l #$1234fffe, d0
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(a_addq_dataRegister_wl)
 	BOOST_CHECK_EQUAL(0x12350004, cpu.d1);
 }
 
-BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
+BOOST_AUTO_TEST_CASE(addq_addressRegister)
 {
 	unsigned char code[] = {
 	0x22, 0x7c, 0xff, 0xff, 0xff, 0xfe,    // move.l #fffffffe, a1
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(a_addq_addressRegister)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(a_addq_increment)
+BOOST_AUTO_TEST_CASE(addq_increment)
 {
 	unsigned char code[] = {
 	0x41, 0xfa, 0x00, 0x0e,    // lea data(pc), a0

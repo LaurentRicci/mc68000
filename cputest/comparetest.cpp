@@ -78,7 +78,7 @@ void verifyCmpiExecution_l(uint32_t d0, uint32_t cmp, uint8_t n, uint8_t z, uint
 	BOOST_CHECK_EQUAL(v, cpu.sr.v);
 
 }
-BOOST_AUTO_TEST_CASE(compare_cmpi_b)
+BOOST_AUTO_TEST_CASE(cmpi_b)
 {
 	verifyCmpiExecution_b(10, 5, 0, 0, 0, 0);
 	verifyCmpiExecution_b(5, 5, 0, 1, 0, 0);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpi_b)
 	verifyCmpiExecution_b(0x70, 0x81, 1, 0, 1, 1);
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpi_w)
+BOOST_AUTO_TEST_CASE(cmpi_w)
 {
 	verifyCmpiExecution_w(0x1010, 0x0505, 0, 0, 0, 0);
 	verifyCmpiExecution_w(0x0505, 0x0505, 0, 1, 0, 0);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpi_w)
 	verifyCmpiExecution_w(0x7070, 0x8181, 1, 0, 1, 1);
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpi_l)
+BOOST_AUTO_TEST_CASE(cmpi_l)
 {
 	verifyCmpiExecution_l(0x10101010, 0x05050505, 0, 0, 0, 0);
 	verifyCmpiExecution_l(0x05050505, 0x05050505, 0, 1, 0, 0);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpi_l)
 	verifyCmpiExecution_l(0x70707070, 0x81818181, 1, 0, 1, 1);
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmp)
+BOOST_AUTO_TEST_CASE(cmp)
 {
 	unsigned char code[] = {
 		0x36, 0x3c,  0x70, 0x70,    // move.w #$7070,d3
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(compare_cmp)
 
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpa)
+BOOST_AUTO_TEST_CASE(cmpa)
 {
 	unsigned char code[] = {
 		0x30, 0x7c,  0x70, 0x70,    // move.w #$7070,a0
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpa)
 
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpm_b)
+BOOST_AUTO_TEST_CASE(cmpm_b)
 {
 	unsigned char code[] = {
 		0x43, 0xfa, 0x00, 0x0e,    // lea data1(pc), a1
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpm_b)
 	BOOST_CHECK_EQUAL(121, cpu.a2);
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpm_w)
+BOOST_AUTO_TEST_CASE(cmpm_w)
 {
 	unsigned char code[] = {
 		0x43, 0xfa, 0x00, 0x0e,    // lea data1(pc), a1
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(compare_cmpm_w)
 	BOOST_CHECK_EQUAL(122, cpu.a2);
 }
 
-BOOST_AUTO_TEST_CASE(compare_cmpm_l)
+BOOST_AUTO_TEST_CASE(cmpm_l)
 {
 	unsigned char code[] = {
 		0x43, 0xfa, 0x00, 0x12,    // lea data1(pc), a1
