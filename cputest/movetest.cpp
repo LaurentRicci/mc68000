@@ -1,13 +1,77 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
-#include "coretest.h"
+#include "verifyexecution.h"
 
 using namespace mc68000;
 
 BOOST_AUTO_TEST_SUITE(cpuSuite_move)
 
-BOOST_AUTO_TEST_CASE(move_moveq)
+BOOST_AUTO_TEST_CASE(move_to_D2_b)
+{
+	// Arrange
+	unsigned char code[] = { 0b0001'0100u, 0b0011'1100u, 0, 0x20, 0x4e, 0x40 }; // move.b #$20,d2
+
+	// Act
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu) { BOOST_CHECK_EQUAL(0x20, cpu.d2); });
+}
+
+BOOST_AUTO_TEST_CASE(move_to_D4_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'1000u, 0b0011'1100u, 0x12, 0x34, 0x4e, 0x40 }; // move.w #$1234,d4
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1234, cpu.d4);
+			validateSR(cpu, -1, 0, 0, 0, 0);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(move_negativeToD4_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'1000u, 0b0011'1100u, 0x82, 0x34, 0x4e, 0x40 }; // move.w #$1234,d4
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x8234, cpu.d4);
+			validateSR(cpu, -1, 1, 0, 0, 0);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(move_to_D7_l)
+{
+	// Arrange
+	unsigned char code[] = { 0b0010'1110u, 0b0011'1100u, 0x12, 0x34, 0x56, 0x78, 0x4e, 0x40 }; // move.w #$1234,d7
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu) { BOOST_CHECK_EQUAL(0x12345678, cpu.d7); });
+}
+
+BOOST_AUTO_TEST_CASE(move_to_A2_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'0100u, 0b0111'1100u, 0x12, 0x34, 0x4e, 0x40 }; // movea.w #$1234,a2
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu) { BOOST_CHECK_EQUAL(0x1234, cpu.a2); });
+}
+
+BOOST_AUTO_TEST_CASE(move_negative_to_A2_w)
+{
+	// Arrange
+	unsigned char code[] = { 0b0011'0100u, 0b0111'1100u, 0x87, 0x34, 0x4e, 0x40 }; // movea.w #$8734,a2
+
+	// Assert
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu) { BOOST_CHECK_EQUAL(0xffff8734, cpu.a2); });
+}
+
+
+
+BOOST_AUTO_TEST_CASE(moveq)
 {
 	unsigned char code[] = {
 		0x74, 0xfe,    // moveq.l #-2,d2
@@ -21,7 +85,7 @@ BOOST_AUTO_TEST_CASE(move_moveq)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(move_move2ccr_1)
+BOOST_AUTO_TEST_CASE(move_to_ccr_1)
 {
 	unsigned char code[] = {
 		0x44, 0xfc, 0x00, 0x15,    // move #21, CCR
@@ -38,7 +102,7 @@ BOOST_AUTO_TEST_CASE(move_move2ccr_1)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(move_move2ccr_2)
+BOOST_AUTO_TEST_CASE(move_to_ccr_2)
 {
 	unsigned char code[] = {
 		0x44, 0xfc, 0x00, 0x0a,    // move #12, CCR
@@ -55,7 +119,7 @@ BOOST_AUTO_TEST_CASE(move_move2ccr_2)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(move_movefromsr)
+BOOST_AUTO_TEST_CASE(move_from_sr)
 {
 	unsigned char code[] = {
 		0x44, 0xfc, 0x00, 0x15,    // move #21, CCR
@@ -75,7 +139,7 @@ BOOST_AUTO_TEST_CASE(move_movefromsr)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_tomemory)
+BOOST_AUTO_TEST_CASE(movem_to_memory)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x18,    // lea SPACE(PC), a3
@@ -110,7 +174,7 @@ BOOST_AUTO_TEST_CASE(move_movem_tomemory)
 	BOOST_CHECK_EQUAL(20, cpu.mem.get<uint32_t>(0x1a));
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_tomemory_word)
+BOOST_AUTO_TEST_CASE(movem_to_memory_word)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x18,    // lea SPACE(PC), a3
@@ -147,7 +211,7 @@ BOOST_AUTO_TEST_CASE(move_movem_tomemory_word)
 
 
 
-BOOST_AUTO_TEST_CASE(move_movem_tofrommemory)
+BOOST_AUTO_TEST_CASE(movem_to_from_memory)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x24,    // lea SPACE(PC), a3
@@ -190,7 +254,7 @@ BOOST_AUTO_TEST_CASE(move_movem_tofrommemory)
 	BOOST_CHECK_EQUAL(20, cpu.mem.get<uint32_t>(0x26));
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_tofrommemory_word)
+BOOST_AUTO_TEST_CASE(movem_to_from_memory_word)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x24,    // lea SPACE(PC), a3
@@ -233,7 +297,7 @@ BOOST_AUTO_TEST_CASE(move_movem_tofrommemory_word)
 	BOOST_CHECK_EQUAL(0xffec, cpu.mem.get<uint16_t>(0x26));
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_incremental_word)
+BOOST_AUTO_TEST_CASE(movem_incremental_word)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x44,    // lea SPACE+32(PC), a3
@@ -277,7 +341,7 @@ BOOST_AUTO_TEST_CASE(move_movem_incremental_word)
 	BOOST_CHECK_EQUAL(44, cpu.mem.get<uint16_t>(0x44));
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_incremental_long)
+BOOST_AUTO_TEST_CASE(movem_incremental_long)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x44,    // lea SPACE+32(PC), a3
@@ -321,7 +385,7 @@ BOOST_AUTO_TEST_CASE(move_movem_incremental_long)
 	BOOST_CHECK_EQUAL(44, cpu.mem.get<uint32_t>(0x42));
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_with_register)
+BOOST_AUTO_TEST_CASE(movem_with_register)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x34,    // lea SPACE+32(PC), a3
@@ -351,7 +415,7 @@ BOOST_AUTO_TEST_CASE(move_movem_with_register)
 	BOOST_CHECK_EQUAL(0x36, cpu.a3);
 }
 
-BOOST_AUTO_TEST_CASE(move_movem_with_register_incremental)
+BOOST_AUTO_TEST_CASE(movem_with_register_incremental)
 {
 	unsigned char code[] = {
 		0x47, 0xfa, 0x00, 0x34,    // lea SPACE+32(PC), a3
@@ -382,7 +446,7 @@ BOOST_AUTO_TEST_CASE(move_movem_with_register_incremental)
 
 }
 
-BOOST_AUTO_TEST_CASE(move_movep_from_reg_word)
+BOOST_AUTO_TEST_CASE(movep_from_reg_word)
 {
 	unsigned char code[] = {
 		0x36, 0x3c, 0x12, 0x34,    // move.w #$1234, d3
@@ -411,7 +475,7 @@ BOOST_AUTO_TEST_CASE(move_movep_from_reg_word)
 
 }
 
-BOOST_AUTO_TEST_CASE(move_movep_from_reg_long)
+BOOST_AUTO_TEST_CASE(movep_from_reg_long)
 {
 	unsigned char code[] = {
 		0x26, 0x3c, 0x12, 0x34, 0x56, 0x78,    // move.l #$12345678, d3
@@ -441,7 +505,7 @@ BOOST_AUTO_TEST_CASE(move_movep_from_reg_long)
 	BOOST_CHECK_EQUAL(0x78, cpu.mem.get<uint8_t>(0x20));
 }
 
-BOOST_AUTO_TEST_CASE(move_pea)
+BOOST_AUTO_TEST_CASE(pea)
 {
 	unsigned char code[] = {
 		0x4F, 0xFA, 0x01, 0xA0, //   lea stack(pc),a7

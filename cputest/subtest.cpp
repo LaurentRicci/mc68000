@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(sub_from_dregister_l)
 }
 
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_17)
+BOOST_AUTO_TEST_CASE(nbcd_17)
 {
 	unsigned char code[] = {
 	0x70, 0x17,            // moveq #$17,d0
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_17)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_83)
+BOOST_AUTO_TEST_CASE(nbcd_83)
 {
 	unsigned char code[] = {
 	0x70, 0x83,            // moveq #$83,d0
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_83)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_0)
+BOOST_AUTO_TEST_CASE(nbcd_0)
 {
 	unsigned char code[] = {
 	0x70, 0x00,            // moveq #$0,d0
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_0)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_17x)
+BOOST_AUTO_TEST_CASE(nbcd_17x)
 {
 	unsigned char code[] = {
 	0x44, 0xfc, 0x00, 0x10, // move  #$10, ccr
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_17x)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_83x)
+BOOST_AUTO_TEST_CASE(nbcd_83x)
 {
 	unsigned char code[] = {
 	0x44, 0xfc, 0x00, 0x10, // move  #$10, ccr
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_83x)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_nbcd_0x)
+BOOST_AUTO_TEST_CASE(nbcd_0x)
 {
 	unsigned char code[] = {
 	0x44, 0xfc, 0x00, 0x10, // move  #$10, ccr
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(sub_nbcd_0x)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_neg)
+BOOST_AUTO_TEST_CASE(neg)
 {
 	unsigned char code[] = {
 	0x70, 0x2a,             // moveq #42, d0
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(sub_neg)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_neg_neg)
+BOOST_AUTO_TEST_CASE(neg_neg)
 {
 	unsigned char code[] = {
 	0x70, 0xd6,             // moveq #-42, d0
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(sub_neg_neg)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_negx)
+BOOST_AUTO_TEST_CASE(negx)
 {
 	unsigned char code[] = {
 	0x70, 0x2a,             // moveq #42, d0
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(sub_negx)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_negx_neg)
+BOOST_AUTO_TEST_CASE(negx_neg)
 {
 	unsigned char code[] = {
 	0x70, 0xd6,             // moveq #-42, d0
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(sub_negx_neg)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(sub_negx_zero)
+BOOST_AUTO_TEST_CASE(negx_zero)
 {
 	unsigned char code[] = {
 		0x70, 0x00,             //  moveq #0,d0
@@ -525,14 +525,14 @@ void verifySbcdExecution(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t expected
 	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
 }
 
-BOOST_AUTO_TEST_CASE(sub_sbcd_register_x0)
+BOOST_AUTO_TEST_CASE(sbcd_register_x0)
 {
 	verifySbcdExecution(0x31, 0x42, 0, 0x11, 0, 0);
 	verifySbcdExecution(0x34, 0x48, 0, 0x14, 0, 0);
 	verifySbcdExecution(0x62, 0x48, 0, 0x86, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(sub_sbcd_register_x1)
+BOOST_AUTO_TEST_CASE(sbcd_register_x1)
 {
 	verifySbcdExecution(0x31, 0x42, 0x10, 0x10, 0, 0);
 	verifySbcdExecution(0x34, 0x48, 0x10, 0x13, 0, 0);
@@ -569,21 +569,21 @@ void verifySbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t ex
 	BOOST_CHECK_EQUAL(zero, cpu.sr.z);
 }
 
-BOOST_AUTO_TEST_CASE(sub_sbcd_memory_x0)
+BOOST_AUTO_TEST_CASE(sbcd_memory_x0)
 {
 	verifySbcdExecutionMemory(0x31, 0x42, 0, 0x11, 0, 0);
 	verifySbcdExecutionMemory(0x34, 0x48, 0, 0x14, 0, 0);
 	verifySbcdExecutionMemory(0x62, 0x48, 0, 0x86, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(sub_sbcd_memory_x1)
+BOOST_AUTO_TEST_CASE(sbcd_memory_x1)
 {
 	verifySbcdExecutionMemory(0x31, 0x42, 0x10, 0x10, 0, 0);
 	verifySbcdExecutionMemory(0x34, 0x48, 0x10, 0x13, 0, 0);
 	verifySbcdExecutionMemory(0x62, 0x48, 0x10, 0x85, 1, 0);
 }
 
-BOOST_AUTO_TEST_CASE(sub_sbcd_overflow)
+BOOST_AUTO_TEST_CASE(sbcd_overflow)
 {
 	unsigned char code[] = {
 	0x30, 0x3c, 0xff, 0x62,     // move #$ff62,d0

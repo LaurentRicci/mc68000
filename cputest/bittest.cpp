@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
-#include "coretest.h"
+#include "verifyexecution.h"
 
 
 BOOST_AUTO_TEST_SUITE(cpuSuite_bit)
@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_bit)
 // ===================================================
 // BCHG tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_bchg_register_set)
+BOOST_AUTO_TEST_CASE(bchg_register_set)
 {
 	unsigned char code[] =
 	{
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_register_set)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_register_reset)
+BOOST_AUTO_TEST_CASE(bchg_register_reset)
 {
 	unsigned char code[] =
 	{
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_register_reset)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_register_indirect)
+BOOST_AUTO_TEST_CASE(bchg_register_indirect)
 {
 	unsigned char code[] =
 	{
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_register_indirect)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_register_indirect_increment)
+BOOST_AUTO_TEST_CASE(bchg_register_indirect_increment)
 {
 	unsigned char code[] =
 	{
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_register_indirect_increment)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_immediate)
+BOOST_AUTO_TEST_CASE(bchg_immediate)
 {
 	unsigned char code[] =
 	{
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_immediate)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_immediate_word)
+BOOST_AUTO_TEST_CASE(bchg_immediate_word)
 {
 	unsigned char code[] =
 	{
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_immediate_word)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bchg_immediate_too_long)
+BOOST_AUTO_TEST_CASE(bchg_immediate_too_long)
 {
 	unsigned char code[] =
 	{
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(bit_bchg_immediate_too_long)
 // ===================================================
 // BCLR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_bclr_register_set)
+BOOST_AUTO_TEST_CASE(bclr_register_set)
 {
 	unsigned char code[] =
 	{
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(bit_bclr_register_set)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bclr_register_indirect)
+BOOST_AUTO_TEST_CASE(bclr_register_indirect)
 {
 	unsigned char code[] =
 	{
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(bit_bclr_register_indirect)
 // ===================================================
 // BSET tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_bset_register_set)
+BOOST_AUTO_TEST_CASE(bset_register_set)
 {
 	unsigned char code[] =
 	{
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(bit_bset_register_set)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_bset_register_indirect)
+BOOST_AUTO_TEST_CASE(bset_register_indirect)
 {
 	unsigned char code[] =
 	{
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(bit_bset_register_indirect)
 // ===================================================
 // BTST tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_btst_register_set)
+BOOST_AUTO_TEST_CASE(btst_register_set)
 {
 	unsigned char code[] =
 	{
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(bit_btst_register_set)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(bit_btst_register_indirect)
+BOOST_AUTO_TEST_CASE(btst_register_indirect)
 {
 	unsigned char code[] =
 	{
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(bit_btst_register_indirect)
 // ===================================================
 // NOT Tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_not)
+BOOST_AUTO_TEST_CASE(not_)
 {
 	unsigned char code[] =
 	{
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(bit_not)
 // ===================================================
 // SCC Tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(bit_scc)
+BOOST_AUTO_TEST_CASE(scc)
 {
 	unsigned char code[] =
 	{

@@ -29,3 +29,8 @@ steps:
     targetType: 'inline'
     script: './coretest'
     workingDirectory: 'coretest'
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: './cputest'
+    workingDirectory: 'cputest'

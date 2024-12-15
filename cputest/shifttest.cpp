@@ -8,7 +8,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_shift)
 // ===================================================
 // ASL tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(shift_memory_left)
+BOOST_AUTO_TEST_CASE(asl_memory)
 {
 	unsigned char code[] = {
 		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(shift_memory_left)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_b)
+BOOST_AUTO_TEST_CASE(asl_b)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(shift_left_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_w)
+BOOST_AUTO_TEST_CASE(asl_w)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(shift_left_w)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_l)
+BOOST_AUTO_TEST_CASE(asl_l)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(shift_left_l)
 // ===================================================
 // ASR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(shift_memory_right)
+BOOST_AUTO_TEST_CASE(asr_memory)
 {
 	unsigned char code[] = {
 		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(shift_memory_right)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_b)
+BOOST_AUTO_TEST_CASE(asr_b)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(shift_right_b)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_w)
+BOOST_AUTO_TEST_CASE(asr_w)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(shift_right_w)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_l)
+BOOST_AUTO_TEST_CASE(asr_l)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move #$12345678, d0
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(shift_right_l)
 // ===================================================
 // LSL tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(shift_memory_left_logical)
+BOOST_AUTO_TEST_CASE(lsl_memory)
 {
 	unsigned char code[] = {
 		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
@@ -265,11 +265,11 @@ BOOST_AUTO_TEST_CASE(shift_memory_left_logical)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_b_logical)
+BOOST_AUTO_TEST_CASE(lsl_b)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move.l #$12345678, d0
-		0xe3, 0x08,                            //   asl.b #1, d0
+		0xe3, 0x08,                            //   lsl.b #1, d0
 		0x4e, 0x40,                            //   trap   #0
 		0xff, 0xff, 0xff, 0xff,                // 
 	};
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(shift_left_b_logical)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_w_logical)
+BOOST_AUTO_TEST_CASE(lsl_w)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move.l #$12345678, d0
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(shift_left_w_logical)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_left_l_logical)
+BOOST_AUTO_TEST_CASE(lsl_l)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,    //   move.l #$12345678, d0
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(shift_left_l_logical)
 // ===================================================
 // LSR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(shift_memory_right_logical)
+BOOST_AUTO_TEST_CASE(lsr_memory)
 {
 	unsigned char code[] = {
 		0x36, 0x7c, 0x10, 0x12,    //   move #data, a3
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(shift_memory_right_logical)
 	BOOST_CHECK_EQUAL(0, cpu.sr.x);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_b_logical)
+BOOST_AUTO_TEST_CASE(lsr_b)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x56, 0x9A,    //   move.l #$1234569A, d0
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(shift_right_b_logical)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_w_logical)
+BOOST_AUTO_TEST_CASE(lsr_w)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x12, 0x34, 0x9A, 0xBC,    //   move.l #$12349ABC, d0
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(shift_right_w_logical)
 	BOOST_CHECK_EQUAL(1, cpu.sr.c);
 }
 
-BOOST_AUTO_TEST_CASE(shift_right_l_logical)
+BOOST_AUTO_TEST_CASE(lsr_l)
 {
 	unsigned char code[] = {
 		0x20, 0x3c, 0x9A, 0xBC, 0x12, 0x34,    //   move.l #$9ABC1234, d0

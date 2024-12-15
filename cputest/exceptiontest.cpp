@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite_exception)
 // ILLEGAL tests
 // ===================================================
 
-BOOST_AUTO_TEST_CASE(exception_illegal)
+BOOST_AUTO_TEST_CASE(illegal)
 {
 	unsigned char code[] = {
 		0x00, 0x00, 0x00, 0x00,             // reset - SSP

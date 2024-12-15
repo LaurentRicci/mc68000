@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
-#include "coretest.h"
+#include "verifyexecution.h"
 
 using namespace mc68000;
 
@@ -29,85 +29,85 @@ void verifyBccExecution(uint8_t ccr, uint8_t bccOp)
 		});
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bcc)
+BOOST_AUTO_TEST_CASE(bcc)
 {
 	//                   XNZVC
 	verifyBccExecution(0b11000, 0x64); // C=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bcs)
+BOOST_AUTO_TEST_CASE(bcs)
 {
 	//                   XNZVC
 	verifyBccExecution(0b11001, 0x65); // C=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_beq)
+BOOST_AUTO_TEST_CASE(beq)
 {
 	//                   XNZVC
 	verifyBccExecution(0b00100, 0x67); // Z=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bne)
+BOOST_AUTO_TEST_CASE(bne)
 {
 	//                   XNZVC
 	verifyBccExecution(0b01000, 0x66); // Z=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bge)
+BOOST_AUTO_TEST_CASE(bge)
 {
 	//                   XNZVC
 	verifyBccExecution(0b10101, 0x6c); // N=0 V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bgt)
+BOOST_AUTO_TEST_CASE(bgt)
 {
 	//                   XNZVC
 	verifyBccExecution(0b11011, 0x6e); // N=1 Z=0 V=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bhi)
+BOOST_AUTO_TEST_CASE(bhi)
 {
 	//                   XNZVC
 	verifyBccExecution(0b11000, 0x62); // C=0 Z=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_ble)
+BOOST_AUTO_TEST_CASE(ble)
 {
 	//                   XNZVC
 	verifyBccExecution(0b11001, 0x6f); // N=1 Z=0 V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bls)
+BOOST_AUTO_TEST_CASE(bls)
 {
 	//                   XNZVC
 	verifyBccExecution(0b00001, 0x63); // Z=0 C=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_blt)
+BOOST_AUTO_TEST_CASE(blt)
 {
 	//                   XNZVC
 	verifyBccExecution(0b01011, 0x6d); // N=1 V=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bmi)
+BOOST_AUTO_TEST_CASE(bmi)
 {
 	//                   XNZVC
 	verifyBccExecution(0b01000, 0x6b); // N=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bpl)
+BOOST_AUTO_TEST_CASE(bpl)
 {
 	//                   XNZVC
 	verifyBccExecution(0b00111, 0x6a); // N=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bvc)
+BOOST_AUTO_TEST_CASE(bvc)
 {
 	//                   XNZVC
 	verifyBccExecution(0b00101, 0x68); // V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_bvs)
+BOOST_AUTO_TEST_CASE(bvs)
 {
 	//                   XNZVC
 	verifyBccExecution(0b00111, 0x69); // V=1
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_bvs)
 // ===================================================
 // BSR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(controlFlow_bsr)
+BOOST_AUTO_TEST_CASE(bsr)
 {
 	unsigned char code[] =
 	{
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_bsr)
 // ===================================================
 // CHK tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(controlFlow_chk_ok)
+BOOST_AUTO_TEST_CASE(chk_ok)
 {
 	unsigned char code[] =
 	{
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_chk_ok)
 	BOOST_CHECK_EQUAL(0x1, cpu.d2);
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_chk_below)
+BOOST_AUTO_TEST_CASE(chk_below)
 {
 	unsigned char code[] =
 	{
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_chk_below)
 	BOOST_CHECK_EQUAL(1, cpu.sr.n);
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_chk_above)
+BOOST_AUTO_TEST_CASE(chk_above)
 {
 	unsigned char code[] =
 	{
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_chk_above)
 // ===================================================
 // DBCC tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(controlFlow_dbf)
+BOOST_AUTO_TEST_CASE(dbf)
 {
 	unsigned char code[] =
 	{
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_dbf)
 	BOOST_CHECK_EQUAL(8, cpu.d1);
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbt)
+BOOST_AUTO_TEST_CASE(dbt)
 {
 	unsigned char code[] =
 	{
@@ -309,85 +309,85 @@ void verifyDbccExecution(uint8_t ccr, uint8_t dbcc)
 	BOOST_CHECK_EQUAL(8, cpu.d1);
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbcc)
+BOOST_AUTO_TEST_CASE(dbcc)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11111, 0x54); // C=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbcs)
+BOOST_AUTO_TEST_CASE(dbcs)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11110, 0x55); // C=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbeq)
+BOOST_AUTO_TEST_CASE(dbeq)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11011, 0x57); // Z=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbne)
+BOOST_AUTO_TEST_CASE(dbne)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11111, 0x56); // Z=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbge)
+BOOST_AUTO_TEST_CASE(dbge)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11101, 0x5c); // N=1 V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbgt)
+BOOST_AUTO_TEST_CASE(dbgt)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b10111, 0x5e); // N=0 Z=1 V=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbhi)
+BOOST_AUTO_TEST_CASE(dbhi)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11001, 0x52); // C=1 Z=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dble)
+BOOST_AUTO_TEST_CASE(dble)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b10001, 0x5f); // Z=0 N=0 V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbls)
+BOOST_AUTO_TEST_CASE(dbls)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11010, 0x53); // C=0 Z=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dblt)
+BOOST_AUTO_TEST_CASE(dblt)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b10101, 0x5d); // N=0 V=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbmi)
+BOOST_AUTO_TEST_CASE(dbmi)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b10111, 0x5b); // N=0
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbpl)
+BOOST_AUTO_TEST_CASE(dbpl)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11001, 0x5a); // N=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbvc)
+BOOST_AUTO_TEST_CASE(dbvc)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b11111, 0x58); // V=1
 }
 
-BOOST_AUTO_TEST_CASE(controlFlow_dbvs)
+BOOST_AUTO_TEST_CASE(dbvs)
 {
 	//                    XNZVC
 	verifyDbccExecution(0b10001, 0x59); // V=0
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_dbvs)
 // ===================================================
 // JMP tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(controlFlow_jmp)
+BOOST_AUTO_TEST_CASE(jmp)
 {
 	unsigned char code[] = {
 		0x70, 0x15,                           //   moveq #21, d0
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(controlFlow_jmp)
 // ===================================================
 // JSR tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(controlFlow_jsr)
+BOOST_AUTO_TEST_CASE(jsr)
 {
 	unsigned char code[] =
 	{
