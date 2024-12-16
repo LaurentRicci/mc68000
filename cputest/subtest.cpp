@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
+#include "verifyexecution.h"
 
 using namespace mc68000;
 
@@ -607,4 +608,196 @@ BOOST_AUTO_TEST_CASE(sbcd_overflow)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 	BOOST_CHECK_EQUAL(0, cpu.sr.z);
 }
+
+// ===================================================
+// SUBA tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(suba)
+{
+	unsigned char code[] = {
+	0x30, 0x7c, 0x00, 0x64,                 // move.w #100,a0
+	0x90, 0xfc, 0x00, 0x20,                 // suba.w #32,a0
+	0x32, 0x7c, 0x00, 0xc8,                 // move.w #200,a1
+	0x92, 0xfc, 0xff, 0xe0,                 // suba.w #-32,a1
+
+	0x34, 0x7c, 0x01, 0x2c,                 // move.w #300,a2
+	0x95, 0xfc, 0x00, 0x00, 0x00, 0x20,     // suba.l #32,a2
+	0x36, 0x7c, 0x01, 0x90,                 // move.w #400,a3
+	0x97, 0xfc, 0xff, 0xff, 0xff, 0xe0,     // suba.w #-32,a1
+
+	0x4e, 0x40,                             // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(68, cpu.a0);
+	BOOST_CHECK_EQUAL(232, cpu.a1);
+	BOOST_CHECK_EQUAL(268, cpu.a2);
+	BOOST_CHECK_EQUAL(432, cpu.a3);
+}
+
+// ===================================================
+// SUBI tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(subi_b)
+{
+	unsigned char code[] = {
+	0x70, 0x64,                 // moveq #100,d0
+	0x04, 0x00, 0x00, 0x20,     // subi.b #32,d0
+	0x72, 0x32,                 // move.w #50,d1
+	0x04, 0x01, 0x00, 0xe0,     // subi.b #-32,d1
+
+	0x4e, 0x40,                 // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(68, cpu.d0);
+	BOOST_CHECK_EQUAL(82, cpu.d1);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(subi_w)
+{
+	unsigned char code[] = {
+	0x30, 0x3c, 0x12, 0x34,     // move.w #$1234,d0
+	0x04, 0x40, 0x02, 0x32,     // subi.w #$232,d0
+	0x32, 0x3c, 0x45, 0x67,     // move.w #$4567,d1
+	0x04, 0x41, 0xf0, 0x32,     // subi.w #$F032,d1
+
+	0x4e, 0x40,                 // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x1002, cpu.d0);
+	BOOST_CHECK_EQUAL(0x5535, cpu.d1);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+}
+
+BOOST_AUTO_TEST_CASE(subi_l)
+{
+	unsigned char code[] = {
+	0x20, 0x3c, 0x12, 0x34, 0x56, 0x78,     // move.l #$12345678, d0
+	0x04, 0x80, 0x10, 0x00, 0x06, 0x78,     // subi.l #$10000678, d0
+	0x22, 0x3c, 0x87, 0x65, 0x43, 0x21,     // move.l #$87654321, d1
+	0x04, 0x81, 0xf1, 0x23, 0x45, 0x67,     // subi.l #$F1234567, d1
+
+	0x4e, 0x40,                             // trap #0
+	0xff, 0xff };
+
+	// Arrange
+	memory memory(256, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.start(0);
+
+	// Assert
+	BOOST_CHECK_EQUAL(0x02345000, cpu.d0);
+	BOOST_CHECK_EQUAL(0x9641fdba, cpu.d1);
+	BOOST_CHECK_EQUAL(1, cpu.sr.c);
+	BOOST_CHECK_EQUAL(1, cpu.sr.x);
+	BOOST_CHECK_EQUAL(1, cpu.sr.n);
+}
+
+// ===================================================
+// SUBQ tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(subq_dregister_b)
+{
+	unsigned char code[] = {
+		0x70, 0x15,             // moveq #21,d0
+		0x5d, 0x40,             // subq.b #6,d0
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+	{
+		BOOST_CHECK_EQUAL(15, cpu.d0);
+		BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	});
+}
+
+BOOST_AUTO_TEST_CASE(subq_dregister_w)
+{
+	unsigned char code[] = {
+		0x30, 0x3c, 0x11, 0xd7, // move   #4567, d0
+		0x5f, 0x40,             // subq.b #7,d0
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+	{
+		BOOST_CHECK_EQUAL(4560, cpu.d0);
+		BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		BOOST_CHECK_EQUAL(0, cpu.sr.n);
+	});
+}
+
+BOOST_AUTO_TEST_CASE(subq_dregister_l)
+{
+	unsigned char code[] = {
+		0x70, 0xe8,  // moveq.l #-24, d0
+		0x5f, 0x80,  // subq.b  #7,d0
+		0x4e, 0x40,  // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0xFFFFFFE1, cpu.d0);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(subq_aregister)
+{
+	unsigned char code[] = {
+		0x30, 0x7c, 0x00, 0x64,  // move.w #100, a0
+		0x44, 0xfc, 0x00, 0xff,  // move #255, ccr
+		0x5f, 0x88,              // subq.l  #7,a0
+		0x4e, 0x40,              // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(93, cpu.a0);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v);
+		});
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

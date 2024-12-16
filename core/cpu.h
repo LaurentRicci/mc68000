@@ -211,6 +211,8 @@ namespace mc68000
 		template <typename T> void rotateRightWithExtend(uint16_t destinationRegister, uint32_t shift);
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
+		template <typename T> void subq(uint32_t data, uint16_t destinationEffectiveAdress);
+
 		void handleException(uint16_t vector);
 		//
 		// private members
