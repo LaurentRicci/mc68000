@@ -540,6 +540,30 @@ namespace mc68000
 	template void Cpu::rotateRightWithExtend<uint16_t>(uint16_t destinationRegister, uint32_t shift);
 	template void Cpu::rotateRightWithExtend<uint32_t>(uint16_t destinationRegister, uint32_t shift);
 
+	// ==========
+	// SUBQ
+	// ==========
+	template <typename T> void Cpu::subq(uint32_t data, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
+		uint64_t result = (uint64_t)destination - (uint64_t)data;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
+
+		// When substracting to address registers, the condition codes are not altered, and the entire destination address
+		// register is used regardless of the operation size.
+		if ((destinationEffectiveAdress & 0b111'000) != 0b001'000)
+		{
+			statusRegister.n = signed_cast<T>(result) < 0;
+			statusRegister.z = static_cast<T>(result) == 0;
+			statusRegister.c = signed_cast<T>(result >> 1) < 0;
+			statusRegister.x = statusRegister.c;
+			statusRegister.v = signed_cast<T>((data ^ result) & (destination ^ result)) < 0;
+		}
+	}
+	template void Cpu::subq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+	template void Cpu::subq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+	template void Cpu::subq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+
 	// ========================================
 	// Memory access through effective address
 	// ========================================

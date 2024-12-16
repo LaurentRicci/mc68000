@@ -149,30 +149,6 @@ namespace mc68000
 	}
 
 	// ==========
-	// ADDA
-	// ==========
-	uint16_t Cpu::adda(uint16_t opcode)
-	{
-		// The Condition Codes are unaffected so the template add<> method can't be used
-		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
-		uint16_t destinationRegister = (opcode >> 9) & 0b111;
-
-		bool isLongOperation = (opcode & 0x100) == 0x100;
-		if (isLongOperation)
-		{
-			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress, false);
-			aRegisters[destinationRegister] += operand;
-		}
-		else
-		{
-			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress, false);
-			uint32_t extended = (int16_t) operand;
-			aRegisters[destinationRegister] += extended;
-		}
-		return instructions::ADDA;
-	}
-
-	// ==========
 	// ADD
 	// ==========
 	uint16_t Cpu::add(uint16_t opcode)
@@ -207,6 +183,30 @@ namespace mc68000
 		return instructions::ADD;
 	}
 	
+	// ==========
+	// ADDA
+	// ==========
+	uint16_t Cpu::adda(uint16_t opcode)
+	{
+		// The Condition Codes are unaffected so the template add<> method can't be used
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
+
+		bool isLongOperation = (opcode & 0x100) == 0x100;
+		if (isLongOperation)
+		{
+			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress, false);
+			aRegisters[destinationRegister] += operand;
+		}
+		else
+		{
+			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress, false);
+			uint32_t extended = (int16_t)operand;
+			aRegisters[destinationRegister] += extended;
+		}
+		return instructions::ADDA;
+	}
+
 	// ==========
 	// ADDI
 	// ==========
@@ -246,10 +246,11 @@ namespace mc68000
 
 	uint16_t Cpu::addq(uint16_t opcode)
 	{
-		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
-		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
-		uint16_t size = (opcode >> 6) & 0b11;
-		uint32_t source = (opcode >> 9) & 0b111;
+			uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+			bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
+			uint16_t size = (opcode >> 6) & 0b11;
+			uint32_t source = (opcode >> 9) & 0b111;
+			if (source == 0) source = 8;
 
 		if (isAddressRegister)
 		{
@@ -1746,7 +1747,6 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-
 	/// <summary>
 	/// ROXL: Rotate Left with Extend
 	/// </summary>
@@ -1965,18 +1965,99 @@ namespace mc68000
 		return instructions::SUB;
 	}
 
-	uint16_t Cpu::subi(uint16_t)
+	/// <summary>
+	/// SUBA: Subtract from Address Register
+	/// </summary>
+	uint16_t Cpu::suba(uint16_t opcode)
 	{
-		return instructions::SUBI;
-	}
+		// The Condition Codes are unaffected so the template add<> method can't be used
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
 
-	uint16_t Cpu::suba(uint16_t)
-	{
+		bool isLongOperation = ((opcode >> 6) & 0b111) == 0b111;
+		if (isLongOperation)
+		{
+			uint32_t operand = readAt<uint32_t>(sourceEffectiveAddress, false);
+			aRegisters[destinationRegister] -= operand;
+		}
+		else
+		{
+			uint16_t operand = readAt<uint16_t>(sourceEffectiveAddress, false);
+			uint32_t extended = (int16_t)operand;
+			aRegisters[destinationRegister] -= extended;
+		}
+
 		return instructions::SUBA;
 	}
 
-	uint16_t Cpu::subq(uint16_t)
+	/// <summary>
+	/// SUBI: Subtract Immediate
+	/// </summary>
+	uint16_t Cpu::subi(uint16_t opcode)
 	{
+		uint16_t sourceEffectiveAddress = 0b111'100;
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		switch (size)
+		{
+			case 0:
+			{
+				sub<uint8_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+				break;
+			}
+			case 1:
+			{
+				sub<uint16_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+				break;
+			}
+			case 2:
+			{
+				sub<uint32_t>(sourceEffectiveAddress, destinationEffectiveAddress);
+				break;
+			}
+		}
+		return instructions::SUBI;
+	}
+
+	/// <summary>
+	/// SUBQ: Subtract Quick
+	/// </summary>
+	uint16_t Cpu::subq(uint16_t opcode)
+	{
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint32_t source = (opcode >> 9) & 0b111;
+		if (source == 0) source = 8;
+
+		if (isAddressRegister)
+		{
+			if (size == 0)
+			{
+				throw "subq: invalid size";
+			}
+			subq<uint32_t>(source, destinationEffectiveAdress);
+		}
+		else
+		{
+			switch (size)
+			{
+				case 0:
+					subq<uint8_t>(source, destinationEffectiveAdress);
+					break;
+				case 1:
+					subq<uint16_t>(source, destinationEffectiveAdress);
+					break;
+				case 2:
+					subq<uint32_t>(source, destinationEffectiveAdress);
+					break;
+				default:
+					throw "subq: invalid size";
+			}
+		}
+
+
+
 		return instructions::SUBQ;
 	}
 
@@ -2020,7 +2101,7 @@ namespace mc68000
 		return instructions::UNLK;
 	}
 
-	uint16_t Cpu::unknown(uint16_t)
+	uint16_t Cpu::unknown(uint16_t opcode)
 	{
 		throw "unknown instruction";
 		return instructions::UNKNOWN;
