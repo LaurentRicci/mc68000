@@ -1795,14 +1795,37 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-	uint16_t Cpu::rtr(uint16_t)
+	/// <summary>
+	/// RTE: Return from Exception
+	/// </summary>
+	uint16_t Cpu::rte(uint16_t opcode)
 	{
+		if (sr.s)
+		{
+			statusRegister = readAt<uint16_t>(0b011'111, false);
+			pc = readAt<uint32_t>(0b011'111, false);
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
+		return instructions::RTE;
+	}
+
+	/// <summary>
+	/// RTR: Return and Restore
+	/// </summary>
+	uint16_t Cpu::rtr(uint16_t opcode)
+	{
+		uint16_t ccr = readAt<uint16_t>(0b011'111, false);
+		statusRegister = static_cast<uint8_t>(ccr & 0xff);
+		pc = readAt<uint32_t>(0b011'111, false);
 		return instructions::RTR;
 	}
 
-	// ==========
-	// RTS
-	// ==========
+	/// <summary>
+	/// RTS: Return from Subroutine
+	/// </summary>
 	uint16_t Cpu::rts(uint16_t opcode)
 	{
 		pc = readAt<uint32_t>(0b011'111, false);
@@ -1918,7 +1941,7 @@ namespace mc68000
 		pc += 2;
 		if (sr.s)
 		{
-			statusRegister = (int16_t) extension;
+			statusRegister = extension;
 			done = true;
 		}
 		else
@@ -2066,13 +2089,38 @@ namespace mc68000
 		return instructions::SUBX;
 	}
 
-	uint16_t Cpu::swap(uint16_t)
+	/// <summary>
+	/// SWAP: Swap Register Halves
+	/// </summary>
+	uint16_t Cpu::swap(uint16_t opcode)
 	{
+		uint16_t destinationRegister = opcode & 0b111;
+		uint32_t value = dRegisters[destinationRegister];
+		value = (value >> 16) | (value << 16);
+		dRegisters[destinationRegister] = value;
+
+		statusRegister.n = static_cast<int32_t>(value) < 0;
+		statusRegister.z = value == 0;
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+
 		return instructions::SWAP;
 	}
 
-	uint16_t Cpu::tas(uint16_t)
+	/// <summary>
+	/// TAS: Test and Set an Operand
+	/// </summary>
+	uint16_t Cpu::tas(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint8_t value = readAt<uint8_t>(effectiveAddress, true);
+		statusRegister.n = (value & 0x80) ? 1 : 0;
+		statusRegister.z = (value == 0) ? 1 : 0;
+		statusRegister.v = 0;
+		statusRegister.c = 0;
+		value |= 0x80;
+		writeAt<uint8_t>(effectiveAddress, value, true);
+
 		return instructions::TAS;
 	}
 
@@ -2086,18 +2134,64 @@ namespace mc68000
 		return instructions::TRAP;
 	}
 
-	uint16_t Cpu::trapv(uint16_t)
+	uint16_t Cpu::trapv(uint16_t opcode)
 	{
+		if (statusRegister.v)
+		{
+			handleException(Exceptions::TRAPV);
+		}
 		return instructions::TRAPV;
 	}
 
-	uint16_t Cpu::tst(uint16_t)
+	/// <summary>
+	/// TST: Test Operand
+	/// </summary>
+	uint16_t Cpu::tst(uint16_t opcode)
 	{
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+		int32_t value32;
+		switch (size)
+		{
+			case 0:
+			{
+				uint8_t value = readAt<uint8_t>(effectiveAddress, false);
+				value32 = static_cast<int8_t>(value);
+				break;
+			}
+			case 1:
+			{
+				uint16_t value = readAt<uint16_t>(effectiveAddress, false);
+				value32 = static_cast<int16_t>(value);
+				break;
+			}
+			case 2:
+			{
+				uint32_t value = readAt<uint32_t>(effectiveAddress, false);
+				value32 = static_cast<int32_t>(value);
+				break;
+			}
+			default:
+			{
+				throw "tst: invalid size";
+			}
+		}
+		statusRegister.n = value32 < 0;
+		statusRegister.z = value32 == 0;
+		statusRegister.v = 0;
+		statusRegister.c = 0;
 		return instructions::TST;
 	}
 
+	/// <summary>
+	/// UNLK: Unlink
+	/// </summary>
 	uint16_t Cpu::unlk(uint16_t opcode)
 	{
+		uint8_t reg = opcode & 0b111;
+		aRegisters[7] = aRegisters[reg];
+		aRegisters[reg] = readAt<uint32_t>(0b011'111, false);
+
 		return instructions::UNLK;
 	}
 

@@ -490,6 +490,9 @@ namespace mc68000
 			}
 		}
 
+		// RTE
+		handlers[0b0100'1110'0111'0011u] = &T::rte;
+
 		// RTR
 		handlers[0b0100'1110'0111'0111u] = &T::rtr;
 

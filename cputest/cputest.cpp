@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(statusRegister_from_int1)
 {
 	StatusRegister sr;
 
-	sr = (int16_t) 0b1010'0110'0001'0110;
+	sr = (uint16_t) 0b1010'0110'0001'0110;
 
 	BOOST_CHECK_EQUAL(0, sr.c);
 	BOOST_CHECK_EQUAL(1, sr.v);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(statusRegister_from_int2)
 {
 	StatusRegister sr;
 
-	sr = (int16_t)0b0101'1001'1110'1001;
+	sr = (uint16_t)0b0101'1001'1110'1001;
 
 	BOOST_CHECK_EQUAL(1, sr.c);
 	BOOST_CHECK_EQUAL(0, sr.v);
