@@ -152,6 +152,7 @@ namespace mc68000
 		unsigned short roxl_memory(unsigned short);
 		unsigned short roxr_memory(unsigned short);
 
+		uint16_t rte(uint16_t);
 		unsigned short rtr(unsigned short);
 		unsigned short rts(unsigned short);
 

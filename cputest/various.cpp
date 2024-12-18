@@ -264,6 +264,37 @@ BOOST_AUTO_TEST_CASE(nop)
 }
 
 // ===================================================
+// RTR tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(rtr)
+{
+	unsigned char code[] = {
+		0x4f, 0xfa, 0x00, 0x62, // lea stack(pc), a7
+		0x41, 0xfa, 0x00, 0x14, // lea jump(pc), a0
+		0x2f, 0x08,             // move.l a0, -(a7)
+		0x44, 0xfc, 0x00, 0x1f, // move   #$1f, ccr
+		0x40, 0xe7,             // move.w sr, -(a7)
+		0x44, 0xfc, 0x00, 0x00, // move   #$00, ccr
+		0x4e, 0x77,	            // rtr
+		0x70, 0x01,             // moveq #1, d0
+		0x4e, 0x40,             // trap #0
+		                        // jump:
+		0x40, 0xc1,			    // move sr, d1
+		0x70, 0x02,             // moveq #2, d0
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff,
+		                        // space: ds.l 16
+								// stack:
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1f, (uint8_t) cpu.d1);
+			BOOST_CHECK_EQUAL(0x2, cpu.d0);
+		});
+}
+
+// ===================================================
 // STOP
 // ===================================================
 BOOST_AUTO_TEST_CASE(stop)
@@ -416,5 +447,28 @@ BOOST_AUTO_TEST_CASE(tst_l)
 			BOOST_CHECK_EQUAL(8, cpu.d3);
 		});
 }
+
+// ===================================================
+// UNLK tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(unlnk)
+{
+	unsigned char code[] = {
+		0x4f, 0xfa, 0x00, 0x52, // lea stack(pc), a7
+		0x3c, 0x7c, 0x12, 0x34, // move #$1234, a6
+		0x4e, 0x56, 0x00, 0x0c, // link a6,#12 
+		0x4e, 0x5e,             // unlk a6
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff, // space: ds.l 16
+								// stack:
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1234, cpu.a6);
+			BOOST_CHECK_EQUAL(0x54, cpu.a7);
+		});
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

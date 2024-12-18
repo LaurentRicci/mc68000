@@ -90,25 +90,26 @@ namespace mc68000
         static const unsigned short ROR = 81;
         static const unsigned short ROXL = 82;
         static const unsigned short ROXR = 83;
-        static const unsigned short RTR = 84;
-        static const unsigned short RTS = 85;
-        static const unsigned short SBCD = 86;
-        static const unsigned short SCC = 87;
-        static const unsigned short STOP = 88;
-        static const unsigned short SUB = 89;
-        static const unsigned short SUBA = 90;
-        static const unsigned short SUBI = 91;
-        static const unsigned short SUBQ = 92;
-        static const unsigned short SUBX = 93;
-        static const unsigned short SWAP = 94;
-        static const unsigned short TAS = 95;
-        static const unsigned short TRAP = 96;
-        static const unsigned short TRAPV = 97;
-        static const unsigned short TST = 98;
-        static const unsigned short UNLK = 99;
+        static const unsigned short RTE = 84;
+        static const unsigned short RTR = 85;
+        static const unsigned short RTS = 86;
+        static const unsigned short SBCD = 87;
+        static const unsigned short SCC = 88;
+        static const unsigned short STOP = 89;
+        static const unsigned short SUB = 90;
+        static const unsigned short SUBA = 91;
+        static const unsigned short SUBI = 92;
+        static const unsigned short SUBQ = 93;
+        static const unsigned short SUBX = 94;
+        static const unsigned short SWAP = 95;
+        static const unsigned short TAS = 96;
+        static const unsigned short TRAP = 97;
+        static const unsigned short TRAPV = 98;
+        static const unsigned short TST = 99;
+        static const unsigned short UNLK = 100;
 
 
-        static const size_t MAX_INSTRUCTIONS = 100;
+        static const size_t MAX_INSTRUCTIONS = 110;
 
         static const wchar_t* names[MAX_INSTRUCTIONS];
 
@@ -198,6 +199,7 @@ namespace mc68000
             names[ROR] = L"ROR";
             names[ROXL] = L"ROXL";
             names[ROXR] = L"ROXR";
+            names[RTE] = L"RTE";
             names[RTR] = L"RTR";
             names[RTS] = L"RTS";
             names[SBCD] = L"SBCD";

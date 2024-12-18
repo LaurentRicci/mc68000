@@ -1795,14 +1795,37 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-	uint16_t Cpu::rtr(uint16_t)
+	/// <summary>
+	/// RTE: Return from Exception
+	/// </summary>
+	uint16_t Cpu::rte(uint16_t opcode)
 	{
+		if (sr.s)
+		{
+			statusRegister = readAt<uint16_t>(0b011'111, false);
+			pc = readAt<uint32_t>(0b011'111, false);
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
+		return instructions::RTE;
+	}
+
+	/// <summary>
+	/// RTR: Return and Restore
+	/// </summary>
+	uint16_t Cpu::rtr(uint16_t opcode)
+	{
+		uint16_t ccr = readAt<uint16_t>(0b011'111, false);
+		statusRegister = static_cast<uint8_t>(ccr & 0xff);
+		pc = readAt<uint32_t>(0b011'111, false);
 		return instructions::RTR;
 	}
 
-	// ==========
-	// RTS
-	// ==========
+	/// <summary>
+	/// RTS: Return from Subroutine
+	/// </summary>
 	uint16_t Cpu::rts(uint16_t opcode)
 	{
 		pc = readAt<uint32_t>(0b011'111, false);
@@ -1918,7 +1941,7 @@ namespace mc68000
 		pc += 2;
 		if (sr.s)
 		{
-			statusRegister = (int16_t) extension;
+			statusRegister = extension;
 			done = true;
 		}
 		else
@@ -2160,8 +2183,15 @@ namespace mc68000
 		return instructions::TST;
 	}
 
+	/// <summary>
+	/// UNLK: Unlink
+	/// </summary>
 	uint16_t Cpu::unlk(uint16_t opcode)
 	{
+		uint8_t reg = opcode & 0b111;
+		aRegisters[7] = aRegisters[reg];
+		aRegisters[reg] = readAt<uint32_t>(0b011'111, false);
+
 		return instructions::UNLK;
 	}
 

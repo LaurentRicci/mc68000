@@ -606,6 +606,11 @@ namespace mc68000
 		return instructions::SBCD;
 	}
 
+	uint16_t DisAsm::rte(uint16_t)
+	{
+		return instructions::RTE;
+	}
+
 	uint16_t DisAsm::rtr(uint16_t)
 	{
 		return instructions::RTR;

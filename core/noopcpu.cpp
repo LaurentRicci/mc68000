@@ -423,6 +423,11 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
+	uint16_t NoOpCpu::rte(uint16_t)
+	{
+		return instructions::RTE;
+	}
+
 	uint16_t NoOpCpu::rtr(uint16_t)
 	{
 		return instructions::RTR;

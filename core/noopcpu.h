@@ -132,6 +132,7 @@ namespace mc68000
 		uint16_t roxl_memory(uint16_t);
 		uint16_t roxr_memory(uint16_t);
 
+		uint16_t rte(uint16_t);
 		uint16_t rtr(uint16_t);
 		uint16_t rts(uint16_t);
 
