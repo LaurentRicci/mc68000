@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "../core/cpu.h"
 #include "../core/memory.h"
+#include "verifyexecution.h"
 
 using namespace mc68000;
 
@@ -596,6 +597,181 @@ BOOST_AUTO_TEST_CASE(addq_increment)
 	BOOST_CHECK_EQUAL(43, cpu.mem.get<uint16_t>(0x10));
 }
 
+// ===================================================
+// ADDX tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(addx_register_b)
+{
+	unsigned char code[] = {
+		0x70, 0x22,             // moveq.l #34,d0
+		0x72, 0x48,             // moveq.l #72,d1
+		0x44, 0xfc, 0x00, 0x10, // move #16, ccr
+		0xd3, 0x00,             // addx.b d0,d1
+		0x4e, 0x40,             // trap #0
+	};
 
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(34, cpu.d0);
+			BOOST_CHECK_EQUAL(107, cpu.d1);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		});
+}
 
+BOOST_AUTO_TEST_CASE(addx_register_w)
+{
+	unsigned char code[] = {
+		0x30, 0x3c, 0x82, 0x83,    // move.w #$8283, d0
+		0x32, 0x3c, 0x67, 0x34,    // move.w #$6734, d1
+		0x44, 0xfc, 0x00, 0x10,    // move #16, ccr
+		0xd3, 0x40,                // addx.w d0,d1
+		0x4e, 0x40,                // trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x8283, cpu.d0);
+			BOOST_CHECK_EQUAL(0xe9b8, cpu.d1);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(addx_register_overflow)
+{
+	unsigned char code[] = {
+		0x30, 0x3c, 0x7f, 0xff,    // move.w #$7fff, d0
+		0x32, 0x3c, 0x7f, 0xff,    // move.w #$7fff, d1
+		0x44, 0xfc, 0x00, 0x10,    // move #16, ccr
+		0xd3, 0x40,                // addx.w d0,d1
+		0x4e, 0x40,                // trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x7fff, cpu.d0);
+			BOOST_CHECK_EQUAL(0xffff, cpu.d1);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(addx_register_l)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x76, 0x54, 0x82, 0x83,    // move.l #$76548283, d0
+		0x22, 0x3c, 0xba, 0xd0, 0x67, 0x34,    // move.l #$bad06734, d1
+		0x44, 0xfc, 0x00, 0x10,                // move #16, ccr
+		0xd3, 0x80,                            // addx.l d0,d1
+		0x4e, 0x40,                            // trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x76548283, cpu.d0);
+			BOOST_CHECK_EQUAL(0x3124E9B8, cpu.d1);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(addx_memory_b)
+{
+	unsigned char code[] = {
+		0x41, 0xfa, 0x00, 0x14, // lea $op1(pc), a0
+		0x43, 0xfa, 0x00, 0x12, // lea $op2(pc), a1
+		0x44, 0xfc, 0x00, 0x10, // move #16, ccr
+		0xd3, 0x08,             // addx.b -(a0), -(a1)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff, // 
+		0x00, 0x22,             // dc.b $00,$22
+		                        // op1:
+		0x00, 0x4e,             // dc.b $00,$4e
+		                        // op2:
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x15, cpu.a0);
+			BOOST_CHECK_EQUAL(0x17, cpu.a1);
+			BOOST_CHECK_EQUAL(0x22, cpu.mem.get<uint8_t>(cpu.a0));
+			BOOST_CHECK_EQUAL(0x71, cpu.mem.get<uint8_t>(cpu.a1));
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(addx_memory_w)
+{
+	unsigned char code[] = {
+		0x41, 0xfa, 0x00, 0x16, // lea $op1(pc), a0
+		0x43, 0xfa, 0x00, 0x16, // lea $op2(pc), a1
+		0x44, 0xfc, 0x00, 0x10, // move #16, ccr
+		0xd3, 0x48,             // addx.w -(a0), -(a1)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff, // 
+		0x00, 0x00, 0x82, 0x83, // dc.w $0000,$8283
+		                        // op1:
+		0x00, 0x00, 0x1a, 0x4e, // dc.w $0000,$1a4e
+                                // op2:
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x16, cpu.a0);
+			BOOST_CHECK_EQUAL(0x1a, cpu.a1);
+			BOOST_CHECK_EQUAL(0x8283, cpu.mem.get<uint16_t>(cpu.a0));
+			BOOST_CHECK_EQUAL(0x9cd2, cpu.mem.get<uint16_t>(cpu.a1));
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(addx_memory_l)
+{
+	unsigned char code[] = {
+		0x41, 0xfa, 0x00, 0x16, // lea $op1(pc), a0
+		0x43, 0xfa, 0x00, 0x16, // lea $op2(pc), a1
+		0x44, 0xfc, 0x00, 0x10, // move #16, ccr
+		0xd3, 0x88,             // addx.l -(a0), -(a1)
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff, 0xff, 0xff, // 
+		0x76, 0x54, 0x82, 0x83, // dc.l $76548283
+		                        // op1:
+		0xba, 0xd0, 0x67, 0x34, // dc.l $bad06734
+		                        // op2:
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x14, cpu.a0);
+			BOOST_CHECK_EQUAL(0x18, cpu.a1);
+			BOOST_CHECK_EQUAL(0x76548283, cpu.mem.get<uint32_t>(cpu.a0));
+			BOOST_CHECK_EQUAL(0x3124E9B8, cpu.mem.get<uint32_t>(cpu.a1));
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -282,15 +282,37 @@ namespace mc68000
 		return instructions::ADDQ;
 	}
 
-	uint16_t Cpu::addx(uint16_t)
+
+	/// <summary>
+	/// ADDX: Add Extended
+	/// </summary>
+	uint16_t Cpu::addx(uint16_t opcode)
 	{
+		uint16_t register1 = opcode & 0b111;
+		uint16_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		switch (size)
+		{
+		case 0:
+			addx<uint8_t>(register1, register2, useAddressRegister);
+			break;
+		case 1:
+			addx<uint16_t>(register1, register2, useAddressRegister);
+			break;
+		case 2:
+			addx<uint32_t>(register1, register2, useAddressRegister);
+			break;
+		default:
+			throw "addx: invalid size";
+		}
 		return instructions::ADDX;
 	}
 
 	// ==========
 	// AND
 	// ==========
-
 	uint16_t Cpu::and_(uint16_t opcode)
 	{
 		logical(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
@@ -300,7 +322,6 @@ namespace mc68000
 	// ==========
 	// ANDI
 	// ==========
-
 	uint16_t Cpu::andi(uint16_t opcode)
 	{
 		logicalImmediate(opcode, [](uint32_t lhs, uint32_t rhs) { return lhs & rhs; });
@@ -2078,14 +2099,33 @@ namespace mc68000
 					throw "subq: invalid size";
 			}
 		}
-
-
-
 		return instructions::SUBQ;
 	}
 
-	uint16_t Cpu::subx(uint16_t)
+	/// <summary>
+	/// SUBX: Subtract with Extend
+	/// </summary>
+	uint16_t Cpu::subx(uint16_t opcode)
 	{
+		uint16_t register1 = opcode & 0b111;
+		uint16_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		switch (size)
+		{
+		case 0:
+			subx<uint8_t>(register1, register2, useAddressRegister);
+			break;
+		case 1:
+			subx<uint16_t>(register1, register2, useAddressRegister);
+			break;
+		case 2:
+			subx<uint32_t>(register1, register2, useAddressRegister);
+			break;
+		default:
+			throw "subx: invalid size";
+		}
 		return instructions::SUBX;
 	}
 

@@ -799,5 +799,126 @@ BOOST_AUTO_TEST_CASE(subq_aregister)
 		});
 }
 
+// ===================================================
+// SUBX tests
+// ===================================================
+BOOST_AUTO_TEST_CASE(subx_register_b)
+{
+	unsigned char code[] = {
+		0x70, 0x15,             // moveq #21,d0
+		0x72, 0x16,             // moveq #22,d1
+		0x44, 0xfc, 0x00, 0x14, // move #20, ccr
+		0x93, 0x00,             // subx.b d0,d1
+		0x4e, 0x40,             // trap #0
+		0xff, 0xff };
 
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(21, cpu.d0);
+			BOOST_CHECK_EQUAL(0, cpu.d1);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(subx_register_w)
+{
+	unsigned char code[] = {
+		0x30, 0x3c, 0x82, 0x83,    // move.w #$8283, d0
+		0x32, 0x3c, 0x67, 0x34,    // move.w #$6734, d1
+		0x44, 0xfc, 0x00, 0x10,    // move #16, ccr
+		0x93, 0x40,                // subx.w d0,d1
+		0x4e, 0x40,                // trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x8283, cpu.d0);
+			BOOST_CHECK_EQUAL(0xe4b0, cpu.d1);
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+			BOOST_CHECK_EQUAL(1, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(subx_register_l)
+{
+	unsigned char code[] = {
+		0x20, 0x3c, 0x76, 0x54, 0x82, 0x83,    // move.l #$76548283, d0
+		0x22, 0x3c, 0xba, 0xd0, 0x67, 0x34,    // move.l #$bad06734, d1
+		0x44, 0xfc, 0x00, 0x10,                // move #16, ccr
+		0x93, 0x80,                            // subx.l d0,d1
+		0x4e, 0x40,                            // trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x76548283, cpu.d0);
+			BOOST_CHECK_EQUAL(0x447BE4B0, cpu.d1);
+			BOOST_CHECK_EQUAL(0, cpu.sr.x);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(0, cpu.sr.z);
+			BOOST_CHECK_EQUAL(1, cpu.sr.v); 
+			BOOST_CHECK_EQUAL(0, cpu.sr.c);
+		});
+}
+
+BOOST_AUTO_TEST_CASE(subx_register)
+{
+	unsigned char code[] = {
+		
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x93, 0x00, //subx.b d0,d1
+	0x40, 0xc2, //move sr, d2; 11011 - 201b
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x93, 0x00, //subx.b d0,d1
+	0x40, 0xc3, //move sr, d3; 00010 - 2002
+
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x93, 0x40, //subx.w d0,d1
+	0x40, 0xc4, //move sr, d4; 10001 - 2011
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move0, ccr
+	0x93, 0x40, //subx.w d0,d1
+	0x40, 0xc5, //move sr, d5; 01000 - 2008
+	
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x93, 0x80, //subx.l d0,d1
+	0x40, 0xc6, //move sr, d6; 10001 - 2011
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move0, ccr
+	0x93, 0x80, //subx.l d0,d1
+	0x40, 0xc7, //move sr, d7; 01000 - 2008
+
+	0x4e, 0x40, //trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0b11011, cpu.d2);
+			BOOST_CHECK_EQUAL(0b00010, cpu.d3);
+			BOOST_CHECK_EQUAL(0b10001, cpu.d4);
+			BOOST_CHECK_EQUAL(0b01000, cpu.d5);
+			BOOST_CHECK_EQUAL(0b10001, cpu.d6);
+			BOOST_CHECK_EQUAL(0b01000, cpu.d7);
+		});
+}
 BOOST_AUTO_TEST_SUITE_END()
