@@ -196,6 +196,7 @@ namespace mc68000
 
 		template <typename T> void add(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void addq(uint32_t data, uint16_t dstEffectiveAdress);
+		template <typename T> void addx(uint16_t source, uint16_t destination, bool useAddressRegister);
 		template <typename T> void cmp(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		void bchg(uint16_t opcode, uint32_t bit, BitOperation operation);
 
@@ -213,7 +214,7 @@ namespace mc68000
 
 		template <typename T> void sub(uint16_t srcEffectiveAdress, uint16_t dstEffectiveAdress);
 		template <typename T> void subq(uint32_t data, uint16_t destinationEffectiveAdress);
-
+		template <typename T> void subx(uint16_t source, uint16_t destination, bool useAddressRegister);
 		void handleException(uint16_t vector);
 		//
 		// private members

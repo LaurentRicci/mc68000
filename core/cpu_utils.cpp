@@ -12,6 +12,7 @@ namespace mc68000
 	template <> int32_t signed_cast <uint8_t>(uint64_t value) { return static_cast<int8_t>(value); }
 	template <> int32_t signed_cast<uint16_t>(uint64_t value) { return static_cast<int16_t>(value); }
 	template <> int32_t signed_cast<uint32_t>(uint64_t value) { return static_cast<int32_t>(value); }
+	template <> int32_t signed_cast<uint64_t>(uint64_t value) { return static_cast<int64_t>(value); }
 
 	template <typename T> T mostSignificantBit(T value);
 
@@ -76,6 +77,42 @@ namespace mc68000
 	template void Cpu::addq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::addq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+
+	/// <summary>
+	/// ADDX: Add with Extend
+	/// </summary>
+	/// <typeparam name="T">The operand type</typeparam>
+	/// <param name="source">The source register number</param>
+	/// <param name="destination">The destination register number</param>
+	/// <param name="useAddressRegister">if true use address register with predecrement</param>
+	template <typename T> void Cpu::addx(uint16_t source, uint16_t destination, bool useAddressRegister)
+	{
+		T opSource;
+		T opDestination;
+		uint64_t result;
+		if (useAddressRegister)
+		{
+			opSource = readAt<T>(0b100'000 | source, false);
+			opDestination = readAt<T>(0b100'000 | destination, true);
+			result = (uint64_t)opDestination + (uint64_t)opSource + statusRegister.x;
+			writeAt<T>(0b100'000 | destination, static_cast<T>(result), true);
+		}
+		else
+		{
+			opSource = subPart<T>(dRegisters[source]);
+			opDestination = subPart<T>(dRegisters[destination]);
+			result = (uint64_t)opDestination + (uint64_t)opSource + statusRegister.x;
+			dRegisters[destination] = setSubPart<T>(dRegisters[destination], static_cast<T>(result));
+		}
+		statusRegister.n = signed_cast<T>(result) < 0;
+		if (static_cast<T>(result) != 0) statusRegister.z = 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((opSource ^ result) & (opDestination ^ result)) < 0;
+	}
+	template void Cpu::addx<uint8_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
+	template void Cpu::addx<uint16_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
+	template void Cpu::addx<uint32_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
 
 	// ==========
 	// shiftLeft ASL LSL
@@ -563,6 +600,41 @@ namespace mc68000
 	template void Cpu::subq<uint8_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::subq<uint16_t>(uint32_t data, uint16_t destinationEffectiveAdress);
 	template void Cpu::subq<uint32_t>(uint32_t data, uint16_t destinationEffectiveAdress);
+	/// <summary>
+	/// SUBX: Subtract with Extend
+	/// </summary>
+	/// <typeparam name="T">The operand type</typeparam>
+	/// <param name="source">The source register number</param>
+	/// <param name="destination">The destination register number</param>
+	/// <param name="useAddressRegister">if true use address register with predecrement</param>
+	template <typename T> void Cpu::subx(uint16_t source, uint16_t destination, bool useAddressRegister)
+	{
+		T opSource;
+		T opDestination;
+		uint64_t result;
+		if (useAddressRegister)
+		{
+			opSource = readAt<T>(0b100'000 | source, false);
+			opDestination = readAt<T>(0b100'000 | destination, true);
+			result = opDestination - opSource - statusRegister.x;
+			writeAt<T>(0b100'000 | destination, static_cast<T>(result), true);
+		}
+		else
+		{
+			opSource = subPart<T>(dRegisters[source]);
+			opDestination = subPart<T>(dRegisters[destination]);
+			result = (int64_t)opDestination - (int64_t)opSource - (int64_t)statusRegister.x;
+			dRegisters[destination] = setSubPart<T>(dRegisters[destination], static_cast<T>(result));
+		}
+		statusRegister.n = signed_cast<T>(result) < 0;
+		if (static_cast<T>(result) != 0) statusRegister.z = 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((~opSource ^ result) & (opDestination ^ result)) < 0;
+	}
+	template void Cpu::subx<uint8_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
+	template void Cpu::subx<uint16_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
+	template void Cpu::subx<uint32_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
 
 	// ========================================
 	// Memory access through effective address
