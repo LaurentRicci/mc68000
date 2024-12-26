@@ -63,8 +63,9 @@ namespace mc68000
 			case 1: // (xxx).l
 			{
 				std::string result = "$";
-				result += toHex(fetchNextWord());
-				result += toHex(fetchNextWord());
+				uint32_t immediate = fetchNextWord() << 16;
+				immediate |= fetchNextWord();
+				result += toHex(immediate);
 				result += ".l";
 				return result;
 			}
@@ -91,15 +92,16 @@ namespace mc68000
 			case 4: // #
 			{
 				std::string result = "#$";
-				result += toHex(fetchNextWord());
+				
 				if (isLongOperation)
 				{
-					result += toHex(fetchNextWord());
-					result += ".l";
+					uint32_t immediate = fetchNextWord() << 16;
+					immediate |= fetchNextWord();
+					result += toHex(immediate);
 				}
 				else
 				{
-					result += ".w";
+					result += toHex(fetchNextWord());
 				}
 				return result;
 			}

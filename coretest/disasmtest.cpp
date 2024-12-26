@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(d_addressMode_111_3)
 
 BOOST_AUTO_TEST_CASE(d_addressMode_111_4w)
 {
-    verifyDisassembly(0x307C, 0x002A, "movea.w #$2a.w,a0");
+    verifyDisassembly(0x307C, 0x002A, "movea.w #$2a,a0");
 }
 
 BOOST_AUTO_TEST_CASE(d_addressMode_111_4l)
 {
-    verifyDisassembly(0x207C, 0x1234, 0x5678, "movea.l #$12345678.l,a0");
+    verifyDisassembly(0x207C, 0x1234, 0x5678, "movea.l #$12345678,a0");
 }
 
 // =================================================================================================
@@ -202,9 +202,53 @@ BOOST_AUTO_TEST_CASE(d_movea_l)
 {
     verifyDisassembly(0x206e, 0x0008, "movea.l 8(a6),a0");
 }
+
+BOOST_AUTO_TEST_CASE(d_nbcd)
+{
+    verifyDisassembly(0x4800, "nbcd d0");
+}
+
+BOOST_AUTO_TEST_CASE(d_neg)
+{
+    verifyDisassembly(0x4400, "neg.b d0");
+    verifyDisassembly(0x4441, "neg.w d1");
+    verifyDisassembly(0x4482, "neg.l d2");
+}
+
+BOOST_AUTO_TEST_CASE(d_negx)
+{
+    verifyDisassembly(0x4000, "negx.b d0");
+    verifyDisassembly(0x4041, "negx.w d1");
+    verifyDisassembly(0x4082, "negx.l d2");
+}
+
+BOOST_AUTO_TEST_CASE(d_sbcd)
+{
+    verifyDisassembly(0x8300, "sbcd d0,d1");
+	verifyDisassembly(0x8509, "sbcd -(a1),-(a2)");
+}
+
 BOOST_AUTO_TEST_CASE(d_stop)
 {
 	verifyDisassembly(0x4e72, 0x0042, "stop #$42");
+}
+
+BOOST_AUTO_TEST_CASE(d_sub)
+{
+ //   verifyDisassembly(0b1001'001'000'000'000u, "sub.b d0,d1");
+ //   verifyDisassembly(0b1001'001'001'000'000u, "sub.w d0,d1");
+ //   verifyDisassembly(0b1001'001'010'000'000u, "sub.l d0,d1");
+ //   verifyDisassembly(0x9614, "sub.b (a4),d3");
+ //   verifyDisassembly(0x9714, "sub.b d3,(a4)");
+	//verifyDisassembly(0x9cb8, 0x0038, "sub.l $38.w,d6");
+    verifyDisassembly(0x96b9, 0x0000,0x0386, "sub.l $386.l,d3");
+}
+
+BOOST_AUTO_TEST_CASE(d_suba)
+{
+    verifyDisassembly(0x90fc, 0x0020, "suba.w #$20,a0");
+    verifyDisassembly(0x92fc, 0xffe0, "suba.w #$ffe0,a1");
+	verifyDisassembly(0x95fc, 0x0000, 0x0020, "suba.l #$20,a2");
 }
 
 BOOST_AUTO_TEST_CASE(d_subx)

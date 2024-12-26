@@ -7,7 +7,7 @@
 
 namespace mc68000
 {
-	inline std::string toHex(unsigned short value)
+	inline std::string toHex(uint32_t value)
 	{
 		// return std::format("{x}", value);
 

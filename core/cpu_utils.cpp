@@ -342,25 +342,6 @@ namespace mc68000
 		}
 
 	}
-	// ==========
-	// SUB
-	// ==========
-	template <typename T> void Cpu::sub(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
-	{
-		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
-		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
-		uint64_t result = (uint64_t)destination - (uint64_t)source;
-		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
-
-		statusRegister.n = signed_cast<T>(result) < 0;
-		statusRegister.z = static_cast<T>(result) == 0;
-		statusRegister.c = signed_cast<T>(result >> 1) < 0;
-		statusRegister.x = statusRegister.c;
-		statusRegister.v = signed_cast<T>((destination ^ source) & (destination ^ result)) < 0;
-	}
-	template void Cpu::sub<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
-	template void Cpu::sub<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
-	template void Cpu::sub<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
 
 	// ==============
 	// Bcc utilities
@@ -578,6 +559,26 @@ namespace mc68000
 	template void Cpu::rotateRightWithExtend<uint32_t>(uint16_t destinationRegister, uint32_t shift);
 
 	// ==========
+	// SUB
+	// ==========
+	template <typename T> void Cpu::sub(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress)
+	{
+		uint32_t source = readAt<T>(sourceEffectiveAddress, false);
+		uint32_t destination = readAt<T>(destinationEffectiveAdress, true);
+		uint64_t result = (uint64_t)destination - (uint64_t)source;
+		writeAt<T>(destinationEffectiveAdress, static_cast<T>(result), true);
+
+		statusRegister.n = signed_cast<T>(result) < 0;
+		statusRegister.z = static_cast<T>(result) == 0;
+		statusRegister.c = signed_cast<T>(result >> 1) < 0;
+		statusRegister.x = statusRegister.c;
+		statusRegister.v = signed_cast<T>((destination ^ source) & (destination ^ result)) < 0;
+	}
+	template void Cpu::sub<uint8_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::sub<uint16_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+	template void Cpu::sub<uint32_t>(uint16_t sourceEffectiveAddress, uint16_t destinationEffectiveAdress);
+
+	// ==========
 	// SUBQ
 	// ==========
 	template <typename T> void Cpu::subq(uint32_t data, uint16_t destinationEffectiveAdress)
@@ -616,21 +617,21 @@ namespace mc68000
 		{
 			opSource = readAt<T>(0b100'000 | source, false);
 			opDestination = readAt<T>(0b100'000 | destination, true);
-			result = opDestination - opSource - statusRegister.x;
+			result = (uint64_t)opDestination - (uint64_t)opSource - (uint64_t)statusRegister.x;
 			writeAt<T>(0b100'000 | destination, static_cast<T>(result), true);
 		}
 		else
 		{
 			opSource = subPart<T>(dRegisters[source]);
 			opDestination = subPart<T>(dRegisters[destination]);
-			result = (int64_t)opDestination - (int64_t)opSource - (int64_t)statusRegister.x;
+			result = (uint64_t)opDestination - (uint64_t)opSource - (uint64_t)statusRegister.x;
 			dRegisters[destination] = setSubPart<T>(dRegisters[destination], static_cast<T>(result));
 		}
 		statusRegister.n = signed_cast<T>(result) < 0;
 		if (static_cast<T>(result) != 0) statusRegister.z = 0;
 		statusRegister.c = signed_cast<T>(result >> 1) < 0;
 		statusRegister.x = statusRegister.c;
-		statusRegister.v = signed_cast<T>((~opSource ^ result) & (opDestination ^ result)) < 0;
+		statusRegister.v = signed_cast<T>((opSource ^ opDestination) & (opDestination ^ result)) < 0;
 	}
 	template void Cpu::subx<uint8_t>(uint16_t source, uint16_t destination, bool useAddressRegister);
 	template void Cpu::subx<uint16_t>(uint16_t source, uint16_t destination, bool useAddressRegister);

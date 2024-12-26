@@ -519,17 +519,28 @@ namespace mc68000
 		return instructions::MULU;
 	}
 
-	uint16_t DisAsm::nbcd(uint16_t)
+	uint16_t DisAsm::nbcd(uint16_t opcode)
 	{
+		disassembly = "nbcd ";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u);
 		return instructions::NBCD;
 	}
 
-	uint16_t DisAsm::neg(uint16_t)
+	uint16_t DisAsm::neg(uint16_t opcode)
 	{
+		disassembly = "neg";
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u);
 		return instructions::NEG;
 	}
-	uint16_t DisAsm::negx(uint16_t)
+
+	uint16_t DisAsm::negx(uint16_t opcode)
 	{
+		disassembly = "negx";
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u);
 		return instructions::NEGX;
 	}
 	uint16_t DisAsm::nop(uint16_t)
@@ -601,11 +612,6 @@ namespace mc68000
 		return instructions::ROXR;
 	}
 
-	uint16_t DisAsm::sbcd(uint16_t)
-	{
-		return instructions::SBCD;
-	}
-
 	uint16_t DisAsm::rte(uint16_t)
 	{
 		return instructions::RTE;
@@ -622,6 +628,27 @@ namespace mc68000
 		return instructions::RTS;
 	}
 
+	uint16_t DisAsm::sbcd(uint16_t opcode)
+	{
+		disassembly = "sbcd ";
+		uint16_t register1 = opcode & 0b111;
+		uint16_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+		if (useAddressRegister)
+		{
+			disassembly += AddressRegisterIndirectPre[register1];
+			disassembly += ",";
+			disassembly += AddressRegisterIndirectPre[register2];
+		}
+		else
+		{
+			disassembly += dregisters[register1];
+			disassembly += ",";
+			disassembly += dregisters[register2];
+		}
+		return instructions::SBCD;
+	}
+
 	uint16_t DisAsm::scc(uint16_t)
 	{
 		return instructions::SCC;
@@ -631,22 +658,60 @@ namespace mc68000
 	{
 		disassembly = "stop #$";
 		disassembly += toHex(fetchNextWord());
+
 		return instructions::STOP;
 	}
 
-	uint16_t DisAsm::sub(uint16_t)
+	uint16_t DisAsm::sub(uint16_t opcode)
 	{
+		disassembly = "sub";
+		uint16_t reg = (opcode >> 9) & 7;
+		bool isMemoryDestination = opcode & 0x100;
+		uint16_t size = (opcode >> 6) & 3;
+
+		disassembly += Sizes[size];
+		if (isMemoryDestination)
+		{
+			disassembly += dregisters[reg];
+			disassembly += ",";
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u);
+		}
+		else
+		{
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u);
+			disassembly += ",";
+			disassembly += dregisters[reg];
+		}
+
 		return instructions::SUB;
+	}
+
+	uint16_t DisAsm::suba(uint16_t opcode)
+	{
+		disassembly = "suba";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
+
+		bool isLongOperation = ((opcode >> 6) & 0b111) == 0b111;
+		if (isLongOperation)
+		{
+			disassembly += ".l ";
+		}
+		else
+		{
+			disassembly += ".w ";
+		}
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, isLongOperation);
+		disassembly += ",";
+		disassembly += aregisters[destinationRegister];
+
+		return instructions::SUBA;
+
 	}
 
 	uint16_t DisAsm::subi(uint16_t)
 	{
 		return instructions::SUBI;
-	}
-
-	uint16_t DisAsm::suba(uint16_t)
-	{
-		return instructions::SUBA;
 	}
 
 	uint16_t DisAsm::subq(uint16_t)
