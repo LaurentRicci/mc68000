@@ -119,6 +119,24 @@ BOOST_AUTO_TEST_CASE(move_to_ccr_2)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(move_to_ccr_3)
+{
+	unsigned char code[] = {
+		0x70, 0x15,     // moveq.l #21, d0
+		0x44, 0xc0,     // move d0, CCR
+		0x4e, 0x40,     // trap #0
+		0xff, 0xff };
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(1, cpu.sr.x);
+			BOOST_CHECK_EQUAL(0, cpu.sr.n);
+			BOOST_CHECK_EQUAL(1, cpu.sr.z);
+			BOOST_CHECK_EQUAL(0, cpu.sr.v);
+			BOOST_CHECK_EQUAL(1, cpu.sr.c);
+		});
+}
+
 BOOST_AUTO_TEST_CASE(move_from_sr)
 {
 	unsigned char code[] = {

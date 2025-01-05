@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(bclr_register_set)
 	unsigned char code[] =
 	{
 		0x72, 0xff,		// moveq #$ff, d1
-		0x01, 0x81,    // bchg d0, d1
+		0x01, 0x81,    // bclr d0, d1
 		0x4e, 0x40 };  // trap #0
 
 	verifyExecution(code, sizeof(code), [](const Cpu& cpu)

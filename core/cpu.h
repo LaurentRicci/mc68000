@@ -112,6 +112,7 @@ namespace mc68000
 		uint16_t movea(uint16_t);
 		uint16_t move2ccr(uint16_t);
 		uint16_t movesr(uint16_t);
+		uint16_t move2sr(uint16_t);
 		uint16_t movem(uint16_t);
 		uint16_t movep(uint16_t);
 		uint16_t moveq(uint16_t);

@@ -316,6 +316,11 @@ namespace mc68000
 		return instructions::MOVESR;
 	}
 
+	uint16_t NoOpCpu::move2sr(uint16_t)
+	{
+		return instructions::MOVE2SR;
+	}
+
 	uint16_t NoOpCpu::movem(uint16_t)
 	{
 		return instructions::MOVEM;

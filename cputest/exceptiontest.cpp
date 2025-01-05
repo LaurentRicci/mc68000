@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(rte_user)
 		0x00, 0x00, 0x00, 0x2c,             // Privilege Violation
 
 		0x70, 0x2a,                         // 0x24 moveq.l #42, d0 
-		0x4e, 0x73,                         // Illegal 
+		0x4e, 0x73,                         // rte 
 		0x70, 0x15,                         // moveq.l #21, d0 
 		0x4e, 0x40,                         // trap #0 
 

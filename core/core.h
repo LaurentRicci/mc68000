@@ -384,6 +384,15 @@ namespace mc68000
 			}
 		}
 
+		// MOVE TO SR
+		for (unsigned ea = 0; ea <= 0b111'111u; ea++)
+		{
+			if (isValidAddressingMode(ea, 0b101111111111u))
+			{
+				handlers[0x46c0 + ea] = &T::move2sr;
+			}
+		}
+
 		// MOVEM - Register to memory
 		for (unsigned ea = 0; ea <= 0b111'111u; ea++)
 		{
