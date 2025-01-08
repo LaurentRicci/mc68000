@@ -141,6 +141,7 @@ namespace mc68000
 		uint16_t not_(uint16_t);
 
 		uint16_t ori2ccr(uint16_t);
+		uint16_t ori2sr(uint16_t);
 
 		uint16_t pea(uint16_t);
 

@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(or_to_dregister_w)
 	unsigned char code[] = {
 		0x36, 0x3c, 0x8a, 0x8f, //   move.w #$8a8f,d3
 		0x38, 0x7c, 0x10, 0x10, //   move   #data, a4
-		0x86, 0x54,             //   or.w(a4), d3
-		0x4e, 0x40,             //   trap #0
+		0x86, 0x54,             //   or.w   (a4), d3
+		0x4e, 0x40,             //   trap   #0
 		0xff, 0xff,             //
 		0xff, 0xff,             // 
 								// data :
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(or_to_dregister_l)
 	unsigned char code[] = {
 		0x26, 0x3c, 0x95, 0x36, 0x8a, 0x8f, //   move.l #$95368a8f,d3
 		0x38, 0x7c, 0x10, 0x12,             //   move   #data, a4
-		0x86, 0x94,                         //   or.w(a4), d3
-		0x4e, 0x40,                         //   trap #0
+		0x86, 0x94,                         //   or.l   (a4), d3
+		0x4e, 0x40,                         //   trap   #0
 		0xff, 0xff, 0xff, 0xff,             // 
 											// data :
 		0x7f, 0x27, 0x81, 0x81,             //   dc.l $7f278181, $fefefefe
@@ -315,4 +315,68 @@ BOOST_AUTO_TEST_CASE(ori2ccr_2)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 }
 
+// ===================================================
+// ORI2SR tests
+// ===================================================
+uint32_t validateOri2sr(bool supervisorMode)
+{
+	unsigned char code[] = {
+		0x00, 0x00, 0x00, 0x00,             // reset - SSP
+		0x00, 0x00, 0x00, 0x00,             // reset - PC
+		0x00, 0x00, 0x00, 0x00,             // Bus error
+		0x00, 0x00, 0x00, 0x00,             // Address error
+		0x00, 0x00, 0x00, 0x00,             // Illegal Instruction
+		0x00, 0x00, 0x00, 0x00,             // Integer Divide by Zero
+		0x00, 0x00, 0x00, 0x00,             // CHK Instruction
+		0x00, 0x00, 0x00, 0x00,             // TRAPV Instruction
+		0x00, 0x00, 0x00, 0x30,             // Privilege Violation
+
+		0x70, 0x2a,                         // moveq.l #42, d0 
+		0x00, 0x7c, 0xfe, 0xff,             // ori #$feff, sr 
+		0x40, 0xc7,                         // move.w sr, d7
+		0x70, 0x15,                         // moveq.l #21, d0 
+		0x4e, 0x40,                         // trap #0 
+
+		// VIOLATION:
+		0x70, 0x08,                         // moveq.l #8, d0 
+		0x4e, 0x40,                         // trap #0 
+
+		0xff, 0xff, 0xff, 0xff              // 
+		// ds.l 16
+		// 0x74 STACK:
+	};
+
+	// Arrange
+	memory memory(128, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.setSupervisorMode(supervisorMode);
+	cpu.start(0x24, 0x74, 0x74);
+
+	// Assert
+	if (supervisorMode)
+	{
+		BOOST_CHECK_EQUAL(0x15, cpu.d0);
+	}
+	else
+	{
+		BOOST_CHECK_EQUAL(0x8, cpu.d0);
+	}
+	return cpu.d7;
+}
+
+BOOST_AUTO_TEST_CASE(ori2sr_user)
+{
+	validateOri2sr(false);
+}
+
+BOOST_AUTO_TEST_CASE(ori2sr_supervisor)
+{
+	uint32_t sr = validateOri2sr(true);
+	//                    T S  III   XNZVC
+	uint32_t expected = 0b1010011000011111;
+	BOOST_CHECK_EQUAL(expected, sr);
+}
 BOOST_AUTO_TEST_SUITE_END()

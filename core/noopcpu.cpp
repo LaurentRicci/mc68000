@@ -241,6 +241,11 @@ namespace mc68000
 		return instructions::EORI2CCR;
 	}
 
+	uint16_t NoOpCpu::eori2sr(uint16_t)
+	{
+		return instructions::EORI2SR;
+	}
+
 	uint16_t NoOpCpu::exg(uint16_t)
 	{
 		return instructions::EXG;
@@ -381,6 +386,11 @@ namespace mc68000
 	uint16_t NoOpCpu::ori2ccr(uint16_t)
 	{
 		return instructions::ORI2CCR;
+	}
+
+	uint16_t NoOpCpu::ori2sr(uint16_t)
+	{
+		return instructions::ORI2SR;
 	}
 
 	uint16_t NoOpCpu::pea(uint16_t)

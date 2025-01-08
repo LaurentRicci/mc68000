@@ -164,22 +164,18 @@ namespace mc68000
 	uint16_t DisAsm::disassembleBccInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode)
 	{
 		disassembly = instructionName;
-		disassembly += " $";
+		disassembly += " offset_0x";
 
 		uint16_t offset = opcode & 0xff;
 		if (offset == 0)
 		{
 			disassembly += toHex(fetchNextWord());
 		}
-		else if (offset == 0xff)
-		{
-			disassembly += toHex(fetchNextWord());
-			disassembly += toHex(fetchNextWord());
-		}
 		else
 		{
 			disassembly += toHex(offset);
 		}
+		disassembly += "(pc)";
 
 		return instructionId;
 	}

@@ -113,6 +113,10 @@ BOOST_AUTO_TEST_CASE(bvs)
 	verifyBccExecution(0b00111, 0x69); // V=1
 }
 
+BOOST_AUTO_TEST_CASE(bra)
+{
+	verifyBccExecution(0, 0x60);
+}
 // ===================================================
 // BSR tests
 // ===================================================

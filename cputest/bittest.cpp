@@ -166,6 +166,22 @@ BOOST_AUTO_TEST_CASE(bclr_register_indirect)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(bclr_immediate)
+{
+	unsigned char code[] =
+	{
+		0x7a, 0x05,                // moveq #5, d5
+		0x08, 0x85, 0x00, 0x02,    // bclr d0, (a1)
+		0x4e, 0x40,                // trap #0
+		0xff, 0xff, 0xff, 0xff };
+
+
+	verifyExecution(code, sizeof(code), 0x1000, [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x1, cpu.d5);
+			BOOST_CHECK_EQUAL(0x0, cpu.sr.z);
+		});
+}
 // ===================================================
 // BSET tests
 // ===================================================
@@ -206,6 +222,20 @@ BOOST_AUTO_TEST_CASE(bset_register_indirect)
 		});
 }
 
+BOOST_AUTO_TEST_CASE(bset_immediate)
+{
+	unsigned char code[] =
+	{
+		0x7a, 0x05,	               // moveq #5, d5
+		0x08, 0xC5, 0x00, 0x06,    // bset #6, d5
+		0x4e, 0x40 };              // trap #0
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x45, cpu.d5);
+			BOOST_CHECK_EQUAL(0x1, cpu.sr.z);
+		});
+}
 // ===================================================
 // BTST tests
 // ===================================================
@@ -243,6 +273,22 @@ BOOST_AUTO_TEST_CASE(btst_register_indirect)
 			BOOST_CHECK_EQUAL(0x100e, cpu.a1);
 			BOOST_CHECK_EQUAL(0x1, cpu.sr.z);
 			BOOST_CHECK_EQUAL(0x12, cpu.mem.get<uint8_t>(0x100e));
+		});
+}
+
+BOOST_AUTO_TEST_CASE(btst_immediate)
+{
+	unsigned char code[] =
+	{
+		0x7a, 0x05,	               // moveq #5, d5
+		0x44, 0xfc, 0x00, 0xff,    // move #$ff,ccr
+		0x08, 0x05, 0x00, 0x02,    // btst #2, d5
+		0x4e, 0x40 };              // trap #0
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0x5, cpu.d5);
+			BOOST_CHECK_EQUAL(0x0, cpu.sr.z);
 		});
 }
 

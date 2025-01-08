@@ -284,6 +284,9 @@ namespace mc68000
 		// EORI TO CCR
 		handlers[0b0000'1010'0011'1100u] = &T::eori2ccr;
 
+		// EORI TO SR
+		handlers[0b0000'1010'0111'1100u] = &T::eori2sr;
+
 		// EXG
 		for (int regx = 0; regx <= 7; regx++)
 		{
@@ -457,6 +460,9 @@ namespace mc68000
 
 		// ORI to CCR
 		handlers[0b0000'0000'0011'1100u] = &T::ori2ccr;
+
+		// ORI to SR
+		handlers[0b0000'0000'0111'1100u] = &T::ori2sr;
 
 		// PEA
 		for (unsigned ea = 0; ea <= 0b111'111u; ea++)

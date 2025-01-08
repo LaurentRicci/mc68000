@@ -222,20 +222,26 @@ BOOST_AUTO_TEST_CASE(d_asr_l)
 
 BOOST_AUTO_TEST_CASE(d_bcc)
 {
-    verifyDisassembly(0b0110'0100'0000'0000, 0x3456, "bcc $3456");
-    verifyDisassembly(0b0110'0101'0000'1000, "bcs $8");
-    verifyDisassembly(0b0110'0111'0000'1000, "beq $8");
-    verifyDisassembly(0b0110'0110'0000'1000, "bne $8");
-    verifyDisassembly(0b0110'1100'0000'1000, "bge $8");
-    verifyDisassembly(0b0110'1110'0000'1000, "bgt $8");
-    verifyDisassembly(0b0110'0010'0000'1000, "bhi $8");
-    verifyDisassembly(0b0110'1111'0000'1000, "ble $8");
-    verifyDisassembly(0b0110'0011'0000'1000, "bls $8");
-    verifyDisassembly(0b0110'1101'0000'1000, "blt $8");
-    verifyDisassembly(0b0110'1011'0000'1000, "bmi $8");
-    verifyDisassembly(0b0110'1010'0000'1000, "bpl $8");
-    verifyDisassembly(0b0110'1000'0000'1000, "bvc $8");
-    verifyDisassembly(0b0110'1001'0000'1000, "bvs $8");
+    verifyDisassembly(0b0110'0100'0000'0000, 0x3456, "bcc offset_0x3456(pc)");
+    verifyDisassembly(0b0110'0101'0000'1000, "bcs offset_0x8(pc)");
+    verifyDisassembly(0b0110'0111'0000'1000, "beq offset_0x8(pc)");
+    verifyDisassembly(0b0110'0110'0000'1000, "bne offset_0x8(pc)");
+    verifyDisassembly(0b0110'1100'0000'1000, "bge offset_0x8(pc)");
+    verifyDisassembly(0b0110'1110'0000'1000, "bgt offset_0x8(pc)");
+    verifyDisassembly(0b0110'0010'0000'1000, "bhi offset_0x8(pc)");
+    verifyDisassembly(0b0110'1111'0000'1000, "ble offset_0x8(pc)");
+    verifyDisassembly(0b0110'0011'0000'1000, "bls offset_0x8(pc)");
+    verifyDisassembly(0b0110'1101'0000'1000, "blt offset_0x8(pc)");
+    verifyDisassembly(0b0110'1011'0000'1000, "bmi offset_0x8(pc)");
+    verifyDisassembly(0b0110'1010'0000'1000, "bpl offset_0x8(pc)");
+    verifyDisassembly(0b0110'1000'0000'1000, "bvc offset_0x8(pc)");
+    verifyDisassembly(0b0110'1001'0000'1000, "bvs offset_0x8(pc)");
+}
+
+BOOST_AUTO_TEST_CASE(d_bra)
+{
+    verifyDisassembly(0x6000, 0x0004, "bra offset_0x4(pc)");
+    verifyDisassembly(0x6008, "bra offset_0x8(pc)");
 }
 
 BOOST_AUTO_TEST_CASE(d_bchg_r)
@@ -263,10 +269,20 @@ BOOST_AUTO_TEST_CASE(d_bset_i)
     verifyDisassembly(0x08c0, 0x0003, "bset #$3,d0");
 }
 
+BOOST_AUTO_TEST_CASE(d_btst)
+{
+	verifyDisassembly(0x0101, "btst d0,d1");
+    verifyDisassembly(0x0711, "btst d3,(a1)");
+
+    verifyDisassembly(0x0801, 0x00a, "btst #$a,d1");
+    verifyDisassembly(0x0819, 0x002, "btst #$2,(a1)+");
+}
+
 BOOST_AUTO_TEST_CASE(d_bsr)
 {
 	verifyDisassembly(0x6100, 0x000e, "bsr offset_0xe(pc)");
     verifyDisassembly(0x6100, 0x00f8, "bsr offset_0xf8(pc)");
+    verifyDisassembly(0x6108, "bsr offset_0x8(pc)");
 }
 
 BOOST_AUTO_TEST_CASE(d_chk)
@@ -367,6 +383,24 @@ BOOST_AUTO_TEST_CASE(d_eori)
 BOOST_AUTO_TEST_CASE(d_eori2ccr)
 {
     verifyDisassembly(0x0a3c, 0x0015, "eori #$15,ccr");
+}
+
+BOOST_AUTO_TEST_CASE(d_eori2sr)
+{
+    verifyDisassembly(0x0a7c, 0x0023, "eori #$23,sr");
+}
+
+BOOST_AUTO_TEST_CASE(d_exg)
+{
+    verifyDisassembly(0xc745, "exg d3,d5");
+    verifyDisassembly(0xcf49, "exg a7,a1");
+    verifyDisassembly(0xcd8b, "exg d6,a3");
+}
+
+BOOST_AUTO_TEST_CASE(d_ext)
+{
+    verifyDisassembly(0x4885, "ext.w d5");
+    verifyDisassembly(0x48c2, "ext.l d2");
 }
 
 BOOST_AUTO_TEST_CASE(d_illegal)
@@ -531,9 +565,69 @@ BOOST_AUTO_TEST_CASE(d_not)
 	verifyDisassembly(0x4684, "not.l d4");
 }
 
+BOOST_AUTO_TEST_CASE(d_or)
+{
+    verifyDisassembly(0x8614, "or.b (a4),d3");
+    verifyDisassembly(0x8654, "or.w (a4),d3");
+	verifyDisassembly(0x8694, "or.l (a4),d3");
+
+    verifyDisassembly(0x8714, "or.b d3,(a4)");
+    verifyDisassembly(0x8754, "or.w d3,(a4)");
+    verifyDisassembly(0x8794, "or.l d3,(a4)");
+}
+
+BOOST_AUTO_TEST_CASE(d_ori)
+{
+    verifyDisassembly(0x003, 0x0029, "ori.b #$29,d3");
+    verifyDisassembly(0x043, 0x8187, "ori.w #$8187,d3");
+    verifyDisassembly(0x083, 0x7f27, 0x8193, "ori.l #$7f278193,d3");
+}
+
+BOOST_AUTO_TEST_CASE(d_ori2ccr)
+{
+    verifyDisassembly(0x003c, 0x0023, "ori #$23,ccr");
+}
+
+BOOST_AUTO_TEST_CASE(d_ori2sr)
+{
+    verifyDisassembly(0x007c, 0x0023, "ori #$23,sr");
+}
+
 BOOST_AUTO_TEST_CASE(d_pea)
 {
     verifyDisassembly(0x4850, "pea (a0)");
+}
+
+BOOST_AUTO_TEST_CASE(d_rol)
+{
+    verifyDisassembly(0xe7d0, "rol (a0)");
+    verifyDisassembly(0xe13b, "rol.b d0,d3");
+    verifyDisassembly(0xe17b, "rol.w d0,d3");
+    verifyDisassembly(0xe1bb, "rol.l d0,d3");
+}
+
+BOOST_AUTO_TEST_CASE(d_roxl)
+{
+    verifyDisassembly(0xe5d0, "roxl (a0)");
+    verifyDisassembly(0xe133, "roxl.b d0,d3");
+    verifyDisassembly(0xe952, "roxl.w #4,d2");
+    verifyDisassembly(0xe1b7, "roxl.l d0,d7");
+}
+
+BOOST_AUTO_TEST_CASE(d_ror)
+{
+    verifyDisassembly(0xe6d0, "ror (a0)");
+    verifyDisassembly(0xe03b, "ror.b d0,d3");
+    verifyDisassembly(0xe07b, "ror.w d0,d3");
+    verifyDisassembly(0xe0bb, "ror.l d0,d3");
+}
+
+BOOST_AUTO_TEST_CASE(d_roxr)
+{
+    verifyDisassembly(0xe4d0, "roxr (a0)");
+    verifyDisassembly(0xe033, "roxr.b d0,d3");
+    verifyDisassembly(0xe852, "roxr.w #4,d2");
+    verifyDisassembly(0xe0b7, "roxr.l d0,d7");
 }
 
 BOOST_AUTO_TEST_CASE(d_rte)
@@ -615,6 +709,34 @@ BOOST_AUTO_TEST_CASE(d_subx)
     verifyDisassembly(0b1001'101'1'10'00'0'010u, "subx.l d2,d5");
 }
 
+BOOST_AUTO_TEST_CASE(d_swap)
+{
+    verifyDisassembly(0x4846, "swap d6");
+    verifyDisassembly(0x4844, "swap d4");
+}
+
+BOOST_AUTO_TEST_CASE(d_tas)
+{
+    verifyDisassembly(0x4aeb, 0x0005, "tas 5(a3)");
+}
+
+BOOST_AUTO_TEST_CASE(d_trap)
+{
+    verifyDisassembly(0x4e43, "trap #3");
+}
+
+BOOST_AUTO_TEST_CASE(d_trapv)
+{
+    verifyDisassembly(0x4e76, "trapv");
+}
+
+BOOST_AUTO_TEST_CASE(d_tst)
+{
+	verifyDisassembly(0x4a00, "tst.b d0");
+    verifyDisassembly(0x4a52, "tst.w (a2)");
+	verifyDisassembly(0x4aae, 0x0008, "tst.l 8(a6)");
+}
+
 /*=================================================================================================
                                     org     $00100000       ;Start at 00100000
                     strtolower      public
@@ -659,7 +781,7 @@ BOOST_AUTO_TEST_CASE(d_tolower05)
 }
 BOOST_AUTO_TEST_CASE(d_tolower06)
 {
-    verifyDisassembly(0x6500, 0x000E, "bcs $e");
+    verifyDisassembly(0x6500, 0x000E, "bcs offset_0xe(pc)");
 }
 
 BOOST_AUTO_TEST_CASE(d_tolower07)
@@ -669,7 +791,7 @@ BOOST_AUTO_TEST_CASE(d_tolower07)
 
 BOOST_AUTO_TEST_CASE(d_tolower08)
 {
-verifyDisassembly(0x6200, 0x0006, "bhi $6");
+verifyDisassembly(0x6200, 0x0006, "bhi offset_0x6(pc)");
 }
 
 BOOST_AUTO_TEST_CASE(d_tolower09)
@@ -684,7 +806,7 @@ BOOST_AUTO_TEST_CASE(d_tolower10)
 
 BOOST_AUTO_TEST_CASE(d_tolower11)
 {
-    verifyDisassembly(0x66E6, "bne $e6");
+    verifyDisassembly(0x66E6, "bne offset_0xe6(pc)");
 }
 
 BOOST_AUTO_TEST_CASE(d_tolower12)

@@ -550,6 +550,67 @@ BOOST_AUTO_TEST_CASE(pea)
 	BOOST_CHECK_EQUAL(cpu.a0, cpu.mem.get<uint32_t>(cpu.a7));
 }
 
+// ===================================================
+// MOVE2SR tests
+// ===================================================
+uint32_t validateMove2sr(bool supervisorMode)
+{
+	unsigned char code[] = {
+		0x00, 0x00, 0x00, 0x00,             // reset - SSP
+		0x00, 0x00, 0x00, 0x00,             // reset - PC
+		0x00, 0x00, 0x00, 0x00,             // Bus error
+		0x00, 0x00, 0x00, 0x00,             // Address error
+		0x00, 0x00, 0x00, 0x00,             // Illegal Instruction
+		0x00, 0x00, 0x00, 0x00,             // Integer Divide by Zero
+		0x00, 0x00, 0x00, 0x00,             // CHK Instruction
+		0x00, 0x00, 0x00, 0x00,             // TRAPV Instruction
+		0x00, 0x00, 0x00, 0x30,             // Privilege Violation
 
+		0x70, 0x2a,                         // moveq.l #42, d0 
+		0x46, 0xfc, 0x27, 0x00,             // move #$2700, sr 
+		0x40, 0xc7,                         // move.w sr, d7
+		0x70, 0x15,                         // moveq.l #21, d0 
+		0x4e, 0x40,                         // trap #0 
+
+		// VIOLATION:
+		0x70, 0x08,                         // moveq.l #8, d0 
+		0x4e, 0x40,                         // trap #0 
+
+		0xff, 0xff, 0xff, 0xff              // 
+		// ds.l 16
+		// 0x74 STACK:
+	};
+
+	// Arrange
+	memory memory(128, 0, code, sizeof(code));
+	Cpu cpu(memory);
+
+	// Act
+	cpu.reset();
+	cpu.setSupervisorMode(supervisorMode);
+	cpu.start(0x24, 0x74, 0x74);
+
+	// Assert
+	if (supervisorMode)
+	{
+		BOOST_CHECK_EQUAL(0x15, cpu.d0);
+	}
+	else
+	{
+		BOOST_CHECK_EQUAL(0x8, cpu.d0);
+	}
+	return cpu.d7;
+}
+
+BOOST_AUTO_TEST_CASE(andi2sr_user)
+{
+	validateMove2sr(false);
+}
+
+BOOST_AUTO_TEST_CASE(andi2sr_supervisor)
+{
+	uint32_t sr = validateMove2sr(true);
+	BOOST_CHECK_EQUAL(0x2700, sr);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

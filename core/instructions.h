@@ -87,6 +87,7 @@ namespace mc68000
         static const unsigned short OR = 77;
         static const unsigned short ORI = 78;
         static const unsigned short ORI2CCR = 79;
+        static const unsigned short ORI2SR = 103;
         static const unsigned short PEA = 80;
         static const unsigned short ROL = 81;
         static const unsigned short ROR = 82;
@@ -197,6 +198,7 @@ namespace mc68000
             names[OR] = L"OR";
             names[ORI] = L"ORI";
             names[ORI2CCR] = L"ORI2CCR";
+            names[ORI2SR] = L"ORI2SR";
             names[PEA] = L"PEA";
             names[ROL] = L"ROL";
             names[ROR] = L"ROR";

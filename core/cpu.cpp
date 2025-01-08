@@ -59,6 +59,11 @@ namespace mc68000
 		localMemory = memory;
 	}
 
+	void Cpu::setSupervisorMode(bool super)
+	{
+		statusRegister.s = super ? 1 : 0;
+	}
+
 	void Cpu::start(uint32_t startPc, uint32_t startSP, uint32_t startSSP)
 	{
 		done = false;
@@ -343,8 +348,22 @@ namespace mc68000
 
 		return instructions::ANDI2CCR;
 	}
+
+	/// <summary>
+	/// ANDI to SR
+	/// </summary>
 	uint16_t Cpu::andi2sr(uint16_t)
 	{
+		if (sr.s)
+		{
+			uint16_t data = readAt<uint16_t>(0b111'100, false);
+			uint16_t sr = statusRegister;
+			statusRegister = (uint16_t)(sr & data);
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
 		return instructions::ANDI2SR;
 	}
 	// ==========
@@ -964,6 +983,24 @@ namespace mc68000
 		return instructions::EORI2CCR;
 	}
 
+	/// <summary>
+	/// EORI to SR: Exclusive OR Immediate to Status Register
+	/// </summary>
+	uint16_t Cpu::eori2sr(uint16_t opcode)
+	{
+		if (sr.s)
+		{
+			uint16_t data = readAt<uint16_t>(0b111'100, false);
+			uint16_t sr = statusRegister;
+			statusRegister = (uint16_t)(sr ^ data);
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
+		return instructions::EORI2SR;
+	}
+
 	// ==========
 	// EXG
 	// ==========
@@ -1226,10 +1263,15 @@ namespace mc68000
 	// ==========
 	uint16_t Cpu::move2sr(uint16_t opcode)
 	{
-		//uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
-		//uint16_t source = readAt<uint16_t>(sourceEffectiveAddress, false);
-
-		//sr = source;
+		if (sr.s)
+		{
+			uint16_t data = readAt<uint16_t>(0b111'100, false);
+			statusRegister = data;
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
 
 		return instructions::MOVE2SR;
 	}
@@ -1622,6 +1664,24 @@ namespace mc68000
 		statusRegister.x |= (source >> 4) & 1;
 
 		return instructions::ORI2CCR;
+	}
+
+	/// <summary>
+	/// ORI to SR: OR Immediate to Status Register
+	/// </summary>
+	uint16_t Cpu::ori2sr(uint16_t)
+	{
+		if (sr.s)
+		{
+			uint16_t data = readAt<uint16_t>(0b111'100, false);
+			uint16_t sr = statusRegister;
+			statusRegister = (uint16_t)(sr | data);
+		}
+		else
+		{
+			handleException(Exceptions::PRIVILEGE_VIOLATION);
+		}
+		return instructions::EORI2SR;
 	}
 
 	/// <summary>

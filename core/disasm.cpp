@@ -181,10 +181,9 @@ namespace mc68000
 		return disassembleShiftRotate("asr", instructions::ASR, opcode);
 	}
 
-	uint16_t DisAsm::bra(uint16_t)
+	uint16_t DisAsm::bra(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::BRA;
+		return disassembleBccInstruction("bra", instructions::BHI, opcode);
 	}
 	uint16_t DisAsm::bhi(uint16_t opcode)
 	{
@@ -276,31 +275,17 @@ namespace mc68000
 
 	uint16_t DisAsm::bsr(uint16_t opcode)
 	{
-		disassembly = "bsr offset_0x";
-		uint16_t offset = opcode & 0xff;
-		if (offset == 0)
-		{
-			disassembly += toHex(fetchNextWord());
-		}
-		else
-		{
-			disassembly += toHex(offset) ;
-		}
-		disassembly += "(pc)";
-
-		return instructions::BSR;
+		return disassembleBccInstruction("bsr", instructions::BSR, opcode);
 	}
 
-	uint16_t DisAsm::btst_r(uint16_t)
+	uint16_t DisAsm::btst_r(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::BTST_R;
+		return disassembleBitRegisterInstruction("btst ", instructions::BTST_R, opcode);
 	}
 
-	uint16_t DisAsm::btst_i(uint16_t)
+	uint16_t DisAsm::btst_i(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::BTST_I;
+		return disassembleBitImmediateInstruction("btst", instructions::BTST_I, opcode);
 	}
 
 	uint16_t DisAsm::chk(uint16_t opcode)
@@ -425,15 +410,52 @@ namespace mc68000
 		return disassemble2sr("eori", instructions::EORI2SR, opcode);
 	}
 
-	uint16_t DisAsm::exg(uint16_t)
+	uint16_t DisAsm::exg(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "exg ";
+		uint16_t mode = (opcode >> 3) & 0b11111;
+		uint16_t regx = (opcode >> 9) & 0b111;
+		uint16_t regy = opcode & 0b111;
+
+		switch (mode)
+		{
+			case 0b01000:
+			{
+				disassembly += dregisters[regx];
+				disassembly += ",";
+				disassembly += dregisters[regy];
+				break;
+			}
+			case 0b01001:
+			{
+				disassembly += aregisters[regx];
+				disassembly += ",";
+				disassembly += aregisters[regy];
+				break;
+			}
+			case 0b10001:
+			{
+				disassembly += dregisters[regx];
+				disassembly += ",";
+				disassembly += aregisters[regy];
+				break;
+			}
+			default:
+				throw "exg: invalid mode";
+		}
+
 		return instructions::EXG;
 	}
 
-	uint16_t DisAsm::ext(uint16_t)
+	uint16_t DisAsm::ext(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "ext";
+		uint16_t reg = opcode & 0b111;
+		bool isLong = (opcode >> 6) & 0b1;
+
+		disassembly += isLong ? ".l " : ".w ";
+		disassembly += dregisters[reg];
+
 		return instructions::EXT;
 	}
 
@@ -704,22 +726,24 @@ namespace mc68000
 		return instructions::NOT;
 	}
 
-	uint16_t DisAsm::or_(uint16_t)
+	uint16_t DisAsm::or_(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::OR;
+		return disassembleLogical("or", instructions::OR, opcode);
 	}
 
-	uint16_t DisAsm::ori(uint16_t)
+	uint16_t DisAsm::ori(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ORI;
+		return disassembleImmediateInstruction("ori", instructions::ORI, opcode);
 	}
 
-	uint16_t DisAsm::ori2ccr(uint16_t)
+	uint16_t DisAsm::ori2ccr(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ORI2CCR;
+		return disassemble2ccr("ori", instructions::ORI2CCR, opcode);
+	}
+
+	uint16_t DisAsm::ori2sr(uint16_t opcode)
+	{
+		return disassemble2sr("ori", instructions::EORI2SR, opcode);
 	}
 
 	uint16_t DisAsm::pea(uint16_t opcode)
@@ -731,52 +755,44 @@ namespace mc68000
 		return instructions::PEA;
 	}
 
-	uint16_t DisAsm::rol_memory(uint16_t)
+	uint16_t DisAsm::rol_memory(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROL;
+		return disassembleShiftRotate("rol ", instructions::ROL, opcode);
 	}
 
-	uint16_t DisAsm::ror_memory(uint16_t)
+	uint16_t DisAsm::ror_memory(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROR;
+		return disassembleShiftRotate("ror ", instructions::ROR, opcode);
 	}
 
-	uint16_t DisAsm::roxl_memory(uint16_t)
+	uint16_t DisAsm::roxl_memory(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROXL;
+		return disassembleShiftRotate("roxl ", instructions::ROXL, opcode);
 	}
 
-	uint16_t DisAsm::roxr_memory(uint16_t)
+	uint16_t DisAsm::roxr_memory(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROXR;
+		return disassembleShiftRotate("roxr ", instructions::ROXR, opcode);
 	}
 
-	uint16_t DisAsm::rol_register(uint16_t)
+	uint16_t DisAsm::rol_register(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROL;
+		return disassembleShiftRotate("rol", instructions::ROL, opcode);
 	}
 
-	uint16_t DisAsm::ror_register(uint16_t)
+	uint16_t DisAsm::ror_register(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROR;
+		return disassembleShiftRotate("ror", instructions::ROR, opcode);
 	}
 
-	uint16_t DisAsm::roxl_register(uint16_t)
+	uint16_t DisAsm::roxl_register(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROXL;
+		return disassembleShiftRotate("roxl", instructions::ROXL, opcode);
 	}
 
-	uint16_t DisAsm::roxr_register(uint16_t)
+	uint16_t DisAsm::roxr_register(uint16_t opcode)
 	{
-		disassembly = "";
-		return instructions::ROXR;
+		return disassembleShiftRotate("roxr", instructions::ROXR, opcode);
 	}
 
 	uint16_t DisAsm::rte(uint16_t)
@@ -915,33 +931,48 @@ namespace mc68000
 		return disassembleAddxSubx("subx", instructions::SUBX, opcode);
 	}
 
-	uint16_t DisAsm::swap(uint16_t)
+	uint16_t DisAsm::swap(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "swap ";
+		uint16_t destinationRegister = opcode & 0b111;
+		disassembly += dregisters[destinationRegister];
+
 		return instructions::SWAP;
 	}
 
-	uint16_t DisAsm::tas(uint16_t)
+	uint16_t DisAsm::tas(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "tas ";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
 		return instructions::TAS;
 	}
 
-	uint16_t DisAsm::trap(uint16_t)
+	uint16_t DisAsm::trap(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "trap #";
+		uint16_t trapNumber = opcode & 0b1111;
+		disassembly += std::to_string(trapNumber);
+
 		return instructions::TRAP;
 	}
 
 	uint16_t DisAsm::trapv(uint16_t)
 	{
-		disassembly = "";
+		disassembly = "trapv";
 		return instructions::TRAPV;
 	}
 
-	uint16_t DisAsm::tst(uint16_t)
+	uint16_t DisAsm::tst(uint16_t opcode)
 	{
-		disassembly = "";
+		disassembly = "tst";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(effectiveAddress, size == 0b10);
+
 		return instructions::TST;
 	}
 
@@ -954,7 +985,7 @@ namespace mc68000
 
 	uint16_t DisAsm::unknown(uint16_t)
 	{
-		disassembly = "";
+		disassembly = "*** unknown instruction ***";
 		return instructions::UNKNOWN;
 	}
 
