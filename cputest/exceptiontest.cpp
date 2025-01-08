@@ -48,31 +48,34 @@ BOOST_AUTO_TEST_CASE(illegal)
 // ===================================================
 // RTE tests
 // ===================================================
-BOOST_AUTO_TEST_CASE(rte_user)
+void validateRte(bool supervisorMode)
 {
 	unsigned char code[] = {
-		0x00, 0x00, 0x00, 0x00,             // reset - SSP
-		0x00, 0x00, 0x00, 0x00,             // reset - PC
-		0x00, 0x00, 0x00, 0x00,             // Bus error
-		0x00, 0x00, 0x00, 0x00,             // Address error
-		0x00, 0x00, 0x00, 0x00,             // Illegal Instruction
-		0x00, 0x00, 0x00, 0x00,             // Integer Divide by Zero
-		0x00, 0x00, 0x00, 0x00,             // CHK Instruction
-		0x00, 0x00, 0x00, 0x00,             // TRAPV Instruction
-		0x00, 0x00, 0x00, 0x2c,             // Privilege Violation
+	0x00, 0x00, 0x00, 0x00,             // reset - SSP
+	0x00, 0x00, 0x00, 0x00,             // reset - PC
+	0x00, 0x00, 0x00, 0x00,             // Bus error
+	0x00, 0x00, 0x00, 0x00,             // Address error
+	0x00, 0x00, 0x00, 0x00,             // Illegal Instruction
+	0x00, 0x00, 0x00, 0x00,             // Integer Divide by Zero
+	0x00, 0x00, 0x00, 0x00,             // CHK Instruction
+	0x00, 0x00, 0x00, 0x00,             // TRAPV Instruction
+	0x00, 0x00, 0x00, 0x32,             // Privilege Violation
 
-		0x70, 0x2a,                         // 0x24 moveq.l #42, d0 
-		0x4e, 0x73,                         // Illegal 
-		0x70, 0x15,                         // moveq.l #21, d0 
-		0x4e, 0x40,                         // trap #0 
+	0x70, 0x2a,                         // moveq.l #42, d0
+	0x48, 0x7a, 0x00, 0x06,             // pea next(pc)
+	0x42, 0x67,                         // clr.w -(a7)
+	0x4e, 0x73,                         // rte
+	                                    // next:
+	0x70, 0x15,                         // moveq.l #21, d0 
+	0x4e, 0x40,                         // trap #0 
 
-	                                        // VIOLATION:
-		0x70, 0x08,                         // moveq.l #8, d0 
-		0x4e, 0x40,                         // trap #0 
+	                                    // VIOLATION:
+	0x70, 0x08,                         // moveq.l #8, d0 
+	0x4e, 0x40,                         // trap #0 
 
-		0xff, 0xff, 0xff, 0xff              // 
-		                                    // ds.l 16
-		                                    // 0x74 STACK:
+	0xff, 0xff, 0xff, 0xff              // 
+	                                    // ds.l 16
+	                                    // STACK:
 	};
 
 	// Arrange
@@ -81,11 +84,28 @@ BOOST_AUTO_TEST_CASE(rte_user)
 
 	// Act
 	cpu.reset();
+	cpu.setSupervisorMode(supervisorMode);
 	cpu.start(0x24, 0x74, 0x74);
 
 	// Assert
-	BOOST_CHECK_EQUAL(0x8, cpu.d0);
+	if (supervisorMode)
+	{
+		BOOST_CHECK_EQUAL(0x15, cpu.d0);
+	}
+	else
+	{
+		BOOST_CHECK_EQUAL(0x8, cpu.d0);
+	}
+}
 
+BOOST_AUTO_TEST_CASE(rte_user)
+{
+	validateRte(false);
+}
+
+BOOST_AUTO_TEST_CASE(rte_supervisor)
+{
+	validateRte(true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

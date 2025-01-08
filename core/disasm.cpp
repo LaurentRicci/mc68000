@@ -15,6 +15,7 @@ namespace mc68000
 	extern const char* const AddressRegisterIndirectPre[8] = { "-(a0)", "-(a1)", "-(a2)", "-(a3)", "-(a4)", "-(a5)", "-(a6)", "-(a7)" };
 	extern const char* const SizesForImmediateInstructions[] = { ".b #$", ".w #$", ".l #$" };
 	extern const char* const Sizes[] = { ".b ", ".w ", ".l " };
+	extern const char* const Conditions[] = { "t", "f", "hi", "ls", "cc", "cs", "ne", "eq", "vc", "vs", "pl", "mi", "ge", "lt", "gt", "le" };
 
 
 	DisAsm::DisAsm() : pc(nullptr), memory(nullptr)
@@ -76,11 +77,11 @@ namespace mc68000
 		{
 			disassembly += dregisters[reg];
 			disassembly += ",";
-			disassembly += decodeEffectiveAddress(opcode & 0b111111u);
+			disassembly += decodeEffectiveAddress(opcode & 0b111111u, size == 0b10);
 		}
 		else
 		{
-			disassembly += decodeEffectiveAddress(opcode & 0b111111u);
+			disassembly += decodeEffectiveAddress(opcode & 0b111111u, size == 0b10);
 			disassembly += ",";
 			disassembly += dregisters[reg];
 		}
@@ -122,7 +123,7 @@ namespace mc68000
 		disassembly += Sizes[size];
 		disassembly += "#" + std::to_string(data);
 		disassembly += ",";
-		disassembly += decodeEffectiveAddress(opcode & 0b111111u);
+		disassembly += decodeEffectiveAddress(opcode & 0b111111u, size == 0b10);
 		return instructions::ADDQ;
 	}
 
@@ -139,25 +140,7 @@ namespace mc68000
 	/// </summary>
 	uint16_t DisAsm::and_(uint16_t opcode)
 	{
-		disassembly = "and";
-		uint16_t size = (opcode >> 6) & 0b11;
-		disassembly += Sizes[size];
-
-		uint16_t reg = (opcode >> 9) & 0b111;
-		bool fromRegister = opcode & (1 << 8);
-		if (fromRegister)
-		{
-			disassembly += dregisters[reg];
-			disassembly += ",";
-			disassembly += decodeEffectiveAddress(opcode & 0b111'111);
-		}
-		else
-		{
-			disassembly += decodeEffectiveAddress(opcode & 0b111'111);
-			disassembly += ",";
-			disassembly += dregisters[reg];
-		}
-		return instructions::AND;
+		return disassembleLogical("and", instructions::AND, opcode);
 	}
 
 	/// <summary>
@@ -168,37 +151,39 @@ namespace mc68000
 		return disassembleImmediateInstruction("andi", instructions::ANDI, opcode);
 	}
 
-	uint16_t DisAsm::andi2ccr(uint16_t)
+	uint16_t DisAsm::andi2ccr(uint16_t opcode)
 	{
-		return instructions::ANDI2CCR;
-	}
-	uint16_t DisAsm::andi2sr(uint16_t)
-	{
-		return instructions::ANDI2SR;
-	}
-	uint16_t DisAsm::asl_memory(uint16_t)
-	{
-		return instructions::ASL;
+		return disassemble2ccr("andi", instructions::ANDI2CCR, opcode);
 	}
 
-	uint16_t DisAsm::asl_register(uint16_t)
+	uint16_t DisAsm::andi2sr(uint16_t opcode)
 	{
-		return instructions::ASL;
+		return disassemble2sr("andi", instructions::ANDI2SR, opcode);
 	}
 
-	uint16_t DisAsm::asr_memory(uint16_t)
+	uint16_t DisAsm::asl_memory(uint16_t opcode)
 	{
-		return instructions::ASR;
+		return disassembleShiftRotate("asl ", instructions::ASL, opcode);
 	}
 
-	uint16_t DisAsm::asr_register(uint16_t)
+	uint16_t DisAsm::asl_register(uint16_t opcode)
 	{
-		return instructions::ASR;
+		return disassembleShiftRotate("asl", instructions::ASL, opcode);
 	}
 
-	uint16_t DisAsm::bra(uint16_t)
+	uint16_t DisAsm::asr_memory(uint16_t opcode)
 	{
-		return instructions::BRA;
+		return disassembleShiftRotate("asr ", instructions::ASR, opcode);
+	}
+
+	uint16_t DisAsm::asr_register(uint16_t opcode)
+	{
+		return disassembleShiftRotate("asr", instructions::ASR, opcode);
+	}
+
+	uint16_t DisAsm::bra(uint16_t opcode)
+	{
+		return disassembleBccInstruction("bra", instructions::BHI, opcode);
 	}
 	uint16_t DisAsm::bhi(uint16_t opcode)
 	{
@@ -259,79 +244,102 @@ namespace mc68000
 
 	uint16_t DisAsm::bchg_r(uint16_t opcode)
 	{
-		disassembly = "bchg ";
-		uint16_t reg = (opcode >> 9) & 0b111;
-		disassembly += dregisters[reg];
-		disassembly += ",";
-		disassembly += decodeEffectiveAddress(opcode & 0b111'111);
-
-		return instructions::BCHG_R;
+		return disassembleBitRegisterInstruction("bchg ", instructions::BCHG_R, opcode);
 	}
 
 	uint16_t DisAsm::bchg_i(uint16_t opcode)
 	{
-		disassembly = "bchg #";
-		uint16_t bit = fetchNextWord();
-		disassembly += toHexDollar(bit);
-		disassembly += ",";
-		disassembly += decodeEffectiveAddress(opcode & 0b111'111);
-
-		return instructions::BCHG_I;
+		return disassembleBitImmediateInstruction("bchg", instructions::BCHG_I, opcode);
 	}
 
-	uint16_t DisAsm::bclr_r(uint16_t)
+	uint16_t DisAsm::bclr_r(uint16_t opcode)
 	{
-		return instructions::BCLR_R;
+		return disassembleBitRegisterInstruction("bclr ", instructions::BCLR_R, opcode);
 	}
 
-	uint16_t DisAsm::bclr_i(uint16_t)
+	uint16_t DisAsm::bclr_i(uint16_t opcode)
 	{
+		return disassembleBitImmediateInstruction("bclr", instructions::BCLR_I, opcode);
 		return instructions::BCLR_I;
 	}
 
-	uint16_t DisAsm::bset_r(uint16_t)
+	uint16_t DisAsm::bset_r(uint16_t opcode)
 	{
-		return instructions::BSET_R;
+		return disassembleBitRegisterInstruction("bset ", instructions::BSET_R, opcode);
 	}
 
-	uint16_t DisAsm::bset_i(uint16_t)
+	uint16_t DisAsm::bset_i(uint16_t opcode)
 	{
-		return instructions::BSET_I;
+		return disassembleBitImmediateInstruction("bset", instructions::BSET_I, opcode);
 	}
 
-	uint16_t DisAsm::bsr(uint16_t)
+	uint16_t DisAsm::bsr(uint16_t opcode)
 	{
-		return instructions::BSR;
+		return disassembleBccInstruction("bsr", instructions::BSR, opcode);
 	}
 
-	uint16_t DisAsm::btst_r(uint16_t)
+	uint16_t DisAsm::btst_r(uint16_t opcode)
 	{
-		return instructions::BTST_R;
+		return disassembleBitRegisterInstruction("btst ", instructions::BTST_R, opcode);
 	}
 
-	uint16_t DisAsm::btst_i(uint16_t)
+	uint16_t DisAsm::btst_i(uint16_t opcode)
 	{
-		return instructions::BTST_I;
+		return disassembleBitImmediateInstruction("btst", instructions::BTST_I, opcode);
 	}
 
-	uint16_t DisAsm::chk(uint16_t)
+	uint16_t DisAsm::chk(uint16_t opcode)
 	{
+		disassembly = "chk ";
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
+		disassembly += ",";
+		disassembly += dregisters[reg];
+
 		return instructions::CHK;
 	}
 
-	uint16_t DisAsm::clr(uint16_t)
+	uint16_t DisAsm::clr(uint16_t opcode)
 	{
+		disassembly = "clr";
+		uint16_t destinationEffectiveAddress = opcode & 0b111'111;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(destinationEffectiveAddress, size == 0b10);
+
 		return instructions::CLR;
 	}
 
 
-	uint16_t DisAsm::cmp(uint16_t)
+	uint16_t DisAsm::cmp(uint16_t opcode)
 	{
+		disassembly = "cmp";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, size == 0b10);
+		disassembly += ",";
+		disassembly += dregisters[reg];
+
 		return instructions::CMP;
 	}
 
-	uint16_t DisAsm::cmpa(uint16_t)
+	uint16_t DisAsm::cmpa(uint16_t opcode)
 	{
+		disassembly = "cmpa";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t size = (opcode >> 8) & 1;
+
+		disassembly += size ? ".l " : ".w ";
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, size);
+		disassembly += ",";
+		disassembly += aregisters[reg];
+
 		return instructions::CMPA;
 	}
 
@@ -340,68 +348,151 @@ namespace mc68000
 		return disassembleImmediateInstruction("cmpi", instructions::CMPI, opcode);
 	}
 
-	uint16_t DisAsm::cmpm(uint16_t)
+	uint16_t DisAsm::cmpm(uint16_t opcode)
 	{
+		disassembly = "cmpm";
+		uint16_t rx = (opcode >> 9) & 0b111;
+		uint16_t ry = opcode & 0b111;
+		uint16_t sourceEffectiveAddress = 0b011'000 | ry;
+		uint16_t destinationEffectiveAddress = 0b011'000 | rx;
+
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, size == 0b10);
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(destinationEffectiveAddress, size == 0b10);
+
 		return instructions::CMPM;
 	}
 
-	uint16_t DisAsm::dbcc(uint16_t)
+	uint16_t DisAsm::dbcc(uint16_t opcode)
 	{
+		disassembly = "db";
+		uint16_t condition = (opcode >> 8) & 0b1111;
+		uint16_t reg = opcode & 0b111;
+		disassembly += Conditions[condition];
+		disassembly += " ";
+		disassembly += dregisters[reg];
+		disassembly += ",offset_0x";
+		uint16_t offset = fetchNextWord();
+		disassembly += toHex(offset);
+
 		return instructions::DBCC;
 	}
 
-	uint16_t DisAsm::divs(uint16_t)
+	uint16_t DisAsm::divs(uint16_t opcode)
 	{
-		return instructions::DIVS;
+		return disassembleMulDiv("divs ", instructions::DIVS, opcode);
 	}
 
-	uint16_t DisAsm::divu(uint16_t)
+	uint16_t DisAsm::divu(uint16_t opcode)
 	{
-		return instructions::DIVU;
+		return disassembleMulDiv("divu ", instructions::DIVU, opcode);
 	}
 
-	uint16_t DisAsm::eor(uint16_t)
+	uint16_t DisAsm::eor(uint16_t opcode)
 	{
-		return instructions::EOR;
+		return disassembleLogical("eor", instructions::EOR, opcode);
 	}
 
-	uint16_t DisAsm::eori(uint16_t)
+	uint16_t DisAsm::eori(uint16_t opcode)
 	{
-		return instructions::EORI;
+		return disassembleImmediateInstruction("eori", instructions::EORI, opcode);
 	}
 
-	uint16_t DisAsm::eori2ccr(uint16_t)
+	uint16_t DisAsm::eori2ccr(uint16_t opcode)
 	{
-		return instructions::EORI2CCR;
+		return disassemble2ccr("eori", instructions::EORI2CCR, opcode);
 	}
 
-	uint16_t DisAsm::exg(uint16_t)
+	uint16_t DisAsm::eori2sr(uint16_t opcode)
 	{
+		return disassemble2sr("eori", instructions::EORI2SR, opcode);
+	}
+
+	uint16_t DisAsm::exg(uint16_t opcode)
+	{
+		disassembly = "exg ";
+		uint16_t mode = (opcode >> 3) & 0b11111;
+		uint16_t regx = (opcode >> 9) & 0b111;
+		uint16_t regy = opcode & 0b111;
+
+		switch (mode)
+		{
+			case 0b01000:
+			{
+				disassembly += dregisters[regx];
+				disassembly += ",";
+				disassembly += dregisters[regy];
+				break;
+			}
+			case 0b01001:
+			{
+				disassembly += aregisters[regx];
+				disassembly += ",";
+				disassembly += aregisters[regy];
+				break;
+			}
+			case 0b10001:
+			{
+				disassembly += dregisters[regx];
+				disassembly += ",";
+				disassembly += aregisters[regy];
+				break;
+			}
+			default:
+				throw "exg: invalid mode";
+		}
+
 		return instructions::EXG;
 	}
 
-	uint16_t DisAsm::ext(uint16_t)
+	uint16_t DisAsm::ext(uint16_t opcode)
 	{
+		disassembly = "ext";
+		uint16_t reg = opcode & 0b111;
+		bool isLong = (opcode >> 6) & 0b1;
+
+		disassembly += isLong ? ".l " : ".w ";
+		disassembly += dregisters[reg];
+
 		return instructions::EXT;
 	}
 
 	uint16_t DisAsm::illegal(uint16_t)
 	{
+		disassembly = "illegal";
 		return instructions::ILLEGAL;
 	}
 
-	uint16_t DisAsm::jmp(uint16_t)
+	uint16_t DisAsm::jmp(uint16_t opcode)
 	{
+		disassembly = "jmp ";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
+
 		return instructions::JMP;
 	}
 
-	uint16_t DisAsm::jsr(uint16_t)
+	uint16_t DisAsm::jsr(uint16_t opcode)
 	{
+		disassembly = "jsr ";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
+
 		return instructions::JSR;
 	}
 
-	uint16_t DisAsm::lea(uint16_t)
+	uint16_t DisAsm::lea(uint16_t opcode)
 	{
+		disassembly = "lea ";
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		disassembly += decodeEffectiveAddress(effectiveAddress, true);
+		disassembly += ",";
+		disassembly += aregisters[reg];
+
 		return instructions::LEA;
 	}
 
@@ -416,36 +507,24 @@ namespace mc68000
 		return instructions::LINK;
 	}
 
-	uint16_t DisAsm::fetchNextWord()
+	uint16_t DisAsm::lsl_memory(uint16_t opcode)
 	{
-		pc++;
-		return *pc;
+		return disassembleShiftRotate("lsl ", instructions::LSL, opcode);
 	}
 
-	void DisAsm::reset(const uint16_t* mem)
+	uint16_t DisAsm::lsl_register(uint16_t opcode)
 	{
-		memory = mem;
-		pc = mem;
+		return disassembleShiftRotate("lsl", instructions::LSL, opcode);
 	}
 
-	uint16_t DisAsm::lsl_memory(uint16_t)
+	uint16_t DisAsm::lsr_memory(uint16_t opcode)
 	{
-		return instructions::LSL;
+		return disassembleShiftRotate("lsr ", instructions::LSR, opcode);
 	}
 
-	uint16_t DisAsm::lsl_register(uint16_t)
+	uint16_t DisAsm::lsr_register(uint16_t opcode)
 	{
-		return instructions::LSL;
-	}
-
-	uint16_t DisAsm::lsr_memory(uint16_t)
-	{
-		return instructions::LSR;
-	}
-
-	uint16_t DisAsm::lsr_register(uint16_t)
-	{
-		return instructions::LSR;
+		return disassembleShiftRotate("lsr", instructions::LSR, opcode);
 	}
 
 	uint16_t DisAsm::move(uint16_t opcode)
@@ -453,11 +532,12 @@ namespace mc68000
 		const char* sizes[4] = { "?", "b", "l", "w" };
 
 		disassembly = "move.";
-		disassembly += sizes[opcode >> 12];
+		uint16_t size = opcode >> 12;
+		disassembly += sizes[size];
 		disassembly += " ";
 
 		uint16_t sourceEffectiveAddress = opcode & 0b111111u;
-		disassembly += decodeEffectiveAddress(sourceEffectiveAddress);
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, size == 0b10);
 		disassembly += ",";
 
 		uint16_t destination = (opcode >> 6) & 0b111111u;
@@ -466,7 +546,7 @@ namespace mc68000
 		uint16_t destinationMode = destination >> 3;
 		uint16_t destinationEffectiveAddress = (destinationRegister << 3) | destinationMode;
 
-		disassembly += decodeEffectiveAddress(destinationEffectiveAddress);
+		disassembly += decodeEffectiveAddress(destinationEffectiveAddress, size == 0b10);
 
 		return instructions::MOVE;
 	}
@@ -484,135 +564,246 @@ namespace mc68000
 		return instructions::MOVEA;
 	}
 
-	uint16_t DisAsm::move2ccr(uint16_t)
+	uint16_t DisAsm::move2ccr(uint16_t opcode)
 	{
+		disassembly = "move ";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+		disassembly += ",ccr";
+
 		return instructions::MOVE2CCR;
 	}
 
-	uint16_t DisAsm::movesr(uint16_t)
+	uint16_t DisAsm::movesr(uint16_t opcode)
 	{
+		disassembly = "move sr,";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+
 		return instructions::MOVESR;
 	}
 
-	uint16_t DisAsm::movem(uint16_t)
+	uint16_t DisAsm::move2sr(uint16_t opcode)
 	{
+		disassembly = "move ";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+		disassembly += ",sr";
+
+		return instructions::MOVE2SR;
+	}
+
+	uint16_t DisAsm::movem(uint16_t opcode)
+	{
+		disassembly = "movem";
+		uint16_t direction = (opcode >> 10) & 1;
+		uint16_t size = (opcode >> 6) & 1;
+		disassembly += size ? ".l " : ".w ";
+		uint16_t registerList = fetchNextWord();
+		if (direction == 0)
+		{
+			// register to memory
+			bool isPredecrement = (opcode & 0b111'000) == 0b100'000;
+			disassembly += registersToString(registerList, isPredecrement);
+			disassembly += ",";
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size);
+		}
+		else
+		{
+			// memory to register
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size);
+			disassembly += ",";
+			disassembly += registersToString(registerList, false);
+		}
+
 		return instructions::MOVEM;
 	}
 
-	uint16_t DisAsm::movep(uint16_t)
+	uint16_t DisAsm::movep(uint16_t opcode)
 	{
+		disassembly = "movep";
+		uint16_t dRegister = (opcode >> 9) & 0b111;
+		uint16_t aRegister = opcode & 0b111;
+		uint16_t opmode = (opcode >> 6) & 0b111;
+		uint16_t displacement = fetchNextWord();
+
+		if (opcode & 0b1'000'000)
+		{
+			disassembly += ".l ";
+		}
+		else
+		{
+			disassembly += ".w ";
+		}
+
+		switch (opmode)
+		{
+			case 0b100:
+			case 0b101:
+				disassembly += toHex(displacement);
+				disassembly += "(";
+				disassembly += aregisters[aRegister];
+				disassembly += "),";
+				disassembly += dregisters[dRegister];
+				break;
+			case 0b110:
+			case 0b111:
+				disassembly += dregisters[dRegister];
+				disassembly += ",";
+				disassembly += toHex(displacement);
+				disassembly += "(";
+				disassembly += aregisters[aRegister];
+				disassembly += ")";
+				break;
+		}
+
 		return instructions::MOVEP;
 	}
 
-	uint16_t DisAsm::moveq(uint16_t)
+	uint16_t DisAsm::moveq(uint16_t opcode)
 	{
+		disassembly = "moveq.l #$";
+		uint16_t reg = (opcode >> 9) & 0x07;
+		int32_t data = (int8_t)(opcode & 0xff);
+
+		disassembly += toHex(data);
+		disassembly += ",";
+		disassembly += dregisters[reg];
+
 		return instructions::MOVEQ;
 	}
 
-	uint16_t DisAsm::muls(uint16_t)
+	uint16_t DisAsm::muls(uint16_t opcode)
 	{
-		return instructions::MULS;
+		return disassembleMulDiv("muls ", instructions::MULS, opcode);
 	}
 
-	uint16_t DisAsm::mulu(uint16_t)
+	uint16_t DisAsm::mulu(uint16_t opcode)
 	{
-		return instructions::MULU;
+		return disassembleMulDiv("mulu ", instructions::MULU, opcode);
 	}
 
-	uint16_t DisAsm::nbcd(uint16_t)
+	uint16_t DisAsm::nbcd(uint16_t opcode)
 	{
+		disassembly = "nbcd ";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, false);
 		return instructions::NBCD;
 	}
 
-	uint16_t DisAsm::neg(uint16_t)
+	uint16_t DisAsm::neg(uint16_t opcode)
 	{
+		disassembly = "neg";
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size == 0b10);
 		return instructions::NEG;
 	}
-	uint16_t DisAsm::negx(uint16_t)
+
+	uint16_t DisAsm::negx(uint16_t opcode)
 	{
+		disassembly = "negx";
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size == 0b10);
 		return instructions::NEGX;
 	}
-	uint16_t DisAsm::nop(uint16_t)
+	uint16_t DisAsm::nop(uint16_t opcode)
 	{
+		disassembly = "nop";
 		return instructions::NOP;
 	}
-	uint16_t DisAsm::not_(uint16_t)
+	uint16_t DisAsm::not_(uint16_t opcode)
 	{
+		disassembly = "not";
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size == 0b10);
+
 		return instructions::NOT;
 	}
 
-	uint16_t DisAsm::or_(uint16_t)
+	uint16_t DisAsm::or_(uint16_t opcode)
 	{
-		return instructions::OR;
+		return disassembleLogical("or", instructions::OR, opcode);
 	}
 
-	uint16_t DisAsm::ori(uint16_t)
+	uint16_t DisAsm::ori(uint16_t opcode)
 	{
-		return instructions::ORI;
+		return disassembleImmediateInstruction("ori", instructions::ORI, opcode);
 	}
 
-	uint16_t DisAsm::ori2ccr(uint16_t)
+	uint16_t DisAsm::ori2ccr(uint16_t opcode)
 	{
-		return instructions::ORI2CCR;
+		return disassemble2ccr("ori", instructions::ORI2CCR, opcode);
 	}
 
-	uint16_t DisAsm::pea(uint16_t)
+	uint16_t DisAsm::ori2sr(uint16_t opcode)
 	{
+		return disassemble2sr("ori", instructions::EORI2SR, opcode);
+	}
+
+	uint16_t DisAsm::pea(uint16_t opcode)
+	{
+		disassembly = "pea ";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		disassembly += decodeEffectiveAddress(effectiveAddress, true);
+
 		return instructions::PEA;
 	}
 
-	uint16_t DisAsm::rol_memory(uint16_t)
+	uint16_t DisAsm::rol_memory(uint16_t opcode)
 	{
-		return instructions::ROL;
+		return disassembleShiftRotate("rol ", instructions::ROL, opcode);
 	}
 
-	uint16_t DisAsm::ror_memory(uint16_t)
+	uint16_t DisAsm::ror_memory(uint16_t opcode)
 	{
-		return instructions::ROR;
+		return disassembleShiftRotate("ror ", instructions::ROR, opcode);
 	}
 
-	uint16_t DisAsm::roxl_memory(uint16_t)
+	uint16_t DisAsm::roxl_memory(uint16_t opcode)
 	{
-		return instructions::ROXL;
+		return disassembleShiftRotate("roxl ", instructions::ROXL, opcode);
 	}
 
-	uint16_t DisAsm::roxr_memory(uint16_t)
+	uint16_t DisAsm::roxr_memory(uint16_t opcode)
 	{
-		return instructions::ROXR;
+		return disassembleShiftRotate("roxr ", instructions::ROXR, opcode);
 	}
 
-	uint16_t DisAsm::rol_register(uint16_t)
+	uint16_t DisAsm::rol_register(uint16_t opcode)
 	{
-		return instructions::ROL;
+		return disassembleShiftRotate("rol", instructions::ROL, opcode);
 	}
 
-	uint16_t DisAsm::ror_register(uint16_t)
+	uint16_t DisAsm::ror_register(uint16_t opcode)
 	{
-		return instructions::ROR;
+		return disassembleShiftRotate("ror", instructions::ROR, opcode);
 	}
 
-	uint16_t DisAsm::roxl_register(uint16_t)
+	uint16_t DisAsm::roxl_register(uint16_t opcode)
 	{
-		return instructions::ROXL;
+		return disassembleShiftRotate("roxl", instructions::ROXL, opcode);
 	}
 
-	uint16_t DisAsm::roxr_register(uint16_t)
+	uint16_t DisAsm::roxr_register(uint16_t opcode)
 	{
-		return instructions::ROXR;
-	}
-
-	uint16_t DisAsm::sbcd(uint16_t)
-	{
-		return instructions::SBCD;
+		return disassembleShiftRotate("roxr", instructions::ROXR, opcode);
 	}
 
 	uint16_t DisAsm::rte(uint16_t)
 	{
+		disassembly = "rte";
 		return instructions::RTE;
 	}
 
 	uint16_t DisAsm::rtr(uint16_t)
 	{
+		disassembly = "rtr";
 		return instructions::RTR;
 	}
 
@@ -622,8 +813,37 @@ namespace mc68000
 		return instructions::RTS;
 	}
 
-	uint16_t DisAsm::scc(uint16_t)
+	uint16_t DisAsm::sbcd(uint16_t opcode)
 	{
+		disassembly = "sbcd ";
+		uint16_t register1 = opcode & 0b111;
+		uint16_t register2 = (opcode >> 9) & 0b111;
+		bool useAddressRegister = (opcode & 0b1000);
+		if (useAddressRegister)
+		{
+			disassembly += AddressRegisterIndirectPre[register1];
+			disassembly += ",";
+			disassembly += AddressRegisterIndirectPre[register2];
+		}
+		else
+		{
+			disassembly += dregisters[register1];
+			disassembly += ",";
+			disassembly += dregisters[register2];
+		}
+		return instructions::SBCD;
+	}
+
+	uint16_t DisAsm::scc(uint16_t opcode)
+	{
+		disassembly = "s";
+		uint16_t condition = (opcode >> 8) & 0b1111;
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		disassembly += Conditions[condition];
+		disassembly += " ";
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
+
 		return instructions::SCC;
 	}
 
@@ -631,26 +851,75 @@ namespace mc68000
 	{
 		disassembly = "stop #$";
 		disassembly += toHex(fetchNextWord());
+
 		return instructions::STOP;
 	}
 
-	uint16_t DisAsm::sub(uint16_t)
+	uint16_t DisAsm::sub(uint16_t opcode)
 	{
+		disassembly = "sub";
+		uint16_t reg = (opcode >> 9) & 7;
+		bool isMemoryDestination = opcode & 0x100;
+		uint16_t size = (opcode >> 6) & 3;
+
+		disassembly += Sizes[size];
+		if (isMemoryDestination)
+		{
+			disassembly += dregisters[reg];
+			disassembly += ",";
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size == 0b10);
+		}
+		else
+		{
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111u, size == 0b10);
+			disassembly += ",";
+			disassembly += dregisters[reg];
+		}
+
 		return instructions::SUB;
 	}
 
-	uint16_t DisAsm::subi(uint16_t)
+	uint16_t DisAsm::suba(uint16_t opcode)
 	{
-		return instructions::SUBI;
-	}
+		disassembly = "suba";
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111u;
+		uint16_t destinationRegister = (opcode >> 9) & 0b111;
 
-	uint16_t DisAsm::suba(uint16_t)
-	{
+		bool isLongOperation = ((opcode >> 6) & 0b111) == 0b111;
+		if (isLongOperation)
+		{
+			disassembly += ".l ";
+		}
+		else
+		{
+			disassembly += ".w ";
+		}
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111u, isLongOperation);
+		disassembly += ",";
+		disassembly += aregisters[destinationRegister];
+
 		return instructions::SUBA;
+
 	}
 
-	uint16_t DisAsm::subq(uint16_t)
+	uint16_t DisAsm::subi(uint16_t opcode)
 	{
+		return disassembleImmediateInstruction("subi", instructions::SUBI, opcode);
+	}
+
+	uint16_t DisAsm::subq(uint16_t opcode)
+	{
+		disassembly = "subq";
+		uint16_t destinationEffectiveAdress = opcode & 0b111'111;
+		bool isAddressRegister = (opcode & 0b111'000) == 0b001'000;
+		uint16_t size = (opcode >> 6) & 0b11;
+		uint32_t source = (opcode >> 9) & 0b111;
+		if (source == 0) source = 8;
+
+		disassembly += Sizes[size];
+		disassembly += "#" + std::to_string(source) + ",";
+		disassembly += decodeEffectiveAddress(destinationEffectiveAdress, size == 0b10);
+
 		return instructions::SUBQ;
 	}
 
@@ -662,28 +931,48 @@ namespace mc68000
 		return disassembleAddxSubx("subx", instructions::SUBX, opcode);
 	}
 
-	uint16_t DisAsm::swap(uint16_t)
+	uint16_t DisAsm::swap(uint16_t opcode)
 	{
+		disassembly = "swap ";
+		uint16_t destinationRegister = opcode & 0b111;
+		disassembly += dregisters[destinationRegister];
+
 		return instructions::SWAP;
 	}
 
-	uint16_t DisAsm::tas(uint16_t)
+	uint16_t DisAsm::tas(uint16_t opcode)
 	{
+		disassembly = "tas ";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+
+		disassembly += decodeEffectiveAddress(effectiveAddress, false);
 		return instructions::TAS;
 	}
 
-	uint16_t DisAsm::trap(uint16_t)
+	uint16_t DisAsm::trap(uint16_t opcode)
 	{
+		disassembly = "trap #";
+		uint16_t trapNumber = opcode & 0b1111;
+		disassembly += std::to_string(trapNumber);
+
 		return instructions::TRAP;
 	}
 
 	uint16_t DisAsm::trapv(uint16_t)
 	{
+		disassembly = "trapv";
 		return instructions::TRAPV;
 	}
 
-	uint16_t DisAsm::tst(uint16_t)
+	uint16_t DisAsm::tst(uint16_t opcode)
 	{
+		disassembly = "tst";
+		uint16_t effectiveAddress = opcode & 0b111'111;
+		uint16_t size = (opcode >> 6) & 0b11;
+
+		disassembly += Sizes[size];
+		disassembly += decodeEffectiveAddress(effectiveAddress, size == 0b10);
+
 		return instructions::TST;
 	}
 
@@ -696,6 +985,7 @@ namespace mc68000
 
 	uint16_t DisAsm::unknown(uint16_t)
 	{
+		disassembly = "*** unknown instruction ***";
 		return instructions::UNKNOWN;
 	}
 

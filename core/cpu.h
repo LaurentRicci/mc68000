@@ -89,6 +89,7 @@ namespace mc68000
 		uint16_t mulu(uint16_t);
 
 		uint16_t eori2ccr(uint16_t);
+		uint16_t eori2sr(uint16_t);
 
 		uint16_t exg(uint16_t);
 
@@ -112,6 +113,7 @@ namespace mc68000
 		uint16_t movea(uint16_t);
 		uint16_t move2ccr(uint16_t);
 		uint16_t movesr(uint16_t);
+		uint16_t move2sr(uint16_t);
 		uint16_t movem(uint16_t);
 		uint16_t movep(uint16_t);
 		uint16_t moveq(uint16_t);
@@ -124,6 +126,7 @@ namespace mc68000
 		uint16_t not_(uint16_t);
 
 		uint16_t ori2ccr(uint16_t);
+		uint16_t ori2sr(uint16_t);
 
 		uint16_t pea(uint16_t);
 
@@ -241,6 +244,7 @@ namespace mc68000
 		void start(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 		void setARegister(int reg, uint32_t value);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
+		void setSupervisorMode(bool super);
 
 		//
 		// public fields

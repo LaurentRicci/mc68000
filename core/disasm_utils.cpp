@@ -12,6 +12,18 @@ namespace mc68000
 	extern const char* const AddressRegisterIndirectPre[8];
 	extern const char* const Sizes[];
 
+	uint16_t DisAsm::fetchNextWord()
+	{
+		pc++;
+		return *pc;
+	}
+
+	void DisAsm::reset(const uint16_t* mem)
+	{
+		memory = mem;
+		pc = mem;
+	}
+
 	std::string DisAsm::decodeEffectiveAddress(unsigned short ea, bool isLongOperation)
 	{
 		unsigned short eam = ea >> 3;
@@ -63,15 +75,16 @@ namespace mc68000
 			case 1: // (xxx).l
 			{
 				std::string result = "$";
-				result += toHex(fetchNextWord());
-				result += toHex(fetchNextWord());
+				uint32_t immediate = fetchNextWord() << 16;
+				immediate |= fetchNextWord();
+				result += toHex(immediate);
 				result += ".l";
 				return result;
 			}
 			case 2: // d16(PC)
 			{
 				auto displacement = fetchNextWord();
-				std::string result = std::to_string(displacement) + "(pc)";
+				std::string result = "offset_0x" + toHex(displacement) + "(pc)";
 				return result;
 			}
 			case 3: // d8(pc,xn)
@@ -83,7 +96,7 @@ namespace mc68000
 				unsigned short scale = (extension >> 9) & 3;
 				auto displacement = (extension & 0xff);
 
-				std::string result = std::to_string(displacement) + "(pc,";
+				std::string result = "offset_0x" + toHex(displacement) + "(pc,";
 				result += isAddressRegister ? aregisters[extensionReg] : dregisters[extensionReg];
 				result += ")";
 				return result;
@@ -91,15 +104,16 @@ namespace mc68000
 			case 4: // #
 			{
 				std::string result = "#$";
-				result += toHex(fetchNextWord());
+				
 				if (isLongOperation)
 				{
-					result += toHex(fetchNextWord());
-					result += ".l";
+					uint32_t immediate = fetchNextWord() << 16;
+					immediate |= fetchNextWord();
+					result += toHex(immediate);
 				}
 				else
 				{
-					result += ".w";
+					result += toHex(fetchNextWord());
 				}
 				return result;
 			}
@@ -134,11 +148,12 @@ namespace mc68000
 		}
 		else
 		{
-			disassembly += toHex(immediate);
-			disassembly += toHex(fetchNextWord());
+			uint32_t value = immediate << 16;
+			value |= fetchNextWord();
+			disassembly += toHex(value);
 		}
 		disassembly += ",";
-		disassembly += decodeEffectiveAddress(effectiveAddress);
+		disassembly += decodeEffectiveAddress(effectiveAddress, size == 0b10);
 
 		return instructions::CMPI;
 	}
@@ -149,22 +164,18 @@ namespace mc68000
 	uint16_t DisAsm::disassembleBccInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode)
 	{
 		disassembly = instructionName;
-		disassembly += " $";
+		disassembly += " offset_0x";
 
 		uint16_t offset = opcode & 0xff;
 		if (offset == 0)
 		{
 			disassembly += toHex(fetchNextWord());
 		}
-		else if (offset == 0xff)
-		{
-			disassembly += toHex(fetchNextWord());
-			disassembly += toHex(fetchNextWord());
-		}
 		else
 		{
 			disassembly += toHex(offset);
 		}
+		disassembly += "(pc)";
 
 		return instructionId;
 	}
@@ -194,6 +205,268 @@ namespace mc68000
 			disassembly += dregisters[registerY];
 			disassembly += ",";
 			disassembly += dregisters[registerX];
+		}
+		return instructionId;
+	}
+
+	/// <summary>
+	/// Handle BCHG, BCLR, BSET, BTST instructions when bit index is from register
+	/// </summary>
+	uint16_t DisAsm::disassembleBitRegisterInstruction(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		uint16_t reg = (opcode >> 9) & 0b111;
+		disassembly += dregisters[reg];
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111, true);
+
+		return instruction;
+	}
+
+	/// <summary>
+	/// Handle BCHG, BCLR, BSET, BTST instructions when bit index is from immediate data
+	/// </summary>
+	uint16_t DisAsm::disassembleBitImmediateInstruction(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		disassembly += " #";
+		uint16_t bit = fetchNextWord();
+		disassembly += toHexDollar(bit);
+		disassembly += ",";
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111, false);
+
+		return instruction;
+	}
+
+	uint16_t DisAsm::disassembleLogical(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		uint16_t size = (opcode >> 6) & 0b11;
+		disassembly += Sizes[size];
+
+		uint16_t reg = (opcode >> 9) & 0b111;
+		bool fromRegister = opcode & (1 << 8);
+		if (fromRegister)
+		{
+			disassembly += dregisters[reg];
+			disassembly += ",";
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111, true);
+		}
+		else
+		{
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111, false);
+			disassembly += ",";
+			disassembly += dregisters[reg];
+		}
+		return instruction;
+	}
+
+	uint16_t DisAsm::disassemble2ccr(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		disassembly += " #$";
+		disassembly += toHex(fetchNextWord());
+		disassembly += ",ccr";
+		return instruction;
+	}
+
+	uint16_t DisAsm::disassemble2sr(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		disassembly += " #$";
+		disassembly += toHex(fetchNextWord());
+		disassembly += ",sr";
+		return instruction;
+	}
+
+	/// <summary>
+	/// Decode a registers list into a string
+	/// </summary>
+	/// <param name="registers">The register list from movem</param>
+	/// <param name="isPredecrement">if true indicates a predecrement operation</param>
+	/// <returns>The list of registers as a string</returns>
+	std::string DisAsm::registersToString(uint16_t registers, bool isPredecrement)
+	{
+		std::string result;
+		bool first = true;
+		bool started = false;
+		if (isPredecrement)
+		{
+			int startIndex = 0;
+			for (int i = 0; i < 8; i++)
+			{
+				if (registers & (1 << (15 - i)))
+				{
+					if (!started)
+					{
+
+						result += first ? "d" : "/d";
+						result += std::to_string(i);
+						started = true;
+						startIndex = i;
+						first = false;
+					}
+					else if (i == 7)
+					{
+						result += "-d7";
+					}
+				}
+				else
+				{
+					if (started)
+					{
+						if (startIndex != i - 1)
+						{
+							result += "-d";
+							result += std::to_string(i - 1);
+						}
+						started = false;
+					}
+				}
+			}
+			started = false;
+			for (int i = 0; i < 8; i++)
+			{
+				if (registers & (1 << (7 - i)))
+				{
+					if (!started)
+					{
+						result += first ? "a" : "/a";
+						result += std::to_string(i);
+						started = true;
+						startIndex = i;
+						first = false;
+					}
+					else if (i == 7)
+					{
+						result += "-a7";
+					}
+				}
+				else
+				{
+					if (started)
+					{
+						if (startIndex != i - 1)
+						{
+							result += "-a";
+							result += std::to_string(i - 1);
+						}
+						started = false;
+					}
+				}
+			}
+		}
+		else
+		{
+			int startIndex = 0;
+			for (int i = 0; i < 8; i++)
+			{
+				if (registers & (1 << i))
+				{
+					if (!started)
+					{
+						result += first ? "d" : "/d";
+						result += std::to_string(i);
+						started = true;
+						startIndex = i;
+						first = false;
+					}
+					else if (i == 7)
+					{
+						result += "-d7";
+					}
+				}
+				else
+				{
+					if (started)
+					{
+						if (startIndex != i - 1)
+						{
+							result += "-d";
+							result += std::to_string(i - 1);
+						}
+						started = false;
+					}
+				}
+			}
+			started = false;
+			for (int i = 0; i < 8; i++)
+			{
+				if (registers & (1 << (i + 8)))
+				{
+					if (!started)
+					{
+						result += first ? "a" : "/a";
+						result += std::to_string(i);
+						started = true;
+						startIndex = i;
+						first = false;
+					}
+					else if (i == 7)
+					{
+						result += "-a7";
+					}
+				}
+				else
+				{
+					if (started)
+					{
+						if (startIndex != i - 1)
+						{
+							result += "-a";
+							result += std::to_string(i - 1);
+						}
+						started = false;
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	uint16_t DisAsm::disassembleMulDiv(const char* name, uint16_t instruction, uint16_t opcode)
+	{
+		disassembly = name;
+		uint16_t reg = (opcode >> 9) & 0b111;
+		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+		disassembly += ",";
+		disassembly += dregisters[reg];
+
+		return instruction;
+	}
+
+	uint16_t DisAsm::disassembleShiftRotate(const char* instructionName, uint16_t instructionId, uint16_t opcode)
+	{
+		disassembly = instructionName;
+		uint16_t size = (opcode >> 6) & 0b11;
+		if (size != 0b11)
+		{
+			disassembly += Sizes[size];
+
+			uint16_t source = (opcode >> 9) & 0b111;
+			uint16_t destination = opcode & 0b111;
+
+			bool fromRegister = opcode & (1 << 5);
+			if (fromRegister)
+			{
+				disassembly += dregisters[source];
+				disassembly += ",";
+				disassembly += dregisters[destination];
+			}
+			else
+			{
+				disassembly += "#"; 
+				disassembly += std::to_string(source ? source : 8);
+				disassembly += ",";
+				disassembly += dregisters[destination];
+			}
+		}
+		else
+		{
+			uint16_t sourceEffectiveAddress = opcode & 0b111'111;
+			disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
 		}
 		return instructionId;
 	}

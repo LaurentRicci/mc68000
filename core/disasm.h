@@ -7,7 +7,7 @@
 
 namespace mc68000
 {
-	inline std::string toHex(unsigned short value)
+	inline std::string toHex(uint32_t value)
 	{
 		// return std::format("{x}", value);
 
@@ -26,167 +26,178 @@ namespace mc68000
 	class DisAsm
 	{
 	private:
-		unsigned short unknown(unsigned short);
+		uint16_t unknown(uint16_t);
 
-		unsigned short abcd(unsigned short);
-		unsigned short sbcd(unsigned short);
+		uint16_t abcd(uint16_t);
+		uint16_t sbcd(uint16_t);
 
-		unsigned short add(unsigned short);
-		unsigned short adda(unsigned short);
-		unsigned short cmp(unsigned short);
-		unsigned short cmpa(unsigned short);
-		unsigned short sub(unsigned short);
-		unsigned short suba(unsigned short);
-		unsigned short and_(unsigned short);
-		unsigned short or_(unsigned short);
-		unsigned short eor(unsigned short);
+		uint16_t add(uint16_t);
+		uint16_t adda(uint16_t);
+		uint16_t cmp(uint16_t);
+		uint16_t cmpa(uint16_t);
+		uint16_t sub(uint16_t);
+		uint16_t suba(uint16_t);
+		uint16_t and_(uint16_t);
+		uint16_t or_(uint16_t);
+		uint16_t eor(uint16_t);
 
-		unsigned short addi(unsigned short);
-		unsigned short andi(unsigned short);
-		unsigned short cmpi(unsigned short);
-		unsigned short eori(unsigned short);
-		unsigned short ori(unsigned short);
-		unsigned short subi(unsigned short);
+		uint16_t addi(uint16_t);
+		uint16_t andi(uint16_t);
+		uint16_t cmpi(uint16_t);
+		uint16_t eori(uint16_t);
+		uint16_t ori(uint16_t);
+		uint16_t subi(uint16_t);
 
-		unsigned short addq(unsigned short);
-		unsigned short subq(unsigned short);
+		uint16_t addq(uint16_t);
+		uint16_t subq(uint16_t);
 
-		unsigned short addx(unsigned short);
-		unsigned short subx(unsigned short);
+		uint16_t addx(uint16_t);
+		uint16_t subx(uint16_t);
 
-		unsigned short andi2ccr(unsigned short);
-		unsigned short andi2sr(unsigned short);
+		uint16_t andi2ccr(uint16_t);
+		uint16_t andi2sr(uint16_t);
 
-		unsigned short asl_register(unsigned short);
-		unsigned short asl_memory(unsigned short);
-		unsigned short asr_register(unsigned short);
-		unsigned short asr_memory(unsigned short);
+		uint16_t asl_register(uint16_t);
+		uint16_t asl_memory(uint16_t);
+		uint16_t asr_register(uint16_t);
+		uint16_t asr_memory(uint16_t);
 
 
-		unsigned short bra(unsigned short);
-		unsigned short bhi(unsigned short);
-		unsigned short bls(unsigned short);
-		unsigned short bcc(unsigned short);
-		unsigned short bcs(unsigned short);
-		unsigned short bne(unsigned short);
-		unsigned short beq(unsigned short);
-		unsigned short bvc(unsigned short);
-		unsigned short bvs(unsigned short);
-		unsigned short bpl(unsigned short);
-		unsigned short bmi(unsigned short);
-		unsigned short bge(unsigned short);
-		unsigned short blt(unsigned short);
-		unsigned short bgt(unsigned short);
-		unsigned short ble(unsigned short);
-		unsigned short bsr(unsigned short);
+		uint16_t bra(uint16_t);
+		uint16_t bhi(uint16_t);
+		uint16_t bls(uint16_t);
+		uint16_t bcc(uint16_t);
+		uint16_t bcs(uint16_t);
+		uint16_t bne(uint16_t);
+		uint16_t beq(uint16_t);
+		uint16_t bvc(uint16_t);
+		uint16_t bvs(uint16_t);
+		uint16_t bpl(uint16_t);
+		uint16_t bmi(uint16_t);
+		uint16_t bge(uint16_t);
+		uint16_t blt(uint16_t);
+		uint16_t bgt(uint16_t);
+		uint16_t ble(uint16_t);
+		uint16_t bsr(uint16_t);
 
-		unsigned short bchg_r(unsigned short);
-		unsigned short bset_r(unsigned short);
-		unsigned short bclr_r(unsigned short);
-		unsigned short bchg_i(unsigned short);
-		unsigned short bset_i(unsigned short);
-		unsigned short bclr_i(unsigned short);
+		uint16_t bchg_r(uint16_t);
+		uint16_t bset_r(uint16_t);
+		uint16_t bclr_r(uint16_t);
+		uint16_t bchg_i(uint16_t);
+		uint16_t bset_i(uint16_t);
+		uint16_t bclr_i(uint16_t);
 
-		unsigned short btst_r(unsigned short);
-		unsigned short btst_i(unsigned short);
+		uint16_t btst_r(uint16_t);
+		uint16_t btst_i(uint16_t);
 
-		unsigned short chk(unsigned short);
+		uint16_t chk(uint16_t);
 
-		unsigned short clr(unsigned short);
+		uint16_t clr(uint16_t);
 
-		unsigned short cmpm(unsigned short);
+		uint16_t cmpm(uint16_t);
 
-		unsigned short dbcc(unsigned short);
+		uint16_t dbcc(uint16_t);
 
-		unsigned short divs(unsigned short);
-		unsigned short divu(unsigned short);
-		unsigned short muls(unsigned short);
-		unsigned short mulu(unsigned short);
+		uint16_t divs(uint16_t);
+		uint16_t divu(uint16_t);
+		uint16_t muls(uint16_t);
+		uint16_t mulu(uint16_t);
 
-		unsigned short eori2ccr(unsigned short);
+		uint16_t eori2ccr(uint16_t);
+		uint16_t eori2sr(uint16_t);
 
-		unsigned short exg(unsigned short);
+		uint16_t exg(uint16_t);
 
-		unsigned short ext(unsigned short);
+		uint16_t ext(uint16_t);
 
-		unsigned short illegal(unsigned short);
+		uint16_t illegal(uint16_t);
 
-		unsigned short jmp(unsigned short);
-		unsigned short jsr(unsigned short);
+		uint16_t jmp(uint16_t);
+		uint16_t jsr(uint16_t);
 
-		unsigned short lea(unsigned short);
+		uint16_t lea(uint16_t);
 
-		unsigned short link(unsigned short);
+		uint16_t link(uint16_t);
 
-		unsigned short lsl_register(unsigned short);
-		unsigned short lsl_memory(unsigned short);
-		unsigned short lsr_register(unsigned short);
-		unsigned short lsr_memory(unsigned short);
+		uint16_t lsl_register(uint16_t);
+		uint16_t lsl_memory(uint16_t);
+		uint16_t lsr_register(uint16_t);
+		uint16_t lsr_memory(uint16_t);
 
-		unsigned short move(unsigned short);
-		unsigned short movea(unsigned short);
-		unsigned short move2ccr(unsigned short);
-		unsigned short movesr(unsigned short);
-		unsigned short movem(unsigned short);
-		unsigned short movep(unsigned short);
-		unsigned short moveq(unsigned short);
+		uint16_t move(uint16_t);
+		uint16_t movea(uint16_t);
+		uint16_t move2ccr(uint16_t);
+		uint16_t movesr(uint16_t);
+		uint16_t move2sr(uint16_t);
+		uint16_t movem(uint16_t);
+		uint16_t movep(uint16_t);
+		uint16_t moveq(uint16_t);
 
-		unsigned short nbcd(unsigned short);
+		uint16_t nbcd(uint16_t);
 
-		unsigned short neg(unsigned short);
-		unsigned short negx(unsigned short);
-		unsigned short nop(unsigned short);
-		unsigned short not_(unsigned short);
+		uint16_t neg(uint16_t);
+		uint16_t negx(uint16_t);
+		uint16_t nop(uint16_t);
+		uint16_t not_(uint16_t);
 
-		unsigned short ori2ccr(unsigned short);
+		uint16_t ori2ccr(uint16_t);
+		uint16_t ori2sr(uint16_t);
 
-		unsigned short pea(unsigned short);
+		uint16_t pea(uint16_t);
 
-		unsigned short rol_register(unsigned short);
-		unsigned short ror_register(unsigned short);
-		unsigned short roxl_register(unsigned short);
-		unsigned short roxr_register(unsigned short);
+		uint16_t rol_register(uint16_t);
+		uint16_t ror_register(uint16_t);
+		uint16_t roxl_register(uint16_t);
+		uint16_t roxr_register(uint16_t);
 
-		unsigned short rol_memory(unsigned short);
-		unsigned short ror_memory(unsigned short);
-		unsigned short roxl_memory(unsigned short);
-		unsigned short roxr_memory(unsigned short);
+		uint16_t rol_memory(uint16_t);
+		uint16_t ror_memory(uint16_t);
+		uint16_t roxl_memory(uint16_t);
+		uint16_t roxr_memory(uint16_t);
 
 		uint16_t rte(uint16_t);
-		unsigned short rtr(unsigned short);
-		unsigned short rts(unsigned short);
+		uint16_t rtr(uint16_t);
+		uint16_t rts(uint16_t);
 
-		unsigned short scc(unsigned short);
-		unsigned short stop(unsigned short);
-		unsigned short swap(unsigned short);
-		unsigned short tas(unsigned short);
+		uint16_t scc(uint16_t);
+		uint16_t stop(uint16_t);
+		uint16_t swap(uint16_t);
+		uint16_t tas(uint16_t);
 
-		unsigned short trap(unsigned short);
-		unsigned short trapv(unsigned short);
-		unsigned short tst(unsigned short);
-		unsigned short unlk(unsigned short);
+		uint16_t trap(uint16_t);
+		uint16_t trapv(uint16_t);
+		uint16_t tst(uint16_t);
+		uint16_t unlk(uint16_t);
 
-		using t_handler = unsigned short (DisAsm::*)(unsigned short);
+		using t_handler = uint16_t (DisAsm::*)(uint16_t);
 		friend t_handler* setup<DisAsm>();
 
 		t_handler* handlers;
 
 	private:
-		unsigned short fetchNextWord();
-		std::string decodeEffectiveAddress(unsigned short ea, bool isLongOperation = false);
-		unsigned short disassembleBccInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
-		unsigned short disassembleImmediateInstruction(const char* instructionName, unsigned short instructionId, unsigned short opcode);
+		uint16_t fetchNextWord();
+		std::string decodeEffectiveAddress(uint16_t ea, bool isLongOperation);
+		std::string registersToString(uint16_t registers, bool isPredecrement);
+		uint16_t disassembleBccInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassembleImmediateInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassembleBitRegisterInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassembleBitImmediateInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode);
 		uint16_t disassembleAddxSubx(const char* instructionName, uint16_t instructionId, uint16_t opcode);
-		void reset(const unsigned short* memory);
+		uint16_t disassembleMulDiv(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassembleShiftRotate(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassembleLogical(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassemble2ccr(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		uint16_t disassemble2sr(const char* instructionName, uint16_t instructionId, uint16_t opcode);
+		void reset(const uint16_t* memory);
 
 	private:
-		const unsigned short* pc;
-		const unsigned short* memory;
+		const uint16_t* pc;
+		const uint16_t* memory;
 		std::string disassembly;
 
 	public:
 		DisAsm();
 		~DisAsm();
-		std::string disassemble(const unsigned short*);
+		std::string disassemble(const uint16_t*);
 	};
 }

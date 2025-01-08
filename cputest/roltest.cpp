@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ror_memory)
 {
 	unsigned char code[] = {
 	0x41, 0xfa, 0x00, 0x0a,    // lea data(pc), a0
-	0xe6, 0xd0,                // rol (a0)
+	0xe6, 0xd0,                // ror (a0)
 	0x4e, 0x40,                // trap #0
 	0xff, 0xff, 0xff, 0xff,
 	0x00, 0xcd                 // data: dc.w $cd
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ror_memory2)
 {
 	unsigned char code[] = {
 	0x41, 0xfa, 0x00, 0x0a,    // lea data(pc), a0
-	0xe6, 0xd0,                // rol (a0)
+	0xe6, 0xd0,                // ror (a0)
 	0x4e, 0x40,                // trap #0
 	0xff, 0xff, 0xff, 0xff,
 	0xd4, 0x56                 // data: dc.w $$d456

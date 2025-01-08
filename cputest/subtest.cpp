@@ -187,6 +187,59 @@ BOOST_AUTO_TEST_CASE(sub_from_dregister_l)
 	BOOST_CHECK_EQUAL(1, cpu.sr.x);
 }
 
+BOOST_AUTO_TEST_CASE(sub)
+{
+	unsigned char code[] = {
+
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x92, 0x00, //sub.b d0,d1
+	0x40, 0xc2, //move sr, d2; 11011 - 201b
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x92, 0x00, //sub.b d0,d1
+	0x40, 0xc3, //move sr, d3; 00010 - 2002
+
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x92, 0x40, //sub.w d0,d1
+	0x40, 0xc4, //move sr, d4; 10001 - 2011
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move0, ccr
+	0x92, 0x40, //sub.w d0,d1
+	0x40, 0xc5, //move sr, d5; 01000 - 2008
+
+	0x70, 0x9c, //moveq # - 100, d0
+	0x72, 0x64, //moveq #100, d1
+	0x44, 0xfc, 0x00, 0x00, //move #0, ccr
+	0x92, 0x80, //sub.l d0,d1
+	0x40, 0xc6, //move sr, d6; 10001 - 2011
+
+	0x70, 0x64, //moveq #100, d0
+	0x72, 0x9c, //moveq # - 100, d1
+	0x44, 0xfc, 0x00, 0x00, //move0, ccr
+	0x92, 0x80, //sub.l d0,d1
+	0x40, 0xc7, //move sr, d7; 01000 - 2008
+
+	0x4e, 0x40, //trap #0
+	};
+
+	verifyExecution(code, sizeof(code), [](const Cpu& cpu)
+		{
+			BOOST_CHECK_EQUAL(0b11011, cpu.d2);
+			BOOST_CHECK_EQUAL(0b00010, cpu.d3);
+			BOOST_CHECK_EQUAL(0b10001, cpu.d4);
+			BOOST_CHECK_EQUAL(0b01000, cpu.d5);
+			BOOST_CHECK_EQUAL(0b10001, cpu.d6);
+			BOOST_CHECK_EQUAL(0b01000, cpu.d7);
+		});
+}
 
 BOOST_AUTO_TEST_CASE(nbcd_17)
 {
