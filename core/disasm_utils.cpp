@@ -14,14 +14,21 @@ namespace mc68000
 
 	uint16_t DisAsm::fetchNextWord()
 	{
+		return memory[pc++];
+	}
+
+	uint32_t DisAsm::fetchRelativeAddress()
+	{
+		uint16_t offset = memory[pc];
+		uint32_t address = origin + (pc * 2)  + (int16_t) offset;
 		pc++;
-		return *pc;
+		return address;
 	}
 
 	void DisAsm::reset(const uint16_t* mem)
 	{
 		memory = mem;
-		pc = mem;
+		pc = 0;
 	}
 
 	std::string DisAsm::decodeEffectiveAddress(unsigned short ea, bool isLongOperation)
@@ -164,18 +171,17 @@ namespace mc68000
 	uint16_t DisAsm::disassembleBccInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode)
 	{
 		disassembly = instructionName;
-		disassembly += " offset_0x";
+		disassembly += " ";
 
-		uint16_t offset = opcode & 0xff;
+		uint8_t offset = opcode & 0xff;
 		if (offset == 0)
 		{
-			disassembly += toHex(fetchNextWord());
+			disassembly += toHexDollar(fetchRelativeAddress());
 		}
 		else
 		{
-			disassembly += toHex(offset);
+			disassembly += toHexDollar(origin + (pc * 2) + (int8_t) offset);
 		}
-		disassembly += "(pc)";
 
 		return instructionId;
 	}
@@ -218,7 +224,7 @@ namespace mc68000
 		uint16_t reg = (opcode >> 9) & 0b111;
 		disassembly += dregisters[reg];
 		disassembly += ",";
-		disassembly += decodeEffectiveAddress(opcode & 0b111'111, true);
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111, Ignore);
 
 		return instruction;
 	}
@@ -233,7 +239,7 @@ namespace mc68000
 		uint16_t bit = fetchNextWord();
 		disassembly += toHexDollar(bit);
 		disassembly += ",";
-		disassembly += decodeEffectiveAddress(opcode & 0b111'111, false);
+		disassembly += decodeEffectiveAddress(opcode & 0b111'111, Ignore);
 
 		return instruction;
 	}
@@ -250,11 +256,11 @@ namespace mc68000
 		{
 			disassembly += dregisters[reg];
 			disassembly += ",";
-			disassembly += decodeEffectiveAddress(opcode & 0b111'111, true);
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111, size == 2);
 		}
 		else
 		{
-			disassembly += decodeEffectiveAddress(opcode & 0b111'111, false);
+			disassembly += decodeEffectiveAddress(opcode & 0b111'111, size == 2);
 			disassembly += ",";
 			disassembly += dregisters[reg];
 		}
@@ -430,7 +436,7 @@ namespace mc68000
 		uint16_t reg = (opcode >> 9) & 0b111;
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111;
 
-		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+		disassembly += decodeEffectiveAddress(sourceEffectiveAddress, AlwaysWord);
 		disassembly += ",";
 		disassembly += dregisters[reg];
 
@@ -466,7 +472,7 @@ namespace mc68000
 		else
 		{
 			uint16_t sourceEffectiveAddress = opcode & 0b111'111;
-			disassembly += decodeEffectiveAddress(sourceEffectiveAddress, false);
+			disassembly += decodeEffectiveAddress(sourceEffectiveAddress, Ignore);
 		}
 		return instructionId;
 	}
