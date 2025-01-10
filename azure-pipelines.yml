@@ -34,3 +34,8 @@ steps:
     targetType: 'inline'
     script: './cputest'
     workingDirectory: 'cputest'
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: './dasmtest'
+    workingDirectory: 'dasmtest'
