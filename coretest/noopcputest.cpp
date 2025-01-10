@@ -164,6 +164,7 @@ namespace noopcputest
     BOOST_AUTO_TEST_CASE(bra)
     {
         validateDecode(0b0110'0000'1010'1010u, instructions::BRA, L"BRA");
+        validateDecode(0x60c0, instructions::BRA, L"BRA");
     }
 
     BOOST_AUTO_TEST_CASE(bset)

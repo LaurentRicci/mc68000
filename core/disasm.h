@@ -176,6 +176,7 @@ namespace mc68000
 
 	private:
 		uint16_t fetchNextWord();
+		uint32_t fetchRelativeAddress();
 		std::string decodeEffectiveAddress(uint16_t ea, bool isLongOperation);
 		std::string registersToString(uint16_t registers, bool isPredecrement);
 		uint16_t disassembleBccInstruction(const char* instructionName, uint16_t instructionId, uint16_t opcode);
@@ -191,13 +192,23 @@ namespace mc68000
 		void reset(const uint16_t* memory);
 
 	private:
-		const uint16_t* pc;
+		uint32_t pc;
 		const uint16_t* memory;
+		uint32_t origin;
 		std::string disassembly;
+		bool done;
+
+		// DecodeEffectiveAddress size options
+		const bool Ignore = false;
+		const bool AlwaysByte = false;
+		const bool AlwaysWord = false;
+		const bool AlwaysLong = true;
+
 
 	public:
 		DisAsm();
 		~DisAsm();
 		std::string disassemble(const uint16_t*);
+		std::string dasm(const uint16_t*, uint32_t org);
 	};
 }

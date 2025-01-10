@@ -515,7 +515,7 @@ namespace mc68000
 		handlers[0b0100'1110'0111'0101u] = &T::rts;
 
 		// SCC
-		for (unsigned condition = 0; condition <= 16; condition++)
+		for (unsigned condition = 0; condition < 16; condition++)
 		{
 			for (unsigned ea = 0; ea <= 0b111'111u; ea++)
 			{
