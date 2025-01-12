@@ -1141,7 +1141,7 @@ namespace mc68000
 			if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
 			{
 				// external handler exists so call it
-				trapHandlers[vector - Exceptions::TRAP](d0, a0);
+				trapHandlers[vector - Exceptions::TRAP](d0, d1, a0, a1);
 				return;
 			}
 		}

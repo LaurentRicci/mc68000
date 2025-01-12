@@ -1,11 +1,12 @@
 #include <iostream>
 #include "emulator.h"
+extern void game();
 
 int main()
 {
     Emulator emulator;
 
-    std::cout << "--- starting ---\n";
     emulator.run();
-    std::cout << "--- ending ---\n";
+
+    game();
 }
