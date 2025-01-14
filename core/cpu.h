@@ -163,7 +163,7 @@ namespace mc68000
 		// trap handlers
 		// 
 	private:
-		using trapHandler_t = void (*)(uint32_t d0, uint32_t a0);
+		using trapHandler_t = void (*)(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1);
 		trapHandler_t trapHandlers[16];
 		trapHandler_t chkHandlers;
 		//
@@ -243,6 +243,7 @@ namespace mc68000
 		void reset(const memory& memory);
 		void start(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 		void setARegister(int reg, uint32_t value);
+		void setDRegister(int reg, uint32_t value);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
 		void setSupervisorMode(bool super);
 

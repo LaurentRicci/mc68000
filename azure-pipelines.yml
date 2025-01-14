@@ -25,12 +25,20 @@ steps:
     workingDirectory: '.'
     cmakeArgs: '--build . --verbose'
 - task: Bash@3
+  displayName: Core tests
   inputs:
     targetType: 'inline'
     script: './coretest'
     workingDirectory: 'coretest'
 - task: Bash@3
+  displayName: Cpu tests
   inputs:
     targetType: 'inline'
     script: './cputest'
     workingDirectory: 'cputest'
+- task: Bash@3
+  displayName: Dasm tests
+  inputs:
+    targetType: 'inline'
+    script: './dasmtest'
+    workingDirectory: 'dasmtest'

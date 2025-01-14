@@ -85,6 +85,11 @@ namespace mc68000
 		aRegisters[reg] = value;
 	}
 
+	void Cpu::setDRegister(int reg, uint32_t value)
+	{
+		dRegisters[reg] = value;
+	}
+
 	void Cpu::registerTrapHandler(int trapNumber, trapHandler_t trapHandler)
 	{
 		if (trapNumber < 0 || trapNumber > 15)
@@ -697,7 +702,7 @@ namespace mc68000
 			statusRegister.n = (value < 0) ? 1 : 0;
 			if (chkHandlers != nullptr)
 			{
-				chkHandlers(value, upperBound);
+				chkHandlers(value, upperBound, 0, 0);
 			}
 			else
 			{
@@ -2310,8 +2315,12 @@ namespace mc68000
 
 	uint16_t Cpu::unknown(uint16_t opcode)
 	{
+		if (opcode == 0xffff)
+		{
+			done = true;
+			return instructions::UNKNOWN;
+		}
 		throw "unknown instruction";
-		return instructions::UNKNOWN;
 	}
 
 }
