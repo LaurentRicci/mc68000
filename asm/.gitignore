@@ -1,0 +1,6 @@
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.jar
+_deps/
+antlr4cpp_generated_src/
