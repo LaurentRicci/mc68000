@@ -3,4 +3,5 @@
 *.sln
 *.jar
 _deps/
-antlr4cpp_generated_src/
+generated/
+asm68000

@@ -28,14 +28,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(antlr) # populates antlr_SOURCE_DIR
 include(${antlr_SOURCE_DIR}/runtime/Cpp/cmake/FindANTLR.cmake) # populates ANTLR_TARGET
 
-#antlr_target(SampleGrammarLexer TLexer.g4 LEXER PACKAGE antlrcpptest)
-antlr_target(asm68000 asm68000.g4 LEXER PARSER LISTENER VISITOR antlrcpptest)
+antlr_target(lexer  lexer68000.g4 OUTPUT_DIRECTORY generated LEXER)
+antlr_target(parser parser68000.g4 OUTPUT_DIRECTORY generated DEPENDS ${ANTLR_lexer_OUTPUTS} PARSER LISTENER VISITOR)
 
 # add generated grammar to demo binary target
-add_executable(asm68000 main.cpp ${ANTLR_asm68000_CXX_OUTPUTS})
+add_executable(asm68000 
+    main.cpp listener.cpp
+    listener.h
+    ${ANTLR_lexer_CXX_OUTPUTS}
+    ${ANTLR_parser_CXX_OUTPUTS}
+    )
 
 target_link_libraries(asm68000 PRIVATE antlr4_static)
-target_include_directories(asm68000 PRIVATE "${antlr_SOURCE_DIR}/runtime/Cpp/runtime/src" ${ANTLR_asm68000_OUTPUT_DIR})
+target_include_directories(asm68000 PRIVATE "${antlr_SOURCE_DIR}/runtime/Cpp/runtime/src" ${ANTLR_parser68000_OUTPUT_DIR} generated)
 target_compile_features(asm68000 PRIVATE cxx_std_20)
 
 # if you want to copy them to a different location and haven't specified
