@@ -13,20 +13,29 @@ using namespace antlr4;
 
 int main(int argc, const char * argv[]) 
 {
-	std::ifstream sourceFile("test.68k");
+	const char* filename;
+	if (argc < 2)
+	{
+		filename = "test.68k";
+	}
+	else
+	{
+		filename = argv[1];
+	}
+	std::ifstream sourceFile(filename);
 
 	ANTLRInputStream input(sourceFile); 
-  lexer68000 lexer(&input);
-  CommonTokenStream tokens(&lexer);
+	lexer68000 lexer(&input);
+	CommonTokenStream tokens(&lexer);
 
-  parser68000 parser(&tokens);
-  tree::ParseTree *tree = parser.prog();
+	parser68000 parser(&tokens);
+	tree::ParseTree *tree = parser.prog();
 
-  tree::ParseTreeWalker walker;
-  walker.walk(new listener(), tree);
+	tree::ParseTreeWalker walker;
+	walker.walk(new listener(), tree);
 
-  auto s = tree->toStringTree(&parser);
-  std::cout << "Parse Tree: " << s << std::endl;
+	auto s = tree->toStringTree(&parser);
+	std::cout << "Parse Tree: " << s << std::endl;
 
-  return 0;
+	return 0;
 }
