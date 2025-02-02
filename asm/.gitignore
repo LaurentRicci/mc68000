@@ -4,4 +4,3 @@
 *.jar
 _deps/
 generated/
-asm68000

@@ -59,7 +59,7 @@ directive
     ;
 
 instruction
-    : ABCD
+    : abcd
     | ADD
     | ADDA
     | ADDI
@@ -146,6 +146,10 @@ instruction
     | UNLK
     ;
 
+    abcd
+    : ABCD WS? dRegister WS? COMMA WS? dRegister
+    | ABCD WS? aRegisterIndirectPreDecrement WS? COMMA WS? aRegisterIndirectPreDecrement
+    ;
 
 emptyLine : WS ;
 
