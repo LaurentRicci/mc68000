@@ -8,24 +8,24 @@ options
 prog : (line EOL)* EOF ;
 
 line
-    : labelSection? instructionSection WS? COMMENT?
-    | labelSection? directiveSection WS? COMMENT?
-    | labelSection
-    | commentLine
-    | emptyLine
+    : labelSection? instructionSection COMMENT?  #line_instructionSection
+    | labelSection? directiveSection COMMENT?    #line_directiveSection
+    | labelSection                               #line_labelSection
+    | commentLine                                #line_commentLine
     ;
 
 labelSection
-    : ID
-    | ID SEMICOLON
-    | WS ID SEMICOLON
-    | WS
+    : LABEL
+    | LABEL SEMICOLON
+    | SPACES ID SEMICOLON
+    | SPACES
     ;
 
 commentLine : COMMENTLINE;
 
 instructionSection
-    : WS instruction size? WS? arguments?
+    : abcd                                      #instructionSection_abcd
+    | instruction size? arguments?              #instructionSection_instruction
     ;
 
 size 
@@ -34,14 +34,14 @@ size
     | SIZELONG;
 
 directiveSection
-    : WS directive 
+    : directive 
     ; 
 
 directive
-    : DC size WS dataList
+    : DC size  dataList
     | DCB size?
-    | DS size? WS number
-    | END WS address
+    | DS size?  number
+    | END  address
     | EQU
     | FAIL
     | INCLUDE
@@ -50,7 +50,7 @@ directive
     | NOLIST
     | MEMORY
     | OPT
-    | ORG WS number
+    | ORG  number
     | PAGE
     | REG
     | SECTION
@@ -59,8 +59,7 @@ directive
     ;
 
 instruction
-    : abcd
-    | ADD
+    : ADD
     | ADDA
     | ADDI
     | ADDQ
@@ -147,11 +146,11 @@ instruction
     ;
 
     abcd
-    : ABCD WS? dRegister WS? COMMA WS? dRegister
-    | ABCD WS? aRegisterIndirectPreDecrement WS? COMMA WS? aRegisterIndirectPreDecrement
+    : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
+    | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
     ;
 
-emptyLine : WS ;
+// emptyLine : WS ;
 
 number 
     : OCTAL
@@ -161,7 +160,7 @@ number
 
 
 register
-    : DREG
+    : DREG { $DREG.text; }
     | AREG
     | SP
     | PC
@@ -212,15 +211,15 @@ addressingMode
     ;
 dRegister : DREG ;
 aRegister : AREG ;
-aRegisterIndirect : OPENPAREN WS? AREG WS? CLOSEPAREN ;
-aRegisterIndirectPostIncrement : OPENPAREN WS? AREG WS? CLOSEPAREN WS? PLUS ;
-aRegisterIndirectPreDecrement : DASH WS? OPENPAREN WS? AREG WS? CLOSEPAREN ;
-aRegisterIndirectDisplacement : number WS? OPENPAREN WS? AREG WS? CLOSEPAREN ;
-aRegisterIndirectIndex : number WS? OPENPAREN WS? AREG WS? COMMA WS? dRegister WS? CLOSEPAREN ;
+aRegisterIndirect : OPENPAREN AREG CLOSEPAREN ;
+aRegisterIndirectPostIncrement : OPENPAREN  AREG  CLOSEPAREN  PLUS ;
+aRegisterIndirectPreDecrement : DASH  OPENPAREN  AREG  CLOSEPAREN ;
+aRegisterIndirectDisplacement : number  OPENPAREN  AREG  CLOSEPAREN ;
+aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  dRegister  CLOSEPAREN ;
 absoluteShort : number ;
 absoluteLong : number SIZELONG;
-pcIndirectDisplacement : number WS? OPENPAREN WS? PC WS? CLOSEPAREN ;
-pcIndirectIndex : number WS? OPENPAREN WS? PC WS? COMMA WS? dRegister WS? CLOSEPAREN ;
+pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
+pcIndirectIndex : number  OPENPAREN  PC  COMMA  dRegister  CLOSEPAREN ;
 immediateData : HASH number ;
 
 dataList

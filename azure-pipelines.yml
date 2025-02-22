@@ -54,3 +54,9 @@ steps:
   inputs:
     workingDirectory: 'asm'
     cmakeArgs: '--build . --verbose'
+- task: Bash@3
+  displayName: Asm tests
+  inputs:
+    targetType: 'inline'
+    script: './asm68000test'
+    workingDirectory: 'asm/asm68000test'

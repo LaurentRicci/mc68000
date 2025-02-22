@@ -11,5 +11,14 @@ public:
 	virtual void exitLabelSection(parser68000::LabelSectionContext* ctx);
 	virtual void exitInstruction(parser68000::InstructionContext* ctx);
 	virtual void exitDirective(parser68000::DirectiveContext* ctx);
+	/*
+	virtual void enterAbcd(parser68000::AbcdContext* ctx);
+	virtual void exitAbcd(parser68000::AbcdContext* ctx);
+	*/
+	virtual void enterAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx);
+	virtual void exitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx);
+
+	virtual void enterAbcd_indirect(parser68000::Abcd_indirectContext* ctx);
+	virtual void exitAbcd_indirect(parser68000::Abcd_indirectContext* ctx);
 
 };

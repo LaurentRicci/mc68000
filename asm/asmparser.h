@@ -1,4 +1,6 @@
 #pragma once
+#include <any>
 
 bool parseFile(const char* filename);
-bool parseText(const char* text);
+std::any parseText(const char* text);
+size_t checkSyntax(const char* text);

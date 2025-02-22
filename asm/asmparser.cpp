@@ -7,6 +7,7 @@
 #include "parser68000BaseListener.h"
 #include "listener.h"
 #include "asmparser.h"
+#include "visitor.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -32,7 +33,7 @@ bool parseFile(const char *filename)
 	return true;
 }
 
-bool parseText(const char* text)
+std::any parseText(const char* text)
 {
 #if defined(_WIN32)
 	// Disable automatic leak detection
@@ -44,7 +45,33 @@ bool parseText(const char* text)
 
 	parser68000 parser(&tokens);
 	tree::ParseTree* tree = parser.prog();
-	auto errors = parser.getNumberOfSyntaxErrors();
+	tree::ParseTreeWalker walker;
+	walker.walk(new listener(), tree);
 
-	return errors == 0;
+	auto errors = parser.getNumberOfSyntaxErrors();
+	if (errors == 0)
+	{
+
+		visitor v;
+		auto result = v.visit(tree);
+		return result;
+	}
+
+	return false;
+}
+
+size_t checkSyntax(const char* text)
+{
+#if defined(_WIN32)
+	// Disable automatic leak detection
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
+#endif
+	ANTLRInputStream input(text);
+	lexer68000 lexer(&input);
+	CommonTokenStream tokens(&lexer);
+
+	parser68000 parser(&tokens);
+	tree::ParseTree* tree = parser.prog();
+
+	return parser.getNumberOfSyntaxErrors();
 }

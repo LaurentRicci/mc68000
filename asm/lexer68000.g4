@@ -1,8 +1,13 @@
 lexer grammar lexer68000;
 
-COMMENTLINE
-    : '*' ~[\r\n]* 
-    ;
+
+SPACES  : [ \t]+                   -> mode(NORMAL);
+LABEL   : [a-zA-Z_] [a-zA-Z0-9_]*  -> mode(NORMAL);
+COMMENTLINE : '*' ~[\r\n]*         -> mode(NORMAL) ;
+
+mode NORMAL;
+
+
 
 //
 // Instructions
@@ -132,7 +137,7 @@ HEXADECIMAL : '$' [0-9a-fA-F]+ ;
 //
 // Registers
 //
-DREG : [dD] [0-7] ;
+DREG : [dD][0-7] ;
 AREG : [aA] [0-7] ;
 SP options { caseInsensitive=true; } : 'sp' ;
 PC options { caseInsensitive=true; } : 'pc' ;
@@ -140,7 +145,7 @@ PC options { caseInsensitive=true; } : 'pc' ;
 //
 // Identifiers
 //
-ID  : [a-zA-Z_] [a-zA-Z0-9_]* ;
+ID  : [a-zA-Z_] [a-zA-Z0-9_]* {printf("ID\n"); } ;
 
 //
 // Strings
@@ -153,8 +158,8 @@ COMMENT     : ';' ~[\r\n]* ;
 //
 // Punctuation
 //
-EOL         : [\r\n]+ ;
-WS          : [ \t]+ ;
+EOL         : [\r\n]+ -> mode(DEFAULT_MODE);
+WS          : [ \t]+  -> skip;
 SEMICOLON   : ':' ;
 HASH        : '#' ;
 COMMA       : ',' ;
@@ -163,6 +168,5 @@ PLUS        : '+' ;
 SLASH       : '/' ;
 OPENPAREN   : '(' ;
 CLOSEPAREN  : ')' ;
-
 
 
