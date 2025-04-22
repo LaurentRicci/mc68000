@@ -36,7 +36,7 @@ include(FetchContent)
 FetchContent_Declare(
     antlr
     GIT_REPOSITORY https://github.com/antlr/antlr4
-    GIT_TAG ${ANTLR_TAG}
+    GIT_TAG cb850120378d000e97da38afb852aa3c554b81f5
     SOURCE_SUBDIR "runtime/Cpp"
 )
 FetchContent_MakeAvailable(antlr) # populates antlr_SOURCE_DIR
