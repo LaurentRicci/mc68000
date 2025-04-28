@@ -25,13 +25,15 @@ commentLine : COMMENTLINE;
 
 instructionSection
     : abcd                                      #instructionSection_abcd
+    | add                                       #instructionSection_add
     | instruction size? arguments?              #instructionSection_instruction
     ;
 
-size 
-    : SIZEBYTE 
-    | SIZEWORD 
-    | SIZELONG;
+size returns [uint16_t value]
+    : SIZEBYTE { $value = 0; }
+    | SIZEWORD { $value = 1; }
+    | SIZELONG { $value = 2; }
+    ;
 
 directiveSection
     : directive 
@@ -148,6 +150,11 @@ instruction
     abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
+    ;
+
+    add
+    : ADD size? addressingMode COMMA dRegister #add_to_dRegister
+    | ADD size? dRegister COMMA addressingMode #add_from_dRegister
     ;
 
 // emptyLine : WS ;

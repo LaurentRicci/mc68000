@@ -94,4 +94,28 @@ BOOST_AUTO_TEST_CASE(abcd_fail)
 	BOOST_CHECK_EQUAL(1, error);
 }
 
+BOOST_AUTO_TEST_CASE(add_from)
+{
+	auto opcode = parseText("  add d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b1101'010'101'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(add_from_long)
+{
+	auto opcode = parseText("  add.l d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b1101'010'110'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(add_to)
+{
+	auto opcode = parseText("  add (a5)+, d4\n");
+	validate_hasValue<uint16_t>(0b1101'100'001'011'101, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(add_to_byte)
+{
+	auto opcode = parseText("  add.b (a2), d0\n");
+	validate_hasValue<uint16_t>(0b1101'000'000'010'010, opcode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
