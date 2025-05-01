@@ -14,13 +14,12 @@ std::any visitor::visitProg(parser68000::ProgContext* ctx)
 }
 std::any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx)
 {
-    tree::ParseTree* node = ctx;
-    size_t n = node->children.size();
-    uint16_t opcode = std::any_cast<uint16_t>(visitInstructionSection_abcd(static_cast<parser68000::InstructionSection_abcdContext*>(node->children[1])));
+    //tree::ParseTree* node = ctx;
+    //size_t n = node->children.size();
+    //uint16_t opcode = std::any_cast<uint16_t>(visit(ctx->children[1]));
 
-    std::any result = node->children[1]->accept(this);
+    std::any result = ctx->children[1]->accept(this);
     return result;
-//	return visitChildren(ctx);
 }
 
 std::any visitor::visitInstructionSection_abcd(parser68000::InstructionSection_abcdContext* ctx)
@@ -50,6 +49,18 @@ std::any visitor::visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx)
     uint16_t opcode = 0b1100'000'10000'1'000 | (ax << 9) | ay;
     return opcode;
 }
+uint16_t visitor::finalize_instruction(uint16_t opcode)
+{
+	code.push_back(opcode);
+	if (extensionCount > 0)
+	{
+		for (int i = 0; i < extensionCount; i++)
+		{
+			code.push_back(extensions[i]);
+		}
+	}
+	return opcode;
+}
 std::any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 {
 	auto sz = ctx->children.size();
@@ -62,10 +73,12 @@ std::any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ct
 	}
 
 	uint16_t ae = std::any_cast<uint16_t>(visit(ctx->children[arg]));
+	auto count = extensionCount;
 	uint16_t dReg = std::any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
+	extensionCount = count;
 
 	uint16_t opcode = 0b1101'000'000'000'000 | (dReg << 9) | (size << 6) | ae;
-	return opcode;
+	return finalize_instruction(opcode);
 }
 std::any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx)
 {
@@ -79,7 +92,9 @@ std::any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext
 	}
 	uint16_t dReg = std::any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t ae = std::any_cast<uint16_t>(visit(ctx->children[arg+2]));
-	return (uint16_t)(0b1101'000'100'000'000 | (dReg << 9) | (size << 6) | ae);
+
+	uint16_t opcode = (0b1101'000'100'000'000 | (dReg << 9) | (size << 6) | ae);
+	return finalize_instruction(opcode);
 }
 
 // ====================================================================================================
@@ -87,6 +102,7 @@ std::any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext
 // ====================================================================================================
 std::any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 {
+	extensionCount = 0;
     auto s = ctx->getText().substr(1);
 	auto reg = std::stoi(s);
     return (uint16_t) (0b000'000 | reg);
@@ -94,13 +110,15 @@ std::any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 
 std::any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 {
-    auto s = ctx->getText().substr(1);
+	extensionCount = 0;
+	auto s = ctx->getText().substr(1);
     auto reg = std::stoi(s);
     return (uint16_t)(0b001'000 | reg);
 }
 
 std::any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* context)
 {
+	extensionCount = 0;
 	auto s = context->children[1]->getText().substr(1);
 	auto reg = std::stoi(s);
 	return (uint16_t)(0b010'000 | reg);
@@ -108,6 +126,7 @@ std::any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* 
 
 std::any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectPostIncrementContext* ctx)
 {
+	extensionCount = 0;
 	auto s = ctx->children[1]->getText().substr(1);
 	auto reg = std::stoi(s);
 	return (uint16_t)(0b011'000 | reg);
@@ -115,13 +134,22 @@ std::any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndi
 
 std::any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPreDecrementContext* ctx)
 {
-    auto s = ctx->children[2]->getText().substr(1);
+	extensionCount = 0;
+	auto s = ctx->children[2]->getText().substr(1);
 	auto reg = std::stoi(s);
     return (uint16_t)(0b100'000 | reg);
 }
 
 std::any visitor::visitARegisterIndirectDisplacement(parser68000::ARegisterIndirectDisplacementContext* ctx)
 {
+    int32_t displacement = std::any_cast<int32_t>(visit(ctx->children[0]));
+	if (displacement > 0x7fff || displacement < -0x8000)
+	{
+		// TODO : return error
+	}
+	extensionCount = 1;
+	extensions[0] = (uint16_t)(displacement & 0xffff);
+
 	auto s = ctx->children[2]->getText().substr(1);
 	auto reg = std::stoi(s);
 	return (uint16_t)(0b101'000 | reg);

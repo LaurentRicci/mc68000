@@ -13,7 +13,7 @@
 
 using namespace antlr4;
 
-bool parseFile(const char *filename) 
+bool asmparser::parseFile(const char *filename) 
 {
 	std::ifstream sourceFile(filename);
 
@@ -33,7 +33,7 @@ bool parseFile(const char *filename)
 	return true;
 }
 
-std::any parseText(const char* text)
+std::any asmparser::parseText(const char* text)
 {
 #if defined(_WIN32)
 	// Disable automatic leak detection
@@ -51,8 +51,7 @@ std::any parseText(const char* text)
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)
 	{
-
-		visitor v;
+		visitor v(code);
 		auto result = v.visit(tree);
 		return result;
 	}
@@ -60,7 +59,7 @@ std::any parseText(const char* text)
 	return false;
 }
 
-size_t checkSyntax(const char* text)
+size_t asmparser::checkSyntax(const char* text)
 {
 #if defined(_WIN32)
 	// Disable automatic leak detection

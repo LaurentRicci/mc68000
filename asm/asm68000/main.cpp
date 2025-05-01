@@ -17,7 +17,8 @@ int main(int argc, const char * argv[])
 	{
 		filename = argv[1];
 	}
-	bool result = parseFile(filename);
+	asmparser parser;
+	bool result = parser.parseFile(filename);
 	if (!result)
 	{
 		std::cout << "Failed to parse file: " << filename << std::endl;

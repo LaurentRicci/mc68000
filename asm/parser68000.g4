@@ -159,10 +159,10 @@ instruction
 
 // emptyLine : WS ;
 
-number 
-    : OCTAL
-    | DECIMAL
-    | HEXADECIMAL
+number returns [int32_t value]
+    : OCTAL         {$value = 1234; } // std::strtol($OCTAL.text.c_str(), nullptr, 8);}
+    | DECIMAL       {$value = std::stoi($DECIMAL.text.c_str());}
+    | HEXADECIMAL   {$value = 3456; } // std::strtol($HEXADECIMAL.text.c_str(), nullptr, 16);}
     ;
 
 
