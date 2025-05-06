@@ -131,14 +131,14 @@ SIMHALT options { caseInsensitive=true; } : 'simhalt' ;
 // Numbers
 //
 OCTAL       : '@' [0-7]+   ;//           { setText(Integer.toString(Integer.parseInt(getText().substring(1), 8)));  };
-DECIMAL     : [0-9]+       ;//           { setText(Integer.toString(Integer.parseInt(getText())));                  };
+DECIMAL     : '-'?[0-9]+       ;//           { setText(Integer.toString(Integer.parseInt(getText())));                  };
 HEXADECIMAL : '$' [0-9a-fA-F]+ ;//        { setText(Integer.toString(Integer.parseInt(getText().substring(1), 16))); };
 
 //
 // Registers
 //
 DREG : [dD][0-7] ;
-AREG : [aA] [0-7] ;
+AREG : [aA][0-7] ;
 SP options { caseInsensitive=true; } : 'sp' ;
 PC options { caseInsensitive=true; } : 'pc' ;
 

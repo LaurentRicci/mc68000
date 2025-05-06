@@ -186,6 +186,32 @@ BOOST_AUTO_TEST_CASE(address_aReg_index)
 	asmparser parser;
 	auto opcode = parser.parseText(" add 4(a1, d2), d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(address_aReg_index_negative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" add -4(a1, d2), d0\n");
+	validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b0'010'0'000'11111100, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(address_aReg_index_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" add 6(a1, a3.l), d0\n");
+	validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b1'011'1'000'00000110, code[1]);
 }
 
 BOOST_AUTO_TEST_CASE(address_absoluteS)
@@ -193,6 +219,10 @@ BOOST_AUTO_TEST_CASE(address_absoluteS)
 	asmparser parser;
 	auto opcode = parser.parseText(" add $1234, d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
 }
 
 BOOST_AUTO_TEST_CASE(address_absoluteL)
@@ -200,6 +230,11 @@ BOOST_AUTO_TEST_CASE(address_absoluteL)
 	asmparser parser;
 	auto opcode = parser.parseText(" add $12345678.L, d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'111'001, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+	BOOST_CHECK_EQUAL(0x5678, code[2]);
 }
 
 BOOST_AUTO_TEST_CASE(address_pc_displacement)
@@ -221,6 +256,33 @@ BOOST_AUTO_TEST_CASE(address_immediate)
 	asmparser parser;
 	auto opcode = parser.parseText(" add #4, d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'111'100, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x4, code[1]);
 }
 
+BOOST_AUTO_TEST_CASE(address_immediate_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" add.l #$12345678, d0\n");
+	validate_hasValue<uint16_t>(0b1101'000'010'111'100, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+	BOOST_CHECK_EQUAL(0x5678, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(address_immediate_long_short)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" add.l #$1234, d0\n");
+	validate_hasValue<uint16_t>(0b1101'000'010'111'100, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x0, code[1]);
+	BOOST_CHECK_EQUAL(0x1234, code[2]);
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -147,12 +147,12 @@ instruction
     | UNLK
     ;
 
-    abcd
+abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
     ;
 
-    add
+add
     : ADD size? addressingMode COMMA dRegister #add_to_dRegister
     | ADD size? dRegister COMMA addressingMode #add_from_dRegister
     ;
@@ -160,9 +160,9 @@ instruction
 // emptyLine : WS ;
 
 number returns [int32_t value]
-    : OCTAL         {$value = 1234; } // std::strtol($OCTAL.text.c_str(), nullptr, 8);}
-    | DECIMAL       {$value = std::stoi($DECIMAL.text.c_str());}
-    | HEXADECIMAL   {$value = 3456; } // std::strtol($HEXADECIMAL.text.c_str(), nullptr, 16);}
+    : OCTAL         { $value = std::strtol($OCTAL.text.c_str()+1, nullptr, 8);        }
+    | DECIMAL       { $value = std::stoi($DECIMAL.text.c_str());                      }
+    | HEXADECIMAL   { $value = std::strtol($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
     ;
 
 
@@ -185,6 +185,10 @@ registerListElement
 adRegister
     : AREG
     | DREG
+    ;
+
+adRegisterSize
+    : adRegister size?
     ;
 
 registerRange
@@ -222,7 +226,7 @@ aRegisterIndirect : OPENPAREN AREG CLOSEPAREN ;
 aRegisterIndirectPostIncrement : OPENPAREN  AREG  CLOSEPAREN  PLUS ;
 aRegisterIndirectPreDecrement : DASH  OPENPAREN  AREG  CLOSEPAREN ;
 aRegisterIndirectDisplacement : number  OPENPAREN  AREG  CLOSEPAREN ;
-aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  dRegister  CLOSEPAREN ;
+aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN ;
 absoluteShort : number ;
 absoluteLong : number SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
