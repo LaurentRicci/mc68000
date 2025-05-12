@@ -230,7 +230,7 @@ aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPA
 absoluteShort : number ;
 absoluteLong : number SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
-pcIndirectIndex : number  OPENPAREN  PC  COMMA  dRegister  CLOSEPAREN ;
+pcIndirectIndex : number  OPENPAREN  PC  COMMA  adRegisterSize  CLOSEPAREN ;
 immediateData : HASH number ;
 
 dataList

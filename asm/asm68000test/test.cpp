@@ -240,8 +240,12 @@ BOOST_AUTO_TEST_CASE(address_absoluteL)
 BOOST_AUTO_TEST_CASE(address_pc_displacement)
 {
 	asmparser parser;
-	auto opcode = parser.parseText(" add 4(pc), d0\n");
+	auto opcode = parser.parseText(" add 42(pc), d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(42, code[1]);
 }
 
 BOOST_AUTO_TEST_CASE(address_pc_index)
@@ -249,6 +253,10 @@ BOOST_AUTO_TEST_CASE(address_pc_index)
 	asmparser parser;
 	auto opcode = parser.parseText(" add 4(pc, d2), d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
+
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 }
 
 BOOST_AUTO_TEST_CASE(address_immediate)
