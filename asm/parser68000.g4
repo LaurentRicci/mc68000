@@ -14,19 +14,20 @@ line
     | commentLine                                #line_commentLine
     ;
 
-labelSection
-    : LABEL
-    | LABEL SEMICOLON
-    | SPACES ID SEMICOLON
-    | SPACES
+labelSection returns [std::string value]
+    : LABEL                { $value = $LABEL.text; }
+    | LABEL SEMICOLON      { $value = $LABEL.text; }
+    | SPACES ID SEMICOLON  { $value = $ID.text; }
+    | SPACES               { $value = ""; }
     ;
 
 commentLine : COMMENTLINE;
 
 instructionSection
-    : abcd                                      #instructionSection_abcd
-    | add                                       #instructionSection_add
-    | instruction size? arguments?              #instructionSection_instruction
+    : abcd
+    | add
+    | nop
+    | instruction size? arguments?
     ;
 
 size returns [uint16_t value]
@@ -157,6 +158,10 @@ add
     | ADD size? dRegister COMMA addressingMode #add_from_dRegister
     ;
 
+nop
+    : NOP
+    ;
+
 // emptyLine : WS ;
 
 number returns [int32_t value]
@@ -227,8 +232,8 @@ aRegisterIndirectPostIncrement : OPENPAREN  AREG  CLOSEPAREN  PLUS ;
 aRegisterIndirectPreDecrement : DASH  OPENPAREN  AREG  CLOSEPAREN ;
 aRegisterIndirectDisplacement : number  OPENPAREN  AREG  CLOSEPAREN ;
 aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN ;
-absoluteShort : number ;
-absoluteLong : number SIZELONG;
+absoluteShort : address ;
+absoluteLong : address SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
 pcIndirectIndex : number  OPENPAREN  PC  COMMA  adRegisterSize  CLOSEPAREN ;
 immediateData : HASH number ;
@@ -242,7 +247,7 @@ dataListElement
     | STRING
     ;
 
-address
-    : number
-    | ID
+address returns [std::any value]
+    : number     { $value = $number.value; }
+    | ID         { $value = $ID.text; }
     ;

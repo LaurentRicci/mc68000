@@ -7,18 +7,26 @@ using namespace antlr4;
 class visitor : public parser68000BaseVisitor
 {
 public: 
-    visitor(std::vector<uint16_t>& code) : code(code), extensionCount(0), size(1) {}
+    visitor(std::vector<uint16_t>& code, std::map<std::string, uint32_t>& labels, std::vector<uint32_t>& labelsLocation) : code(code), labels(labels) {}
 	~visitor() override = default;
+    std::any generateCode(tree::ParseTree* tree);
 
 private:
-	uint16_t extensionCount;  // the number of extra words for the addressing mode
-	uint16_t extensions[2];   // the extra words for the addressing mode
-	std::vector<uint16_t>& code; // the results of the parsing
-    uint16_t size; // the size of the current instruction
+    std::vector<uint16_t>& code;                       // the assembly code as a results of the parsing
+    
+    uint16_t extensionCount = 0;                       // the number of extra words for the addressing mode
+    uint16_t extensions[2] = { 0,0 };                  // the extra words for the addressing mode
+
+    std::map<std::string, uint32_t>& labels;           // the labels found in the code label -> index
+	int pass = 0;                                      // the current pass (0 = first pass, 1 = second pass)
+    uint32_t currentAddress = 0;                       // the current address in the code
+
+    uint16_t size = 1;                                 // the size of the current instruction
 
 private:
     std::any visitProg(parser68000::ProgContext* ctx);
     std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx);
+    std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
     std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx);
     std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx);
@@ -27,6 +35,8 @@ private:
 
     std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
+
+	std::any visitNop(parser68000::NopContext* ctx) override;
 
 	// Addressing modes
     std::any visitDRegister(parser68000::DRegisterContext* context) override;
@@ -45,12 +55,17 @@ private:
     std::any visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx) override;
 
     virtual std::any visitSize(parser68000::SizeContext* ctx) override {
-        size = std::any_cast<uint16_t>(ctx->value);
+        size = std::any_cast<uint16_t>(ctx->value); //TODO: why this line?
         return ctx->value;
     }
 
     virtual std::any visitNumber(parser68000::NumberContext* ctx) override {
         return ctx->value;
+    }
+
+
+    virtual std::any visitAddress(parser68000::AddressContext* ctx) override {  
+       return ctx->value;  
     }
 
 };

@@ -45,14 +45,14 @@ std::any asmparser::parseText(const char* text)
 
 	parser68000 parser(&tokens);
 	tree::ParseTree* tree = parser.prog();
-	tree::ParseTreeWalker walker;
-	walker.walk(new listener(), tree);
+//	tree::ParseTreeWalker walker;
+//	walker.walk(new listener(), tree);
 
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)
 	{
-		visitor v(code);
-		auto result = v.visit(tree);
+		visitor v(code, labels, labelsLocation);
+		auto result = v.generateCode(tree);
 		return result;
 	}
 

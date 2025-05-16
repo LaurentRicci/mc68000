@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
 add_executable (asm68000test 
-	"test.cpp"  "module.cpp"
+	"test.cpp"  "module.cpp" "addressingMode.cpp"
 	"../asmparser.h" )
 
 target_include_directories(asm68000test PUBLIC ${Boost_INCLUDE_DIRS}) 

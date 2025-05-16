@@ -2,6 +2,33 @@
 
 using namespace std;
 
+uint16_t visitor::finalize_instruction(uint16_t opcode)
+{
+	code.push_back(opcode);
+	currentAddress++;
+	if (extensionCount > 0)
+	{
+		for (int i = 0; i < extensionCount; i++)
+		{
+			currentAddress++;
+			code.push_back(extensions[i]);
+		}
+	}
+	return opcode;
+}
+
+any visitor::generateCode(tree::ParseTree* tree)
+{
+	pass = 0;
+	tree->accept(this);
+	code.clear();
+	currentAddress = 0;
+	pass = 1;
+	auto result = tree->accept(this);
+
+	return result;
+}
+
 any visitor::visitProg(parser68000::ProgContext* ctx)
 {
     size_t n = ctx->children.size();
@@ -22,7 +49,22 @@ any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionCo
     return result;
 }
 
-
+any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
+{
+	if (pass == 0 && !ctx->value.empty())
+	{
+		if (labels.find(ctx->value) == labels.end())
+		{
+			labels[ctx->value] = currentAddress;
+		}
+		else
+		{
+			// TODO : report error
+			std::cerr << "Duplicate label: " << ctx->value << std::endl;
+		}
+	}
+	return any();
+}
 
 any visitor::visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx)
 {
@@ -41,18 +83,7 @@ any visitor::visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx)
     uint16_t opcode = 0b1100'000'10000'1'000 | (ax << 9) | ay;
     return opcode;
 }
-uint16_t visitor::finalize_instruction(uint16_t opcode)
-{
-	code.push_back(opcode);
-	if (extensionCount > 0)
-	{
-		for (int i = 0; i < extensionCount; i++)
-		{
-			code.push_back(extensions[i]);
-		}
-	}
-	return opcode;
-}
+
 any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 {
 	auto sz = ctx->children.size();
@@ -72,6 +103,7 @@ any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 	uint16_t opcode = 0b1101'000'000'000'000 | (dReg << 9) | (size << 6) | ae;
 	return finalize_instruction(opcode);
 }
+
 any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx)
 {
 	auto sz = ctx->children.size();
@@ -89,9 +121,20 @@ any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitNop(parser68000::NopContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0001;
+	extensionCount = 0;
+	return finalize_instruction(opcode);
+}
+
 // ====================================================================================================
 // Addressing modes
 // ====================================================================================================
+
+/// <summary>
+/// Addressing mode for data registers: D0
+/// </summary>
 any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 {
 	extensionCount = 0;
@@ -100,6 +143,9 @@ any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
     return (uint16_t) (0b000'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address registers: A0
+/// </summary>
 any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 {
 	extensionCount = 0;
@@ -108,6 +154,9 @@ any visitor::visitARegister(parser68000::ARegisterContext* ctx)
     return (uint16_t)(0b001'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address register indirect: (A0)
+/// </summary>
 any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* context)
 {
 	extensionCount = 0;
@@ -116,6 +165,9 @@ any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* conte
 	return (uint16_t)(0b010'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address register indirect post increment: (A0)+
+/// </summary>
 any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectPostIncrementContext* ctx)
 {
 	extensionCount = 0;
@@ -124,6 +176,9 @@ any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectP
 	return (uint16_t)(0b011'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address register indirect pre decrement: -(A0)
+/// </summary>
 any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPreDecrementContext* ctx)
 {
 	extensionCount = 0;
@@ -132,6 +187,9 @@ any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPr
     return (uint16_t)(0b100'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address register indirect with displacement: 42(A0)
+/// </summary>
 any visitor::visitARegisterIndirectDisplacement(parser68000::ARegisterIndirectDisplacementContext* ctx)
 {
     int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
@@ -147,40 +205,10 @@ any visitor::visitARegisterIndirectDisplacement(parser68000::ARegisterIndirectDi
 	return (uint16_t)(0b101'000 | reg);
 }
 
-any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
-{
-	auto s = ctx->children[0]->getText();
-	auto reg = stoi(s.substr(1));
-	// The returned value is formatted for the aRegisterIndirectIndex addressing mode
-	if (s[0] == 'a' || s[0] == 'A')
-	{
-		return (uint16_t)(0b1'000'0 | (reg << 1));
-	}
-	else
-	{
-		return (uint16_t)(0b0'000'0 | (reg << 1));
-	}
-}
 
-any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
-{
-	uint16_t adRegister = any_cast<uint16_t>(visit(ctx->children[0]));
-	if (ctx->children.size() == 2)
-	{
-		int16_t size = any_cast<uint16_t>(visit(ctx->children[1]));
-		if (size == 0)
-		{
-			// TODO : return error
-		}
-		else if (size == 2)
-		{
-			adRegister |= 0b0'000'1; // size is long
-		}
-	}
-	return adRegister;
-}
-
-
+/// <summary>
+/// Addressing mode for address register indirect with index: 42(A0, D1)
+/// </summary>
 any visitor::visitARegisterIndirectIndex(parser68000::ARegisterIndirectIndexContext* ctx)
 {
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
@@ -199,21 +227,59 @@ any visitor::visitARegisterIndirectIndex(parser68000::ARegisterIndirectIndexCont
 	return (uint16_t)(0b110'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for absolute short: 42
+/// </summary>
 any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 {
-	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
-	if (displacement > 0x7fff || displacement < -0x8000)
+	any address = visit(ctx->children[0]);
+	if (address.type() == typeid(std::string))
 	{
-		// TODO : return error
+		std::string label = any_cast<std::string>(address);
+		auto it = labels.find(label);
+		if (it == labels.end())
+		{
+			// During the 1st pass the label may not be defined yet
+			if (pass != 0)
+			{
+				// TODO : return error
+				std::cerr << "Label not found: " << label << std::endl;
+			}
+			extensionCount = 1;
+			extensions[0] = 0;
+		}
+		else
+		{
+			uint32_t displacement = it->second;
+			if (displacement > 0x7fff || displacement < -0x8000)
+			{
+				// TODO : return error
+				std::cerr << "Address doesn't fit on in one word: " << label << std::endl;
+			}
+			uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
+			extensionCount = 1;
+			extensions[0] = displacement16;
+		}
 	}
-	uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
-	extensionCount = 1;
-	extensions[0] = displacement16;
+	else if (address.type() == typeid(int32_t))
+	{
+		int32_t displacement = any_cast<int32_t>(address);
+		if (displacement > 0x7fff || displacement < -0x8000)
+		{
+			// TODO : return error
+			std::cerr << "Address doesn't fit on in one word: " << displacement << std::endl;
+		}
+		uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
+		extensionCount = 1;
+		extensions[0] = displacement16;
+	}
 
 	return (uint16_t)(0b111'000);
-
 }
 
+/// <summary>
+/// Addressing mode for absolute long: 42L
+/// </summary>
 any visitor::visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx)
 {
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
@@ -226,6 +292,9 @@ any visitor::visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx)
 	return (uint16_t)(0b111'001);
 }
 
+/// <summary>
+/// Addressing mode for PC indirect with displacement: 42(PC)
+/// </summary>
 any visitor::visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementContext* ctx)
 {
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
@@ -239,6 +308,9 @@ any visitor::visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementCont
 	return (uint16_t)(0b111'010);
 }
 
+/// <summary>
+/// Addressing mode for PC indirect with index: 42(PC, D1)
+/// </summary>
 any visitor::visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx)
 {
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
@@ -254,6 +326,10 @@ any visitor::visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx)
 
 	return (uint16_t)(0b111'011);
 }
+
+/// <summary>
+/// Addressing mode for immediate data: #42
+/// </summary>
 any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 {
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[1]));
@@ -286,6 +362,43 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 		extensions[1] = displacementLow;
 	}
 	return (uint16_t)(0b111'100);
+}
+
+// ====================================================================================================
+// Addressing modes helpers
+// ====================================================================================================
+
+any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
+{
+	auto s = ctx->children[0]->getText();
+	auto reg = stoi(s.substr(1));
+	// The returned value is formatted for the aRegisterIndirectIndex addressing mode
+	if (s[0] == 'a' || s[0] == 'A')
+	{
+		return (uint16_t)(0b1'000'0 | (reg << 1));
+	}
+	else
+	{
+		return (uint16_t)(0b0'000'0 | (reg << 1));
+	}
+}
+
+any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
+{
+	uint16_t adRegister = any_cast<uint16_t>(visit(ctx->children[0]));
+	if (ctx->children.size() == 2)
+	{
+		int16_t size = any_cast<uint16_t>(visit(ctx->children[1]));
+		if (size == 0)
+		{
+			// TODO : return error
+		}
+		else if (size == 2)
+		{
+			adRegister |= 0b0'000'1; // size is long
+		}
+	}
+	return adRegister;
 }
 
 
