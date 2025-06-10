@@ -230,8 +230,14 @@ aRegister : AREG ;
 aRegisterIndirect : OPENPAREN AREG CLOSEPAREN ;
 aRegisterIndirectPostIncrement : OPENPAREN  AREG  CLOSEPAREN  PLUS ;
 aRegisterIndirectPreDecrement : DASH  OPENPAREN  AREG  CLOSEPAREN ;
-aRegisterIndirectDisplacement : number  OPENPAREN  AREG  CLOSEPAREN ;
-aRegisterIndirectIndex : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN ;
+aRegisterIndirectDisplacement
+    : number  OPENPAREN  AREG  CLOSEPAREN            #aRegisterIndirectDisplacementOld
+    | OPENPAREN number COMMA AREG CLOSEPAREN         #aRegisterIndirectDisplacementNew
+    ;
+aRegisterIndirectIndex
+    : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
+    | OPENPAREN number  COMMA AREG  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
+    ;
 absoluteShort : address ;
 absoluteLong : address SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;

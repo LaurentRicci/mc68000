@@ -44,9 +44,15 @@ private:
 	std::any visitARegisterIndirect(parser68000::ARegisterIndirectContext* context) override;
 	std::any visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectPostIncrementContext* ctx) override;
     std::any visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPreDecrementContext* ctx) override;
-	std::any visitARegisterIndirectDisplacement(parser68000::ARegisterIndirectDisplacementContext* ctx) override;
-	std::any visitARegisterIndirectIndex(parser68000::ARegisterIndirectIndexContext* ctx) override;
-	std::any visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx) override;
+
+    std::any visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr);
+    std::any visitARegisterIndirectDisplacementOld(parser68000::ARegisterIndirectDisplacementOldContext* ctx) override;
+    std::any visitARegisterIndirectDisplacementNew(parser68000::ARegisterIndirectDisplacementNewContext* ctx) override;
+
+    std::any visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr, tree::ParseTree* pIndex);
+    std::any visitARegisterIndirectIndexOld(parser68000::ARegisterIndirectIndexOldContext* ctx) override;
+    std::any visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexNewContext* ctx) override;
+    std::any visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx) override;
 	std::any visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx) override;
     std::any visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementContext* ctx) override;
     std::any visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx) override;

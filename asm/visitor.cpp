@@ -188,43 +188,80 @@ any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPr
 }
 
 /// <summary>
-/// Addressing mode for address register indirect with displacement: 42(A0)
+/// Addressing mode for address register indirect with displacement
+/// This is a helper function to handle both old and new syntax for address register indirect with displacement
+/// It is used to avoid code duplication in the visitARegisterIndirectDisplacementOld and visitARegisterIndirectDisplacementNew methods
 /// </summary>
-any visitor::visitARegisterIndirectDisplacement(parser68000::ARegisterIndirectDisplacementContext* ctx)
+any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRegistr)
 {
-    int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
+	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
 	if (displacement > 0x7fff || displacement < -0x8000)
 	{
 		// TODO : return error
+		std::cerr << "Displacement doesn't fit on in one byte: " << displacement << std::endl;
 	}
 	extensionCount = 1;
 	extensions[0] = (uint16_t)(displacement & 0xffff);
 
-	auto s = ctx->children[2]->getText().substr(1);
+	auto s = pRegistr->getText().substr(1);
 	auto reg = stoi(s);
 	return (uint16_t)(0b101'000 | reg);
 }
 
+/// <summary>
+/// Addressing mode for address register indirect with displacement: 42(A0)
+/// </summary>
+any visitor::visitARegisterIndirectDisplacementOld(parser68000::ARegisterIndirectDisplacementOldContext* ctx)
+{
+	return visitARegisterIndirectDisplacement(ctx->children[0], ctx->children[2]);
+}
+
+/// <summary>
+/// Addressing mode for address register indirect with displacement: (42,A0)
+/// </summary>
+any visitor::visitARegisterIndirectDisplacementNew(parser68000::ARegisterIndirectDisplacementNewContext* ctx)
+{
+	return visitARegisterIndirectDisplacement(ctx->children[1], ctx->children[3]);
+}
+
+/// <summary>
+/// Addressing mode for address register indirect with index
+/// This is a helper function to handle both old and new syntax for address register indirect with index
+/// It is used to avoid code duplication in the visitARegisterIndirectIndexOld and visitARegisterIndirectIndexNew methods
+/// </summary>
+any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr, tree::ParseTree* pIndex)
+{
+	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
+	if (displacement > 0x7f || displacement < -0x80)
+	{
+		// TODO : return error
+		std::cerr << "Displacement doesn't fit on in one byte: " << displacement << std::endl;
+	}
+	uint16_t displacement8 = (uint16_t)(displacement & 0xff);
+
+	uint16_t index = any_cast<uint16_t>(visit(pIndex));
+	extensionCount = 1;
+	extensions[0] = (index << 11) | displacement8;
+	
+	auto s = pRregistr->getText().substr(1);
+	auto reg = stoi(s);
+	return (uint16_t)(0b110'000 | reg);
+}
 
 /// <summary>
 /// Addressing mode for address register indirect with index: 42(A0, D1)
 /// </summary>
-any visitor::visitARegisterIndirectIndex(parser68000::ARegisterIndirectIndexContext* ctx)
+any visitor::visitARegisterIndirectIndexOld(parser68000::ARegisterIndirectIndexOldContext* ctx)
 {
-	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
-	if (displacement > 0x7f || displacement < -0x80)
-	{
-		// TODO : return error
-	}
-	uint16_t displacement8 = (uint16_t)(displacement & 0xff);
+	return visitARegisterIndirectDisplacement(ctx->children[0], ctx->children[2], ctx->children[4]);
+}
 
-	uint16_t index = any_cast<uint16_t>(visit(ctx->children[4]));
-	extensionCount = 1;
-	extensions[0] = (index << 11) | displacement8;
-
-	auto s = ctx->children[2]->getText().substr(1);
-	auto reg = stoi(s);
-	return (uint16_t)(0b110'000 | reg);
+/// <summary>
+/// Addressing mode for address register indirect with index: (42, A0, D1)
+/// </summary>
+any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexNewContext* ctx)
+{
+	return visitARegisterIndirectDisplacement(ctx->children[1], ctx->children[3], ctx->children[5]);
 }
 
 /// <summary>
