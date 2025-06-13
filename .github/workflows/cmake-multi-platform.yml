@@ -49,9 +49,3 @@ jobs:
 
     - name: Run asm68000test
       run: ./asm/asm68000test
-"""
-
-# Write the content to a file
-with open("cmake-multi-platform.yml", "w") as f:
-    f.write(workflow_content)
-
