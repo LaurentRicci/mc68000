@@ -97,6 +97,7 @@ namespace addressing_mode
 		const std::vector<uint16_t>& code = parser.getCode();
 		BOOST_CHECK_EQUAL(2, code.size());
 		BOOST_CHECK_EQUAL(0b0'010'0'000'10100100, code[1]);
+		//TODO: check that there is an error reported
 	}
 
 	BOOST_AUTO_TEST_CASE(address_aReg_index_negative)
