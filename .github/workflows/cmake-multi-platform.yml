@@ -1,51 +1,57 @@
-
-name: CMake Multi-Platform Build
+# Define the updated GitHub Actions workflow content
+workflow_content = """name: CMake Multi-Platform Build
 
 on:
   push:
-    branches: [ "main", "dev" ]
-  pull_request:
-    branches: [ "main", "dev" ]
-  workflow_dispatch:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Install dependencies (Boost, GCC-12)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y g++-12 gcc-12 libboost-all-dev
+    - name: Install dependencies (Boost, GCC-12)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++-12 gcc-12 libboost-all-dev
 
-    - name: Set GCC-12 as default
-      run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
-        gcc --version
-        g++ --version
+    - name: Set GCC-12 as default
+      run: |
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
+        gcc --version
+        g++ --version
 
-    - name: Configure and build root project
-      run: |
-        cmake -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-        cmake --build build
+    - name: Configure and build root project
+      run: |
+        cmake -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        cmake --build build
 
-    - name: Configure and build asm subproject
-      run: |
-        cmake -B asm/build -S asm -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-        cmake --build asm/build
+    - name: Configure and build asm subproject
+      run: |
+        cmake -B asm/build -S asm -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        cmake --build asm/build
 
-    - name: Run coretest
-      run: ./coretest
+    - name: Run coretest
+      run: ./coretest
 
-    - name: Run cputest
-      run: ./cputest
+    - name: Run cputest
+      run: ./cputest
 
-    - name: Run dasmtest
-      run: ./dasmtest
+    - name: Run dasmtest
+      run: ./dasmtest
 
-    - name: Run asm68000test
-      run: ./asm/asm68000test
+    - name: Run asm68000test
+      run: ./asm/asm68000test
+"""
+
+# Write the content to a file
+with open("cmake-multi-platform.yml", "w") as f:
+    f.write(workflow_content)
+
