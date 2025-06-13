@@ -35,7 +35,7 @@ jobs:
     - name: Configure and build asm subproject
       working-directory: asm
       run: |
-        cmake -B build -S asm -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        cmake -B build -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
         cmake --build build
 
     - name: Run coretest
