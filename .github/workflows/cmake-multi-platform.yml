@@ -1,5 +1,4 @@
-# Define the updated GitHub Actions workflow content
-workflow_content = """name: CMake Multi-Platform Build
+name: CMake on multiple platforms
 
 on:
   push:
