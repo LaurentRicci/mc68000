@@ -33,18 +33,23 @@ jobs:
         cmake --build build
 
     - name: Configure and build asm subproject
+      working-directory: asm
       run: |
-        cmake -B asm/build -S asm -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-        cmake --build asm/build
+        cmake -B build -S asm -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        cmake --build build
 
     - name: Run coretest
+      working-directory: coretest
       run: ./coretest
 
     - name: Run cputest
+      working-directory: cputest
       run: ./cputest
 
     - name: Run dasmtest
+      working-directory: dasmtest
       run: ./dasmtest
 
     - name: Run asm68000test
-      run: ./asm/asm68000test
+      working-directory: 
+      run: ./asm68000test
