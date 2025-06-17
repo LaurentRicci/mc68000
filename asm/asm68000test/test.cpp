@@ -72,6 +72,14 @@ BOOST_AUTO_TEST_CASE(comment)
 	BOOST_CHECK_EQUAL(0, error);
 }
 
+BOOST_AUTO_TEST_CASE(label_duplicate)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("here:\n  abcd d2,d4\nhere:\n nop\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+
 BOOST_AUTO_TEST_CASE(abcd_register)
 {
 	asmparser parser;

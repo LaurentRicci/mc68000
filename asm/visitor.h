@@ -1,13 +1,17 @@
 #pragma once
 #include "parser68000BaseVisitor.h"
 #include <tree/ParseTree.h>
+#include "errors.h"
 
 using namespace antlr4;
 
 class visitor : public parser68000BaseVisitor
 {
 public: 
-    visitor(std::vector<uint16_t>& code, std::map<std::string, uint32_t>& labels, std::vector<uint32_t>& labelsLocation) : code(code), labels(labels) {}
+    visitor(std::vector<uint16_t>& code, std::map<std::string, uint32_t>& labels, std::vector<uint32_t>& labelsLocation, mc68000::errors& errorList) 
+        : code(code), labels(labels), errorList(errorList) 
+    {
+    }
 	~visitor() override = default;
     std::any generateCode(tree::ParseTree* tree);
 
@@ -22,6 +26,8 @@ private:
     uint32_t currentAddress = 0;                       // the current address in the code
 
     uint16_t size = 1;                                 // the size of the current instruction
+
+	mc68000::errors& errorList;                                 // the list of errors found during the parsing
 
 private:
     std::any visitProg(parser68000::ProgContext* ctx);
@@ -69,9 +75,11 @@ private:
         return ctx->value;
     }
 
-
     virtual std::any visitAddress(parser68000::AddressContext* ctx) override {  
        return ctx->value;  
     }
 
+    // Utilities
+    void addError(const std::string& message, tree::ParseTree* ctx);
+    void addPass0Error(const std::string& message, tree::ParseTree* ctx);
 };

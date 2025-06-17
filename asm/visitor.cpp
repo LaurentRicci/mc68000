@@ -1,6 +1,7 @@
 #include "visitor.h"
 
 using namespace std;
+using namespace mc68000;
 
 uint16_t visitor::finalize_instruction(uint16_t opcode)
 {
@@ -59,8 +60,7 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 		}
 		else
 		{
-			// TODO : report error
-			std::cerr << "Duplicate label: " << ctx->value << std::endl;
+			addPass0Error("Duplicate label: " + ctx->value, ctx);
 		}
 	}
 	return any();
@@ -197,8 +197,7 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
 	if (displacement > 0x7fff || displacement < -0x8000)
 	{
-		// TODO : return error
-		std::cerr << "Displacement doesn't fit on in one byte: " << displacement << std::endl;
+		addError("Displacement doesn't fit on in one word: " + std::to_string(displacement), pDisplacement);
 	}
 	extensionCount = 1;
 	extensions[0] = (uint16_t)(displacement & 0xffff);
@@ -234,8 +233,7 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
 	if (displacement > 0x7f || displacement < -0x80)
 	{
-		// TODO : return error
-		std::cerr << "Displacement doesn't fit on in one byte: " << displacement << std::endl;
+		addError("Displacement doesn't fit on in one byte: " + std::to_string(displacement), pDisplacement);
 	}
 	uint16_t displacement8 = (uint16_t)(displacement & 0xff);
 
@@ -279,8 +277,7 @@ any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 			// During the 1st pass the label may not be defined yet
 			if (pass != 0)
 			{
-				// TODO : return error
-				std::cerr << "Label not found: " << label << std::endl;
+				addError("Label not found: " + label, ctx->children[0]);
 			}
 			extensionCount = 1;
 			extensions[0] = 0;
@@ -290,8 +287,7 @@ any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 			uint32_t displacement = it->second;
 			if (displacement > 0x7fff || displacement < -0x8000)
 			{
-				// TODO : return error
-				std::cerr << "Address doesn't fit on in one word: " << label << std::endl;
+				addError("Address doesn't fit on in one word: " + label, ctx->children[0]);
 			}
 			uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
 			extensionCount = 1;
@@ -303,8 +299,7 @@ any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 		int32_t displacement = any_cast<int32_t>(address);
 		if (displacement > 0x7fff || displacement < -0x8000)
 		{
-			// TODO : return error
-			std::cerr << "Address doesn't fit on in one word: " << displacement << std::endl;
+			addError("Address doesn't fit on in one word: " + std::to_string(displacement), ctx->children[0] );
 		}
 		uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
 		extensionCount = 1;
@@ -337,7 +332,7 @@ any visitor::visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementCont
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
 	if (displacement > 0x7fff || displacement < -0x8000)
 	{
-		// TODO : return error
+		addError("Displacement doesn't fit on in one word: " + std::to_string(displacement), ctx->children[0]);
 	}
 	extensionCount = 1;
 	extensions[0] = (uint16_t)(displacement & 0xffff);
@@ -353,7 +348,7 @@ any visitor::visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx)
 	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
 	if (displacement > 0x7f || displacement < -0x80)
 	{
-		// TODO : return error
+		addError("Displacement doesn't fit on in one byte: " + std::to_string(displacement), ctx->children[0]);
 	}
 	uint16_t displacement8 = (uint16_t)(displacement & 0xff);
 
@@ -374,7 +369,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 	{
 		if (displacement > 0x7f || displacement < -0x80)
 		{
-			// TODO : return error
+			addError("Immediate data doesn't fit on in one byte: " + std::to_string(displacement), ctx->children[1]);
 		}
 		uint16_t displacement8 = (uint16_t)(displacement & 0xff);
 		extensionCount = 1;
@@ -384,7 +379,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 	{
 		if (displacement > 0x7fff || displacement < -0x8000)
 		{
-			// TODO : return error
+			addError("Immediate data doesn't fit on in one word: " + std::to_string(displacement), ctx->children[1]);
 		}
 		uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
 		extensionCount = 1;
@@ -428,7 +423,7 @@ any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
 		int16_t size = any_cast<uint16_t>(visit(ctx->children[1]));
 		if (size == 0)
 		{
-			// TODO : return error
+			addError("Invalid size", ctx->children[1]);
 		}
 		else if (size == 2)
 		{
@@ -439,3 +434,33 @@ any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
 }
 
 
+void visitor::addError(const std::string& message, tree::ParseTree* ctx)
+{
+    if (pass == 1) 
+	{
+        if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx)) 
+		{
+            int line = prc->getStart()->getLine();
+            int col = prc->getStart()->getCharPositionInLine();
+            errorList.add(message, line, col);
+        } 
+		else
+		{
+            errorList.add(message,0,0);
+        }
+    }
+}
+
+void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
+{
+	if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx))
+	{
+		int line = prc->getStart()->getLine();
+		int col = prc->getStart()->getCharPositionInLine();
+		errorList.add(message, line, col);
+	}
+	else
+	{
+		errorList.add(message, 0, 0);
+	}
+}

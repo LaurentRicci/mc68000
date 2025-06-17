@@ -51,7 +51,7 @@ std::any asmparser::parseText(const char* text)
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)
 	{
-		visitor v(code, labels, labelsLocation);
+		visitor v(code, labels, labelsLocation, errorsList);
 		auto result = v.generateCode(tree);
 		return result;
 	}

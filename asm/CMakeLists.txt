@@ -55,6 +55,8 @@ add_library(asm68000lib
     listener.h
     visitor.cpp
     visitor.h
+    errors.cpp
+    errors.h
     ${ANTLR_lexer_CXX_OUTPUTS}
     ${ANTLR_parser_CXX_OUTPUTS}
     )
