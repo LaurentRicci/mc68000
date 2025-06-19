@@ -26,6 +26,9 @@ commentLine : COMMENTLINE;
 instructionSection
     : abcd
     | add
+    | adda
+    | addi
+    | addq
     | nop
     | instruction size? arguments?
     ;
@@ -62,11 +65,7 @@ directive
     ;
 
 instruction
-    : ADD
-    | ADDA
-    | ADDI
-    | ADDQ
-    | ADDX
+    : ADDX
     | AND
     | ANDI
     | ASL
@@ -156,6 +155,18 @@ abcd
 add
     : ADD size? addressingMode COMMA dRegister #add_to_dRegister
     | ADD size? dRegister COMMA addressingMode #add_from_dRegister
+    ;
+
+adda
+    : ADDA size? addressingMode COMMA aRegister
+    ;
+
+addi
+    : ADDI size? immediateData COMMA addressingMode
+    ;
+
+addq
+    : ADDQ size? HASH number COMMA addressingMode
     ;
 
 nop

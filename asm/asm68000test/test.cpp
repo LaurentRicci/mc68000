@@ -79,7 +79,9 @@ BOOST_AUTO_TEST_CASE(label_duplicate)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
-
+// ====================================================================================================
+// ABCD
+// ====================================================================================================
 BOOST_AUTO_TEST_CASE(abcd_register)
 {
 	asmparser parser;
@@ -101,6 +103,9 @@ BOOST_AUTO_TEST_CASE(abcd_fail)
 	BOOST_CHECK_EQUAL(1, error);
 }
 
+// ====================================================================================================
+// ADD
+// ====================================================================================================
 BOOST_AUTO_TEST_CASE(add_from)
 {
 	asmparser parser;
@@ -128,8 +133,138 @@ BOOST_AUTO_TEST_CASE(add_to_byte)
 	auto opcode = parser.parseText("  add.b (a2), d0\n");
 	validate_hasValue<uint16_t>(0b1101'000'000'010'010, opcode);
 }
+// ====================================================================================================
+// ADDA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(adda_word_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  adda d2,A4\n");
+	validate_hasValue<uint16_t>(0b1101'100'011'000'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(adda_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  adda.b a2,A4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(adda_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  adda.w a2,A4\n");
+	validate_hasValue<uint16_t>(0b1101'100'011'001'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(adda_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  adda.l (a2),A4\n");
+	validate_hasValue<uint16_t>(0b1101'100'111'010'010, opcode);
+}
+// ====================================================================================================
+// ADDI
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(addi_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi.b #$34,(a2)\n");
+	validate_hasValue<uint16_t>(0b0000'0110'00'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(addi_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi.w #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0110'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(addi_word_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0110'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(addi_extended)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("   addi.w #$3456, $78(A4)\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x066c, code[0]);
+	BOOST_CHECK_EQUAL(0x3456, code[1]);
+	BOOST_CHECK_EQUAL(0x0078, code[2]);
+}
 
 
+BOOST_AUTO_TEST_CASE(addi_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi.l #$12345678,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0110'10'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+	BOOST_CHECK_EQUAL(0x5678, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(addi_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi #1,4(PC)\n  addi #2,4(PC,D0)\n  addi #3,#4\n");
+	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// ADDQ
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(addq)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq #4,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'100'0'01'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(addq_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq.b #4,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'100'0'00'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(addq_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq.l #8,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'000'0'10'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(addq_byte_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq.b #4,a2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(addq_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq #1,4(PC)\n  addq #2,4(PC,D0)\n  addq #3,#4\n");
+	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------

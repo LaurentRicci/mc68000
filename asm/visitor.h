@@ -18,8 +18,9 @@ public:
 private:
     std::vector<uint16_t>& code;                       // the assembly code as a results of the parsing
     
-    uint16_t extensionCount = 0;                       // the number of extra words for the addressing mode
-    uint16_t extensions[2] = { 0,0 };                  // the extra words for the addressing mode
+    //uint16_t extensionCount = 0;                       // the number of extra words for the addressing mode
+    //uint16_t extensions[2] = { 0,0 };                  // the extra words for the addressing mode
+	std::vector<uint16_t> extensionsList;         // the list of extra words for the addressing mode
 
     std::map<std::string, uint32_t>& labels;           // the labels found in the code label -> index
 	int pass = 0;                                      // the current pass (0 = first pass, 1 = second pass)
@@ -41,6 +42,10 @@ private:
 
     std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
+
+    virtual std::any visitAdda(parser68000::AddaContext* ctx) override;
+    virtual std::any visitAddi(parser68000::AddiContext* ctx) override;
+    virtual std::any visitAddq(parser68000::AddqContext* ctx) override;
 
 	std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -82,4 +87,5 @@ private:
     // Utilities
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
+    bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);
 };
