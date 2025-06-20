@@ -17,10 +17,12 @@ steps:
     gcc --version
     ls /usr/bin
 - task: CMake@1
+  displayName: Preparing emulator makefile
   inputs:
     workingDirectory: '.'
     cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
 - task: CMake@1
+  displayName: Building emulator
   inputs:
     workingDirectory: '.'
     cmakeArgs: '--build . --verbose'
@@ -42,3 +44,19 @@ steps:
     targetType: 'inline'
     script: './dasmtest'
     workingDirectory: 'dasmtest'
+- task: CMake@1
+  displayName: Preparing asm makefile
+  inputs:
+    workingDirectory: 'asm'
+    cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
+- task: CMake@1
+  displayName: Building asm project
+  inputs:
+    workingDirectory: 'asm'
+    cmakeArgs: '--build . --verbose'
+- task: Bash@3
+  displayName: Asm tests
+  inputs:
+    targetType: 'inline'
+    script: './asm68000test'
+    workingDirectory: 'asm/asm68000test'

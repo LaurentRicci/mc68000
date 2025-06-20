@@ -1,0 +1,14 @@
+# CMakeList.txt : CMake project for cputest, include source and define
+# project specific logic here.
+#
+cmake_minimum_required (VERSION 3.8)
+
+# Add source to this project's executable.
+add_executable (asm68000
+    main.cpp)
+
+#target_link_libraries(asm68000 PRIVATE antlr4_static)
+target_include_directories(asm68000 PRIVATE "..")
+target_compile_features(asm68000 PRIVATE cxx_std_20)
+target_link_libraries(asm68000 PUBLIC asm68000lib)
+
