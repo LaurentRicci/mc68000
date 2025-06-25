@@ -31,14 +31,13 @@ private:
 	mc68000::errors& errorList;                                 // the list of errors found during the parsing
 
 private:
-    std::any visitProg(parser68000::ProgContext* ctx);
-    std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx);
+    std::any visitProg(parser68000::ProgContext* ctx) override;
+    std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx) override;
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
-    std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx);
-    std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx);
-
-    uint16_t finalize_instruction(uint16_t opcode);
+	// Instructions
+    std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
+    std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
 
     std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
@@ -47,7 +46,13 @@ private:
     virtual std::any visitAddi(parser68000::AddiContext* ctx) override;
     virtual std::any visitAddq(parser68000::AddqContext* ctx) override;
 
-	std::any visitNop(parser68000::NopContext* ctx) override;
+    std::any visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx) override;
+    std::any visitAddx_indirect(parser68000::Addx_indirectContext* ctx) override;
+    
+    std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
+    std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
+
+    std::any visitNop(parser68000::NopContext* ctx) override;
 
 	// Addressing modes
     std::any visitDRegister(parser68000::DRegisterContext* context) override;
@@ -85,6 +90,7 @@ private:
     }
 
     // Utilities
+    uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);

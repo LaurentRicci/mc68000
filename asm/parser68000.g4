@@ -29,6 +29,8 @@ instructionSection
     | adda
     | addi
     | addq
+    | addx 
+    | and
     | nop
     | instruction size? arguments?
     ;
@@ -65,9 +67,7 @@ directive
     ;
 
 instruction
-    : ADDX
-    | AND
-    | ANDI
+    : ANDI
     | ASL
     | BCC
     | BCHG
@@ -167,6 +167,16 @@ addi
 
 addq
     : ADDQ size? HASH number COMMA addressingMode
+    ;
+
+addx
+    : ADDX size? dRegister COMMA dRegister                                         #addx_dRegister
+    | ADDX size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
+    ;
+
+and
+    : AND size? addressingMode COMMA dRegister #and_to_dRegister
+    | AND size? dRegister COMMA addressingMode #and_from_dRegister
     ;
 
 nop

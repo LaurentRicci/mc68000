@@ -259,12 +259,128 @@ BOOST_AUTO_TEST_CASE(addq_byte_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+BOOST_AUTO_TEST_CASE(addq_invalid_data)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addq.b #9,d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
 BOOST_AUTO_TEST_CASE(addq_invalid)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  addq #1,4(PC)\n  addq #2,4(PC,D0)\n  addq #3,#4\n");
 	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
 }
+
+// ====================================================================================================
+// ADDX
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(addx_register_word)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  addx.w d2,d4\n");
+    validate_hasValue<uint16_t>(0b1101'100'1'01'00'0'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(addx_register_byte)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  addx.b d2,d4\n");
+    validate_hasValue<uint16_t>(0b1101'100'1'00'00'0'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(addx_memory_word)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  addx.w -(a2),-(a4)\n");
+    validate_hasValue<uint16_t>(0b1101'100'1'01'00'1'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(addx_memory_long)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  addx.l -(a2),-(a4)\n");
+    validate_hasValue<uint16_t>(0b1101'100'1'10'00'1'010, opcode);
+}
+
+// ====================================================================================================
+// AND
+// ====================================================================================================
+
+// AND: Dn,<ea> (Dn is source, <ea> is destination)
+BOOST_AUTO_TEST_CASE(and_from)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  and d2,-(a3)\n");
+	validate_hasValue<uint16_t>(0b1100'010'101'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_from_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  and.w d2,(a3)\n");
+	validate_hasValue<uint16_t>(0b1100'010'101'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_from_byte)
+{
+    asmparser parser;	
+    auto opcode = parser.parseText("  and.b d1,(a2)\n");
+    validate_hasValue<uint16_t>(0b1100'001'100'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_from_long)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.l d3,(a4)\n");
+    validate_hasValue<uint16_t>(0b1100'011'110'010'100, opcode);
+}
+
+// AND: <ea>,Dn (<ea> is source, Dn is destination)
+BOOST_AUTO_TEST_CASE(and_to)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  and (a3)+,d2\n");
+	validate_hasValue<uint16_t>(0b1100'010'001'011'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_to_word)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.w (a3),d2\n");
+    validate_hasValue<uint16_t>(0b1100'010'001'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_to_byte)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.b (a2),d1\n");
+    validate_hasValue<uint16_t>(0b1100'001'000'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_to_long)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.l (a4),d3\n");
+    validate_hasValue<uint16_t>(0b1100'011'010'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(and_from_invalid)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.w d0,a1\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// Invalid addressing mode: AND from address register to Dn
+BOOST_AUTO_TEST_CASE(and_to_invalid)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  and.w a1,d0\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
 // -------------------------------
 // Label and variable tests
 // -------------------------------
