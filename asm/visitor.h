@@ -36,23 +36,25 @@ private:
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
 	// Instructions
-    std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
-    std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
+    virtual std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
+    virtual std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
 
-    std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
-    std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
+    virtual std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
+    virtual std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
 
     virtual std::any visitAdda(parser68000::AddaContext* ctx) override;
-    virtual std::any visitAddi(parser68000::AddiContext* ctx) override;
     virtual std::any visitAddq(parser68000::AddqContext* ctx) override;
 
-    std::any visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx) override;
-    std::any visitAddx_indirect(parser68000::Addx_indirectContext* ctx) override;
+    virtual std::any visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx) override;
+    virtual std::any visitAddx_indirect(parser68000::Addx_indirectContext* ctx) override;
     
-    std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
-    std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
+    virtual std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
+    virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
+
+    virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
+
 
 	// Addressing modes
     std::any visitDRegister(parser68000::DRegisterContext* context) override;
@@ -87,6 +89,10 @@ private:
 
     virtual std::any visitAddress(parser68000::AddressContext* ctx) override {  
        return ctx->value;  
+    }
+
+    virtual std::any visitImmediateInstruction(parser68000::ImmediateInstructionContext* ctx) override {
+        return ctx->value;
     }
 
     // Utilities

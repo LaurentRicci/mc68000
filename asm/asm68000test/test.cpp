@@ -380,7 +380,68 @@ BOOST_AUTO_TEST_CASE(and_to_invalid)
     auto opcode = parser.parseText("  and.w a1,d0\n");
     BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+// ====================================================================================================
+// ANDI
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(andi_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi.b #$34,(a2)\n");
+	validate_hasValue<uint16_t>(0b0000'0010'00'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
 
+BOOST_AUTO_TEST_CASE(andi_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi.w #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0010'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(andi_word_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0010'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(andi_extended)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("   andi.w #$3456, $78(A4)\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x026c, code[0]);
+	BOOST_CHECK_EQUAL(0x3456, code[1]);
+	BOOST_CHECK_EQUAL(0x0078, code[2]);
+}
+
+
+BOOST_AUTO_TEST_CASE(andi_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi.l #$12345678,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0010'10'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+	BOOST_CHECK_EQUAL(0x5678, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(andi_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #1,4(PC)\n  andi #2,4(PC,D0)\n  andi #3,#4\n");
+	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------

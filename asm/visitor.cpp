@@ -142,31 +142,6 @@ any visitor::visitAdda(parser68000::AddaContext* ctx)
 }
 
 /// <summary>
-///  ADDI size? immediateData COMMA addressingMode
-/// </summary>
-/// <param name="ctx"></param>
-/// <returns></returns>
-any visitor::visitAddi(parser68000::AddiContext* ctx)
-{
-	size = 1;
-	int arg = 1;
-	if (ctx->children.size() == 5) // if there is a size specified
-	{
-		size = any_cast<uint16_t>(visit(ctx->children[1]));
-		arg++; // the optional size is included so there is one extra child
-	}
-	visit(ctx->children[arg]);
-
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg+2]));
-	if (!isValidAddressingMode(ae, 0b101111111000))
-	{
-		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
-	}
-	uint16_t opcode = 0b0000'0110'00'000'000 | (size << 6) | ae;
-	return finalize_instruction(opcode);
-}
-
-/// <summary>
 /// ADDQ size? HASH number COMMA addressingMode
 /// </summary>
 any visitor::visitAddq(parser68000::AddqContext* ctx)
@@ -288,6 +263,29 @@ any visitor::visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+///  XXXI size? immediateData COMMA addressingMode
+/// </summary>
+any visitor::visitImmediate(parser68000::ImmediateContext* ctx)
+{
+	uint16_t specific_opcode = any_cast<uint16_t>(visit(ctx->children[0]));
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	visit(ctx->children[arg]);
+
+	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (!isValidAddressingMode(ae, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
+	}
+	uint16_t opcode = 0b0000'0000'00'000'000 | (specific_opcode << 8) | (size << 6) | ae;
+	return finalize_instruction(opcode);
+}
 
 
 any visitor::visitNop(parser68000::NopContext* ctx)

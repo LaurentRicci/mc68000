@@ -27,12 +27,16 @@ instructionSection
     : abcd
     | add
     | adda
-    | addi
     | addq
     | addx 
     | and
     | nop
+    | immediate
     | instruction size? arguments?
+    ;
+
+immediate
+    : immediateInstruction size? immediateData COMMA addressingMode
     ;
 
 size returns [uint16_t value]
@@ -67,8 +71,7 @@ directive
     ;
 
 instruction
-    : ANDI
-    | ASL
+    : ASL
     | BCC
     | BCHG
     | BCLR
@@ -147,6 +150,11 @@ instruction
     | UNLK
     ;
 
+immediateInstruction  returns [uint16_t value]
+    : ADDI { $value = 0b0110;}
+    | ANDI { $value = 0b0010;}
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -159,10 +167,6 @@ add
 
 adda
     : ADDA size? addressingMode COMMA aRegister
-    ;
-
-addi
-    : ADDI size? immediateData COMMA addressingMode
     ;
 
 addq
