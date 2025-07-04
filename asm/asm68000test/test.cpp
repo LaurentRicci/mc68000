@@ -442,6 +442,33 @@ BOOST_AUTO_TEST_CASE(andi_invalid)
 	auto opcode = parser.parseText("  andi #1,4(PC)\n  andi #2,4(PC,D0)\n  andi #3,#4\n");
 	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
 }
+
+// ====================================================================================================
+// Immediate instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(immediate)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  addi.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x066c, opcode);
+
+	opcode = parser.parseText("  subi.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x046c, opcode);
+
+	opcode = parser.parseText("  andi.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x026c, opcode);
+
+	opcode = parser.parseText("  eori.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x0a6c, opcode);
+
+	opcode = parser.parseText("  ori.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x006c, opcode);
+
+	opcode = parser.parseText("  cmpi.w #$3456, $78(A4)\n");
+	validate_hasValue<uint16_t>(0x0c6c, opcode);
+}
+
+
 // -------------------------------
 // Label and variable tests
 // -------------------------------

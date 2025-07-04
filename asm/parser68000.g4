@@ -96,13 +96,11 @@ instruction
     | CLR
     | CMP
     | CMPA
-    | CMPI
     | CMPM
     | DBCC
     | DIVS
     | DIVU
     | EOR
-    | EORI
     | EXG
     | EXT
     | ILLEGAL
@@ -125,7 +123,6 @@ instruction
     | NOP
     | NOT
     | OR
-    | ORI
     | PEA
     | ROL
     | ROR
@@ -139,7 +136,6 @@ instruction
     | STOP
     | SUB
     | SUBA
-    | SUBI
     | SUBQ
     | SUBX
     | SWAP
@@ -152,7 +148,11 @@ instruction
 
 immediateInstruction  returns [uint16_t value]
     : ADDI { $value = 0b0110;}
+    | SUBI { $value = 0b0100;}
     | ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    | CMPI { $value = 0b1100;}
     ;
 
 abcd
