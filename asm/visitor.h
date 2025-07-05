@@ -31,23 +31,32 @@ private:
 	mc68000::errors& errorList;                                 // the list of errors found during the parsing
 
 private:
-    std::any visitProg(parser68000::ProgContext* ctx);
-    std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx);
+    std::any visitProg(parser68000::ProgContext* ctx) override;
+    std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx) override;
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
-    std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx);
-    std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx);
+	// Instructions
+    virtual std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
+    virtual std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
 
-    uint16_t finalize_instruction(uint16_t opcode);
-
-    std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
-    std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
+    virtual std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
+    virtual std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
 
     virtual std::any visitAdda(parser68000::AddaContext* ctx) override;
-    virtual std::any visitAddi(parser68000::AddiContext* ctx) override;
     virtual std::any visitAddq(parser68000::AddqContext* ctx) override;
 
-	std::any visitNop(parser68000::NopContext* ctx) override;
+    virtual std::any visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx) override;
+    virtual std::any visitAddx_indirect(parser68000::Addx_indirectContext* ctx) override;
+    
+    virtual std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
+    virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
+
+    virtual std::any visitAndi2ccr(parser68000::Andi2ccrContext* ctx) override;
+
+    std::any visitNop(parser68000::NopContext* ctx) override;
+
+    virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
+
 
 	// Addressing modes
     std::any visitDRegister(parser68000::DRegisterContext* context) override;
@@ -84,7 +93,12 @@ private:
        return ctx->value;  
     }
 
+    virtual std::any visitImmediateInstruction(parser68000::ImmediateInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
     // Utilities
+    uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);

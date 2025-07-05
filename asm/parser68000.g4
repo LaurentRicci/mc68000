@@ -27,10 +27,17 @@ instructionSection
     : abcd
     | add
     | adda
-    | addi
     | addq
+    | addx 
+    | and
+    | andi2ccr
     | nop
+    | immediate
     | instruction size? arguments?
+    ;
+
+immediate
+    : immediateInstruction size? immediateData COMMA addressingMode
     ;
 
 size returns [uint16_t value]
@@ -65,10 +72,7 @@ directive
     ;
 
 instruction
-    : ADDX
-    | AND
-    | ANDI
-    | ASL
+    : ASL
     | BCC
     | BCHG
     | BCLR
@@ -93,13 +97,11 @@ instruction
     | CLR
     | CMP
     | CMPA
-    | CMPI
     | CMPM
     | DBCC
     | DIVS
     | DIVU
     | EOR
-    | EORI
     | EXG
     | EXT
     | ILLEGAL
@@ -122,7 +124,6 @@ instruction
     | NOP
     | NOT
     | OR
-    | ORI
     | PEA
     | ROL
     | ROR
@@ -136,7 +137,6 @@ instruction
     | STOP
     | SUB
     | SUBA
-    | SUBI
     | SUBQ
     | SUBX
     | SWAP
@@ -145,6 +145,15 @@ instruction
     | TRAPV
     | TST
     | UNLK
+    ;
+
+immediateInstruction  returns [uint16_t value]
+    : ADDI { $value = 0b0110;}
+    | SUBI { $value = 0b0100;}
+    | ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    | CMPI { $value = 0b1100;}
     ;
 
 abcd
@@ -161,12 +170,22 @@ adda
     : ADDA size? addressingMode COMMA aRegister
     ;
 
-addi
-    : ADDI size? immediateData COMMA addressingMode
-    ;
-
 addq
     : ADDQ size? HASH number COMMA addressingMode
+    ;
+
+addx
+    : ADDX size? dRegister COMMA dRegister                                         #addx_dRegister
+    | ADDX size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
+    ;
+
+and
+    : AND size? addressingMode COMMA dRegister #and_to_dRegister
+    | AND size? dRegister COMMA addressingMode #and_from_dRegister
+    ;
+
+andi2ccr
+    : ANDI immediateData COMMA CCR
     ;
 
 nop
