@@ -287,6 +287,14 @@ any visitor::visitImmediate(parser68000::ImmediateContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitAndi2ccr(parser68000::Andi2ccrContext* ctx)
+{
+	size = 0;
+	visit(ctx->children[1]);
+
+	uint16_t opcode = 0b0000'0010'0011'1100 ;
+	return finalize_instruction(opcode);
+}
 
 any visitor::visitNop(parser68000::NopContext* ctx)
 {

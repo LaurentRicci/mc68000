@@ -30,6 +30,7 @@ instructionSection
     | addq
     | addx 
     | and
+    | andi2ccr
     | nop
     | immediate
     | instruction size? arguments?
@@ -181,6 +182,10 @@ addx
 and
     : AND size? addressingMode COMMA dRegister #and_to_dRegister
     | AND size? dRegister COMMA addressingMode #and_from_dRegister
+    ;
+
+andi2ccr
+    : ANDI immediateData COMMA CCR
     ;
 
 nop

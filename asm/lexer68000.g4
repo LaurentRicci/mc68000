@@ -139,8 +139,10 @@ HEXADECIMAL : '$' [0-9a-fA-F]+ ;//        { setText(Integer.toString(Integer.par
 //
 DREG : [dD][0-7] ;
 AREG : [aA][0-7] ;
-SP options { caseInsensitive=true; } : 'sp' ;
-PC options { caseInsensitive=true; } : 'pc' ;
+SP options  { caseInsensitive=true; } : 'sp' ;
+PC options  { caseInsensitive=true; } : 'pc' ;
+CCR options { caseInsensitive=true; } : 'ccr' ;
+SR options  { caseInsensitive=true; } : 'sr' ;
 
 //
 // Identifiers

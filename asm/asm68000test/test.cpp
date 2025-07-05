@@ -444,6 +444,25 @@ BOOST_AUTO_TEST_CASE(andi_invalid)
 }
 
 // ====================================================================================================
+// ANDI to CCR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(andi2ccr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$34, CCR\n");
+	validate_hasValue<uint16_t>(0b0000'0010'0011'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(andi2ccr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$345, CCR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // Immediate instructions
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(immediate)
