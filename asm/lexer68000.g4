@@ -21,6 +21,7 @@ ADDX    options { caseInsensitive=true; } : 'addx' ;
 AND     options { caseInsensitive=true; } : 'and' ;
 ANDI    options { caseInsensitive=true; } : 'andi' ;
 ASL     options { caseInsensitive=true; } : 'asl' ;
+ASR     options { caseInsensitive=true; } : 'asr' ;
 BCC     options { caseInsensitive=true; } : 'bcc' ;
 BCHG    options { caseInsensitive=true; } : 'bchg' ;
 BCLR    options { caseInsensitive=true; } : 'bclr' ;

@@ -296,6 +296,94 @@ any visitor::visitAndi2ccr(parser68000::Andi2ccrContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitAndi2sr(parser68000::Andi2srContext* ctx)
+{
+	size = 1;
+	visit(ctx->children[1]);
+
+	uint16_t opcode = 0b0000'0010'0111'1100;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? dRegister COMMA dRegister
+/// </summary>
+any visitor::visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t dx = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+
+	uint16_t opcode = 0b1110'000'0'00'1'00'000 | (dx << 9) | (direction << 8) | (size << 6) | dy;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 2;
+	if (ctx->children.size() == 6) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg]));
+	if (immediate_data <= 0 || immediate_data > 8)
+	{
+		addError("Immediate data for ASL/ASR must be between 0 and 8", ctx->children[arg + 1]);
+		immediate_data = 0; // reset to 0 to avoid further errors
+	}
+	else if (immediate_data == 8)
+	{
+		immediate_data = 0; // 8 is treated as 0 in the instruction encoding
+	}
+	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+
+	uint16_t opcode = 0b1110'000'0'00'0'00'000 | (immediate_data << 9) | (direction << 8) | (size << 6) | dy;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? addressingMode
+/// </summary>
+any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		if (size != 1)
+		{
+			addError("Invalid size for ASL/ASR, only .W is supported", ctx->children[1]);
+			size = 1;
+		}
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(ae, 0b001111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b1110'000'0'11'000'000 | (direction << 8) | ae;
+	return finalize_instruction(opcode);
+}
+
 any visitor::visitNop(parser68000::NopContext* ctx)
 {
 	uint16_t opcode = 0b0100'1110'0111'0001;

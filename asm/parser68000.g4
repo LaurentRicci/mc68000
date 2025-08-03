@@ -31,6 +31,8 @@ instructionSection
     | addx 
     | and
     | andi2ccr
+    | andi2sr
+    | aslAsr
     | nop
     | immediate
     | instruction size? arguments?
@@ -72,8 +74,7 @@ directive
     ;
 
 instruction
-    : ASL
-    | BCC
+    : BCC
     | BCHG
     | BCLR
     | BCS
@@ -156,6 +157,11 @@ immediateInstruction  returns [uint16_t value]
     | CMPI { $value = 0b1100;}
     ;
 
+shiftInstruction returns [uint16_t value]
+    : ASL { $value = 1; }
+    | ASR { $value = 0; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -186,6 +192,16 @@ and
 
 andi2ccr
     : ANDI immediateData COMMA CCR
+    ;
+
+andi2sr
+    : ANDI immediateData COMMA SR
+    ;
+
+aslAsr
+    : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
+    | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
+    | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
     ;
 
 nop

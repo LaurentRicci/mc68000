@@ -463,6 +463,107 @@ BOOST_AUTO_TEST_CASE(andi2ccr_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// ANDI to SR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(andi2sr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$432, SR\n");
+	validate_hasValue<uint16_t>(0b0000'0010'0111'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x432, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(andi2sr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$34567, SR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// ASL, ASR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(asl_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr (a4)\n");
+	validate_hasValue<uint16_t>(0b1110'000'0'11'010'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(asl_eam_size)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(asl_eam_wrongsize)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.b (a3)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(asl_eam_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(asl_eam_2errors)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.l a3\n");
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.b #1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'00'0'00'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr.b #1,d1\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'00'0'00'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_w)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w #8,d0\n");
+	validate_hasValue<uint16_t>(0xe140, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w #12,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(asl_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'10'1'00'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'10'1'00'000, opcode);
+}
+
+
+// ====================================================================================================
 // Immediate instructions
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(immediate)

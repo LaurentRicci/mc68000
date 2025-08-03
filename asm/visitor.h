@@ -52,6 +52,11 @@ private:
     virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
 
     virtual std::any visitAndi2ccr(parser68000::Andi2ccrContext* ctx) override;
+	virtual std::any visitAndi2sr(parser68000::Andi2srContext* ctx) override;
+
+    virtual std::any visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx) override;
+    virtual std::any visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx) override;
+    virtual std::any visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -96,6 +101,10 @@ private:
     virtual std::any visitImmediateInstruction(parser68000::ImmediateInstructionContext* ctx) override {
         return ctx->value;
     }
+
+    virtual std::any visitShiftInstruction(parser68000::ShiftInstructionContext* ctx) override {
+        return ctx->value;
+	}
 
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
