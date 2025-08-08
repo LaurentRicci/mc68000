@@ -58,6 +58,8 @@ private:
     virtual std::any visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx) override;
     virtual std::any visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx) override;
 
+	virtual std::any visitBcc(parser68000::BccContext* ctx) override;
+
     std::any visitNop(parser68000::NopContext* ctx) override;
 
     virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
@@ -105,6 +107,10 @@ private:
     virtual std::any visitShiftInstruction(parser68000::ShiftInstructionContext* ctx) override {
         return ctx->value;
 	}
+
+    virtual std::any visitBccInstruction(parser68000::BccInstructionContext* ctx) override {
+        return ctx->value;
+    }
 
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);

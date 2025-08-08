@@ -33,6 +33,7 @@ instructionSection
     | andi2ccr
     | andi2sr
     | aslAsr
+    | bcc
     | nop
     | immediate
     | instruction size? arguments?
@@ -74,26 +75,12 @@ directive
     ;
 
 instruction
-    : BCC
-    | BCHG
+    : BCHG
     | BCLR
-    | BCS
-    | BEQ
-    | BGE
-    | BGT
-    | BHI
-    | BLE
-    | BLS
-    | BLT
-    | BMI
-    | BNE
-    | BPL
     | BRA
     | BSET
     | BSR
     | BTST
-    | BVC
-    | BVS
     | CHK
     | CLR
     | CMP
@@ -162,6 +149,24 @@ shiftInstruction returns [uint16_t value]
     | ASR { $value = 0; }
     ;
 
+bccInstruction returns [uint16_t value]
+    : BCC { $value = 0b0100; }
+    | BCS { $value = 0b0101; }
+    | BEQ { $value = 0b0111; }
+    | BNE { $value = 0b0110; }
+    | BGE { $value = 0b1100; }
+    | BGT { $value = 0b1110; }
+    | BHI { $value = 0b0010; }
+    | BLE { $value = 0b1111; }
+    | BLS { $value = 0b0011; }
+    | BLT { $value = 0b1101; }
+    | BMI { $value = 0b1011; }
+    | BPL { $value = 0b1010; }
+    | BVC { $value = 0b1000; }
+    | BVS { $value = 0b1001; }
+    | BRA { $value = 0b0000; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -202,6 +207,10 @@ aslAsr
     : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
     | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
     | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
+    ;
+
+bcc
+    : bccInstruction address
     ;
 
 nop

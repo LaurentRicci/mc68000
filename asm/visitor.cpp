@@ -6,12 +6,12 @@ using namespace mc68000;
 uint16_t visitor::finalize_instruction(uint16_t opcode)
 {
 	code.push_back(opcode);
-	currentAddress++;
+	currentAddress += 2;
 	if (!extensionsList.empty())
 	{
 		code.insert(code.end(), extensionsList.begin(), extensionsList.end());
 	}
-	currentAddress += (uint32_t) extensionsList.size();
+	currentAddress += 2 * (uint32_t) extensionsList.size();
 	extensionsList.clear();
 	return opcode;
 }
@@ -384,6 +384,64 @@ any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContex
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// BCC address
+/// </summary>
+any visitor::visitBcc(parser68000::BccContext* ctx)
+{
+	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	uint32_t target = 0;
+	any address = visit(ctx->children[1]);
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		auto it = labels.find(label);
+		if (it == labels.end())
+		{
+			// During the 1st pass the label may not be defined yet
+			if (pass != 0)
+			{
+				addError("Label not found: " + label, ctx->children[0]);
+			}
+			target = 0; // Add a placeholder for the label
+		}
+		else
+		{
+			target = it->second;
+		}
+	}
+	else if (address.type() == typeid(int32_t))
+	{
+		target = any_cast<int32_t>(address);
+	}
+
+	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
+	if (offset > 0x7fff || offset < -0x8000)
+	{
+		addError("Address doesn't fit on in one word: " + std::to_string(offset), ctx->children[1]);
+		offset = 0x100; // to force 2 words for the instruction 
+	}
+	uint16_t opcode = 0;
+	if (address.type() == typeid(int32_t) && offset >= -128 && offset <= 127) // offset fits in one byte
+	{
+		uint16_t offset8 = (uint16_t)(offset & 0xff);
+		opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
+	}
+	else
+	{
+		// The offset could potentially fit in one byte but during the 1st pass the exact offset may be unknown
+		// so we need to always reserve two words for the instruction to avoid further address calculation errors. 
+		uint16_t offset16 = (uint16_t)(offset & 0xffff);
+		opcode = 0b0110'0000'0000'0000 | (condition << 8);
+		extensionsList.push_back(offset16); // Add the offset as an extension
+	}
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// NOP
+/// </summary>
 any visitor::visitNop(parser68000::NopContext* ctx)
 {
 	uint16_t opcode = 0b0100'1110'0111'0001;

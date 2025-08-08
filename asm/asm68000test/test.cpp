@@ -588,7 +588,84 @@ BOOST_AUTO_TEST_CASE(immediate)
 	validate_hasValue<uint16_t>(0x0c6c, opcode);
 }
 
+// ====================================================================================================
+// BCC instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bcc_address)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bcc $3458\n");
+	validate_hasValue<uint16_t>(0b0110'0100'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x3456, code[1]);
+}
 
+BOOST_AUTO_TEST_CASE(bcc_addressShort)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bcc $34\n");
+	validate_hasValue<uint16_t>(0b0110'0100'00110010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(bcc_addressNegative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  nop\n  bcc $0\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b0110'0100'11111100, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_all)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  nop\n  bcc $20\n  bcs $20\n  beq $20\n  bne $20\n  bge $20\n  bgt $20\n  bhi $20\n  ble $0\n  bls $0\n  blt $0\n  bmi $0\n  bpl $0\n  bvc $0\n  bvs $0\n  bra $0\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(16, code.size());
+	BOOST_CHECK_EQUAL(0x4e71, code[0]);
+	BOOST_CHECK_EQUAL(0x641c, code[1]);
+	BOOST_CHECK_EQUAL(0x651a, code[2]);
+	BOOST_CHECK_EQUAL(0x6718, code[3]);
+	BOOST_CHECK_EQUAL(0x6616, code[4]);
+	BOOST_CHECK_EQUAL(0x6c14, code[5]);
+	BOOST_CHECK_EQUAL(0x6e12, code[6]);
+	BOOST_CHECK_EQUAL(0x6210, code[7]);
+	BOOST_CHECK_EQUAL(0x6fee, code[8]);
+	BOOST_CHECK_EQUAL(0x63ec, code[9]);
+	BOOST_CHECK_EQUAL(0x6dea, code[10]);
+	BOOST_CHECK_EQUAL(0x6be8, code[11]);
+	BOOST_CHECK_EQUAL(0x6ae6, code[12]);
+	BOOST_CHECK_EQUAL(0x68e4, code[13]);
+	BOOST_CHECK_EQUAL(0x69e2, code[14]);
+	BOOST_CHECK_EQUAL(0x60e0, code[15]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0100'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_labelUnknown)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc data\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bcc_labelTooFar)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc $12346\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------
