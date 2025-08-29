@@ -34,6 +34,7 @@ instructionSection
     | andi2sr
     | aslAsr
     | bcc
+    | bchg
     | nop
     | immediate
     | instruction size? arguments?
@@ -75,8 +76,7 @@ directive
     ;
 
 instruction
-    : BCHG
-    | BCLR
+    : BCLR
     | BRA
     | BSET
     | BSR
@@ -211,6 +211,11 @@ aslAsr
 
 bcc
     : bccInstruction address
+    ;
+
+bchg
+    : BCHG dRegister COMMA addressingMode     #bchg_dRegister
+    | BCHG HASH number COMMA addressingMode   #bchg_immediateData
     ;
 
 nop

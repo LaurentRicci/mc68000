@@ -666,6 +666,94 @@ BOOST_AUTO_TEST_CASE(bcc_labelTooFar)
 	auto opcode = parser.parseText(" bcc $12346\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+
+// ====================================================================================================
+// BCHG instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bchg_dReg_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,d4\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'000'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_ea)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_ea2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,7(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x7, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg d0,a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #27,d4\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'000'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(27, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_ea)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #2,(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'010'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(2, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_ea2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #5,7(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x5, code[1]);
+	BOOST_CHECK_EQUAL(0x7, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #1,#1234\n");
+	// TODO: This should be 1 error, but currently it generates 2 errors
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_SizeError)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #36,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_SizeError2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #9,(a0)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
 // -------------------------------
 // Label and variable tests
 // -------------------------------

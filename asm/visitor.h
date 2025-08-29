@@ -60,6 +60,9 @@ private:
 
 	virtual std::any visitBcc(parser68000::BccContext* ctx) override;
 
+	virtual std::any visitBchg_dRegister(parser68000::Bchg_dRegisterContext* ctx) override;
+	virtual std::any visitBchg_immediateData(parser68000::Bchg_immediateDataContext* ctx) override;
+
     std::any visitNop(parser68000::NopContext* ctx) override;
 
     virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
