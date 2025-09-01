@@ -442,8 +442,10 @@ any visitor::visitBcc(parser68000::BccContext* ctx)
 /// <summary>
 /// BCHG dRegister COMMA addressingMode
 /// </summary>
-any visitor::visitBchg_dRegister(parser68000::Bchg_dRegisterContext* ctx) 
+any visitor::visitBit_dRegister(parser68000::Bit_dRegisterContext* ctx) 
 {
+	uint16_t instruction = any_cast<uint16_t>(visit(ctx->children[0]));
+
 	size = 1;
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[3]));
@@ -451,15 +453,17 @@ any visitor::visitBchg_dRegister(parser68000::Bchg_dRegisterContext* ctx)
 	{
 		addError("Invalid addressing mode: ", ctx->children[3]);
 	}
-	uint16_t opcode = 0b0000'000'101'000'000 | (dReg << 9) | effectiveAddress;
+	uint16_t opcode = 0b0000'000'1'00'000'000 | (dReg << 9) | (instruction << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
 /// BCHG HASH number COMMA addressingMode
 /// </summary>
-any visitor::visitBchg_immediateData(parser68000::Bchg_immediateDataContext* ctx)
+any visitor::visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx)
 {
+	uint16_t instruction = any_cast<uint16_t>(visit(ctx->children[0]));
+
 	size = 0;
 	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[2]));
 	uint16_t data8 = (uint16_t)(immediate_data & 0xff);
@@ -482,7 +486,7 @@ any visitor::visitBchg_immediateData(parser68000::Bchg_immediateDataContext* ctx
 			: "Immediate data for Bchg must be between 0 and 31", ctx->children[2]);
 	}
 
-	uint16_t opcode = 0b0000'100'001'000'000 | effectiveAddress;
+	uint16_t opcode = 0b0000'100'0'00'000'000 | (instruction << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 

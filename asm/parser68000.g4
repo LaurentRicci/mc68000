@@ -34,7 +34,7 @@ instructionSection
     | andi2sr
     | aslAsr
     | bcc
-    | bchg
+    | bit
     | nop
     | immediate
     | instruction size? arguments?
@@ -76,11 +76,8 @@ directive
     ;
 
 instruction
-    : BCLR
-    | BRA
-    | BSET
+    : BRA
     | BSR
-    | BTST
     | CHK
     | CLR
     | CMP
@@ -167,6 +164,13 @@ bccInstruction returns [uint16_t value]
     | BRA { $value = 0b0000; }
     ;
 
+bitInstruction returns [uint16_t value]
+    : BCHG { $value = 0b001; }
+    | BCLR { $value = 0b010; }
+    | BSET { $value = 0b011; }
+    | BTST { $value = 0b000; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -213,9 +217,9 @@ bcc
     : bccInstruction address
     ;
 
-bchg
-    : BCHG dRegister COMMA addressingMode     #bchg_dRegister
-    | BCHG HASH number COMMA addressingMode   #bchg_immediateData
+bit
+    : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
+    | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
     ;
 
 nop

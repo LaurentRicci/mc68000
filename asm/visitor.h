@@ -60,8 +60,8 @@ private:
 
 	virtual std::any visitBcc(parser68000::BccContext* ctx) override;
 
-	virtual std::any visitBchg_dRegister(parser68000::Bchg_dRegisterContext* ctx) override;
-	virtual std::any visitBchg_immediateData(parser68000::Bchg_immediateDataContext* ctx) override;
+	virtual std::any visitBit_dRegister(parser68000::Bit_dRegisterContext* ctx) override;
+	virtual std::any visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -115,6 +115,9 @@ private:
         return ctx->value;
     }
 
+    virtual std::any visitBitInstruction(parser68000::BitInstructionContext* ctx) override {
+        return ctx->value;
+    }
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);

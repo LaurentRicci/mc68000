@@ -754,6 +754,38 @@ BOOST_AUTO_TEST_CASE(bchg_Imm_SizeError2)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+// ====================================================================================================
+// BIT instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bit_dReg_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,d4\n  bclr d2,d4\n  bset d2,d4\n  bTST d2,d4\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(4, code.size());
+	BOOST_CHECK_EQUAL(0x0544, code[0]);
+	BOOST_CHECK_EQUAL(0x0584, code[1]);
+	BOOST_CHECK_EQUAL(0x05C4, code[2]);
+	BOOST_CHECK_EQUAL(0x0504, code[3]);
+}
+BOOST_AUTO_TEST_CASE(bit_immediate)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #2,(A4)\n  bclr #2,(A4)\n  bset #5,7(a4)\n  btst #5,7(a4)\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(10, code.size());
+	BOOST_CHECK_EQUAL(0x0854, code[0]);
+	BOOST_CHECK_EQUAL(0x0002, code[1]);
+	BOOST_CHECK_EQUAL(0x0894, code[2]);
+	BOOST_CHECK_EQUAL(0x0002, code[3]);
+
+	BOOST_CHECK_EQUAL(0x08ec, code[4]);
+	BOOST_CHECK_EQUAL(0x0005, code[5]);
+	BOOST_CHECK_EQUAL(0x0007, code[6]);
+	BOOST_CHECK_EQUAL(0x082c, code[7]);
+	BOOST_CHECK_EQUAL(0x0005, code[8]);
+	BOOST_CHECK_EQUAL(0x0007, code[9]);
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------
