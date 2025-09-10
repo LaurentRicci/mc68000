@@ -76,9 +76,7 @@ directive
     ;
 
 instruction
-    : BRA
-    | BSR
-    | CHK
+    : CHK
     | CLR
     | CMP
     | CMPA
@@ -162,6 +160,7 @@ bccInstruction returns [uint16_t value]
     | BVC { $value = 0b1000; }
     | BVS { $value = 0b1001; }
     | BRA { $value = 0b0000; }
+    | BSR { $value = 0b0001; }
     ;
 
 bitInstruction returns [uint16_t value]

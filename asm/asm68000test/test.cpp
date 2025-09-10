@@ -786,6 +786,32 @@ BOOST_AUTO_TEST_CASE(bit_immediate)
 	BOOST_CHECK_EQUAL(0x0005, code[8]);
 	BOOST_CHECK_EQUAL(0x0007, code[9]);
 }
+
+// ====================================================================================================
+// BRA instruction
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bra_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bra data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0000'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
+
+// ====================================================================================================
+// BSR instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bsr_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bsr data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0001'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------
