@@ -489,7 +489,64 @@ any visitor::visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx)
 	uint16_t opcode = 0b0000'100'0'00'000'000 | (instruction << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+/// <summary>
+/// CHK addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitChk(parser68000::ChkContext* ctx)
+{
+	size = 1;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3]));
+	uint16_t opcode = 0b0100'000'110'000'000 | (dReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
 
+/// <summary>
+/// CLR size? addressingMode
+/// </summary>
+any visitor::visitClr(parser68000::ClrContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'0010'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// CMP size? addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitCmp(parser68000::CmpContext* ctx)
+{
+	uint16_t size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (size == 0 && (effectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("CMP to Address register should be word or long", ctx->children[arg]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+	uint16_t opcode = 0b1011'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
 /// <summary>
 /// NOP
 /// </summary>

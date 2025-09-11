@@ -812,6 +812,81 @@ BOOST_AUTO_TEST_CASE(bsr_label)
 	BOOST_CHECK_EQUAL(5, code.size());
 	BOOST_CHECK_EQUAL(0x8, code[1]);
 }
+
+// ====================================================================================================
+// CHK instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(chk_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  chk (a2),d4\n");
+	validate_hasValue<uint16_t>(0b0100'100'110'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(chk_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  chk a2,d4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// CLR instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(clr_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr.b (a2)\n");
+	validate_hasValue<uint16_t>(0b0100'0010'00'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr (a4)+\n");
+	validate_hasValue<uint16_t>(0b0100'0010'01'011'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr.l -(a1)\n");
+	validate_hasValue<uint16_t>(0b0100'0010'10'100'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr #$1234\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// CMP instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(cmp_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp (a2),d4\n");
+	validate_hasValue<uint16_t>(0b1011'100'001'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmp_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.b (a3)+,d0\n");
+	validate_hasValue<uint16_t>(0b1011'000'000'011'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmp_byteFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.b a2,d4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(cmp_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.l #$123456,d1\n");
+	validate_hasValue<uint16_t>(0b1011'001'010'111'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x12, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------

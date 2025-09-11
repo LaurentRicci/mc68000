@@ -63,6 +63,11 @@ private:
 	virtual std::any visitBit_dRegister(parser68000::Bit_dRegisterContext* ctx) override;
 	virtual std::any visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx) override;
 
+	virtual std::any visitChk(parser68000::ChkContext* ctx) override;
+
+    virtual std::any visitClr(parser68000::ClrContext* ctx) override;
+	virtual std::any visitCmp(parser68000::CmpContext* ctx) override;
+
     std::any visitNop(parser68000::NopContext* ctx) override;
 
     virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;

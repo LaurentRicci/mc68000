@@ -35,6 +35,9 @@ instructionSection
     | aslAsr
     | bcc
     | bit
+    | chk
+    | clr
+    | cmp
     | nop
     | immediate
     | instruction size? arguments?
@@ -76,10 +79,7 @@ directive
     ;
 
 instruction
-    : CHK
-    | CLR
-    | CMP
-    | CMPA
+    : CMPA
     | CMPM
     | DBCC
     | DIVS
@@ -219,6 +219,18 @@ bcc
 bit
     : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
     | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
+    ;
+
+chk
+    : CHK addressingMode COMMA dRegister
+    ;
+
+clr
+    : CLR size? addressingMode
+    ;
+
+cmp
+    : CMP size? addressingMode COMMA dRegister
     ;
 
 nop
