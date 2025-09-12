@@ -31,6 +31,13 @@ instructionSection
     | addx 
     | and
     | andi2ccr
+    | andi2sr
+    | aslAsr
+    | bcc
+    | bit
+    | chk
+    | clr
+    | cmp
     | nop
     | immediate
     | instruction size? arguments?
@@ -72,31 +79,7 @@ directive
     ;
 
 instruction
-    : ASL
-    | BCC
-    | BCHG
-    | BCLR
-    | BCS
-    | BEQ
-    | BGE
-    | BGT
-    | BHI
-    | BLE
-    | BLS
-    | BLT
-    | BMI
-    | BNE
-    | BPL
-    | BRA
-    | BSET
-    | BSR
-    | BTST
-    | BVC
-    | BVS
-    | CHK
-    | CLR
-    | CMP
-    | CMPA
+    : CMPA
     | CMPM
     | DBCC
     | DIVS
@@ -156,6 +139,37 @@ immediateInstruction  returns [uint16_t value]
     | CMPI { $value = 0b1100;}
     ;
 
+shiftInstruction returns [uint16_t value]
+    : ASL { $value = 1; }
+    | ASR { $value = 0; }
+    ;
+
+bccInstruction returns [uint16_t value]
+    : BCC { $value = 0b0100; }
+    | BCS { $value = 0b0101; }
+    | BEQ { $value = 0b0111; }
+    | BNE { $value = 0b0110; }
+    | BGE { $value = 0b1100; }
+    | BGT { $value = 0b1110; }
+    | BHI { $value = 0b0010; }
+    | BLE { $value = 0b1111; }
+    | BLS { $value = 0b0011; }
+    | BLT { $value = 0b1101; }
+    | BMI { $value = 0b1011; }
+    | BPL { $value = 0b1010; }
+    | BVC { $value = 0b1000; }
+    | BVS { $value = 0b1001; }
+    | BRA { $value = 0b0000; }
+    | BSR { $value = 0b0001; }
+    ;
+
+bitInstruction returns [uint16_t value]
+    : BCHG { $value = 0b001; }
+    | BCLR { $value = 0b010; }
+    | BSET { $value = 0b011; }
+    | BTST { $value = 0b000; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -186,6 +200,37 @@ and
 
 andi2ccr
     : ANDI immediateData COMMA CCR
+    ;
+
+andi2sr
+    : ANDI immediateData COMMA SR
+    ;
+
+aslAsr
+    : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
+    | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
+    | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
+    ;
+
+bcc
+    : bccInstruction address
+    ;
+
+bit
+    : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
+    | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
+    ;
+
+chk
+    : CHK addressingMode COMMA dRegister
+    ;
+
+clr
+    : CLR size? addressingMode
+    ;
+
+cmp
+    : CMP size? addressingMode COMMA dRegister
     ;
 
 nop

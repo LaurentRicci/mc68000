@@ -52,6 +52,21 @@ private:
     virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
 
     virtual std::any visitAndi2ccr(parser68000::Andi2ccrContext* ctx) override;
+	virtual std::any visitAndi2sr(parser68000::Andi2srContext* ctx) override;
+
+    virtual std::any visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx) override;
+    virtual std::any visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx) override;
+    virtual std::any visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx) override;
+
+	virtual std::any visitBcc(parser68000::BccContext* ctx) override;
+
+	virtual std::any visitBit_dRegister(parser68000::Bit_dRegisterContext* ctx) override;
+	virtual std::any visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx) override;
+
+	virtual std::any visitChk(parser68000::ChkContext* ctx) override;
+
+    virtual std::any visitClr(parser68000::ClrContext* ctx) override;
+	virtual std::any visitCmp(parser68000::CmpContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -97,6 +112,17 @@ private:
         return ctx->value;
     }
 
+    virtual std::any visitShiftInstruction(parser68000::ShiftInstructionContext* ctx) override {
+        return ctx->value;
+	}
+
+    virtual std::any visitBccInstruction(parser68000::BccInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitBitInstruction(parser68000::BitInstructionContext* ctx) override {
+        return ctx->value;
+    }
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);

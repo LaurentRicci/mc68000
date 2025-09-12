@@ -463,6 +463,107 @@ BOOST_AUTO_TEST_CASE(andi2ccr_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// ANDI to SR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(andi2sr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$432, SR\n");
+	validate_hasValue<uint16_t>(0b0000'0010'0111'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x432, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(andi2sr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  andi #$34567, SR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// ASL, ASR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(asl_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr (a4)\n");
+	validate_hasValue<uint16_t>(0b1110'000'0'11'010'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(asl_eam_size)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(asl_eam_wrongsize)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.b (a3)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(asl_eam_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(asl_eam_2errors)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.l a3\n");
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.b #1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'00'0'00'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr.b #1,d1\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'00'0'00'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_w)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w #8,d0\n");
+	validate_hasValue<uint16_t>(0xe140, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(asl_immediate_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.w #12,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(asl_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asl.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'10'1'00'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(asr_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  asr.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'10'1'00'000, opcode);
+}
+
+
+// ====================================================================================================
 // Immediate instructions
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(immediate)
@@ -487,7 +588,305 @@ BOOST_AUTO_TEST_CASE(immediate)
 	validate_hasValue<uint16_t>(0x0c6c, opcode);
 }
 
+// ====================================================================================================
+// BCC instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bcc_address)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bcc $3458\n");
+	validate_hasValue<uint16_t>(0b0110'0100'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x3456, code[1]);
+}
 
+BOOST_AUTO_TEST_CASE(bcc_addressShort)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bcc $34\n");
+	validate_hasValue<uint16_t>(0b0110'0100'00110010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(bcc_addressNegative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  nop\n  bcc $0\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b0110'0100'11111100, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_all)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  nop\n  bcc $20\n  bcs $20\n  beq $20\n  bne $20\n  bge $20\n  bgt $20\n  bhi $20\n  ble $0\n  bls $0\n  blt $0\n  bmi $0\n  bpl $0\n  bvc $0\n  bvs $0\n  bra $0\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(16, code.size());
+	BOOST_CHECK_EQUAL(0x4e71, code[0]);
+	BOOST_CHECK_EQUAL(0x641c, code[1]);
+	BOOST_CHECK_EQUAL(0x651a, code[2]);
+	BOOST_CHECK_EQUAL(0x6718, code[3]);
+	BOOST_CHECK_EQUAL(0x6616, code[4]);
+	BOOST_CHECK_EQUAL(0x6c14, code[5]);
+	BOOST_CHECK_EQUAL(0x6e12, code[6]);
+	BOOST_CHECK_EQUAL(0x6210, code[7]);
+	BOOST_CHECK_EQUAL(0x6fee, code[8]);
+	BOOST_CHECK_EQUAL(0x63ec, code[9]);
+	BOOST_CHECK_EQUAL(0x6dea, code[10]);
+	BOOST_CHECK_EQUAL(0x6be8, code[11]);
+	BOOST_CHECK_EQUAL(0x6ae6, code[12]);
+	BOOST_CHECK_EQUAL(0x68e4, code[13]);
+	BOOST_CHECK_EQUAL(0x69e2, code[14]);
+	BOOST_CHECK_EQUAL(0x60e0, code[15]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0100'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bcc_labelUnknown)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc data\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bcc_labelTooFar)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc $12346\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// BCHG instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bchg_dReg_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,d4\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'000'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_ea)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_ea2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,7(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'010'101'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x7, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_dReg_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg d0,a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #27,d4\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'000'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(27, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_ea)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #2,(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'010'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(2, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_ea2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #5,7(a4)\n");
+	validate_hasValue<uint16_t>(0b0000'1000'01'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x5, code[1]);
+	BOOST_CHECK_EQUAL(0x7, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #1,#1234\n");
+	// TODO: This should be 1 error, but currently it generates 2 errors
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_SizeError)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #36,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(bchg_Imm_SizeError2)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bchg #9,(a0)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// BIT instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bit_dReg_dReg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg d2,d4\n  bclr d2,d4\n  bset d2,d4\n  bTST d2,d4\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(4, code.size());
+	BOOST_CHECK_EQUAL(0x0544, code[0]);
+	BOOST_CHECK_EQUAL(0x0584, code[1]);
+	BOOST_CHECK_EQUAL(0x05C4, code[2]);
+	BOOST_CHECK_EQUAL(0x0504, code[3]);
+}
+BOOST_AUTO_TEST_CASE(bit_immediate)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  bchg #2,(A4)\n  bclr #2,(A4)\n  bset #5,7(a4)\n  btst #5,7(a4)\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(10, code.size());
+	BOOST_CHECK_EQUAL(0x0854, code[0]);
+	BOOST_CHECK_EQUAL(0x0002, code[1]);
+	BOOST_CHECK_EQUAL(0x0894, code[2]);
+	BOOST_CHECK_EQUAL(0x0002, code[3]);
+
+	BOOST_CHECK_EQUAL(0x08ec, code[4]);
+	BOOST_CHECK_EQUAL(0x0005, code[5]);
+	BOOST_CHECK_EQUAL(0x0007, code[6]);
+	BOOST_CHECK_EQUAL(0x082c, code[7]);
+	BOOST_CHECK_EQUAL(0x0005, code[8]);
+	BOOST_CHECK_EQUAL(0x0007, code[9]);
+}
+
+// ====================================================================================================
+// BRA instruction
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bra_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bra data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0000'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
+
+// ====================================================================================================
+// BSR instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(bsr_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bsr data\n nop\n nop\n nop\ndata:\n");
+	validate_hasValue<uint16_t>(0b0110'0001'0000'0000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(5, code.size());
+	BOOST_CHECK_EQUAL(0x8, code[1]);
+}
+
+// ====================================================================================================
+// CHK instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(chk_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  chk (a2),d4\n");
+	validate_hasValue<uint16_t>(0b0100'100'110'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(chk_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  chk a2,d4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// CLR instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(clr_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr.b (a2)\n");
+	validate_hasValue<uint16_t>(0b0100'0010'00'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr (a4)+\n");
+	validate_hasValue<uint16_t>(0b0100'0010'01'011'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr.l -(a1)\n");
+	validate_hasValue<uint16_t>(0b0100'0010'10'100'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(clr_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  clr #$1234\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// CMP instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(cmp_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp (a2),d4\n");
+	validate_hasValue<uint16_t>(0b1011'100'001'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmp_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.b (a3)+,d0\n");
+	validate_hasValue<uint16_t>(0b1011'000'000'011'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmp_byteFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.b a2,d4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(cmp_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmp.l #$123456,d1\n");
+	validate_hasValue<uint16_t>(0b1011'001'010'111'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x12, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
 // -------------------------------
 // Label and variable tests
 // -------------------------------

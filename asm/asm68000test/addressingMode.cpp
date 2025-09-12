@@ -168,7 +168,7 @@ namespace addressing_mode
 
 		const std::vector<uint16_t>& code = parser.getCode();
 		BOOST_CHECK_EQUAL(6, code.size());
-		BOOST_CHECK_EQUAL(0x6,    code[1]);
+		BOOST_CHECK_EQUAL(0xc,    code[1]);
 		BOOST_CHECK_EQUAL(0xd07c, code[2]);
 		BOOST_CHECK_EQUAL(0x1,    code[3]);
 		BOOST_CHECK_EQUAL(0x4e71, code[4]);

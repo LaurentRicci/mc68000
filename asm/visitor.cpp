@@ -6,12 +6,12 @@ using namespace mc68000;
 uint16_t visitor::finalize_instruction(uint16_t opcode)
 {
 	code.push_back(opcode);
-	currentAddress++;
+	currentAddress += 2;
 	if (!extensionsList.empty())
 	{
 		code.insert(code.end(), extensionsList.begin(), extensionsList.end());
 	}
-	currentAddress += (uint32_t) extensionsList.size();
+	currentAddress += 2 * (uint32_t) extensionsList.size();
 	extensionsList.clear();
 	return opcode;
 }
@@ -94,10 +94,10 @@ any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 		arg++; // the optional size is included so there is one extra child
 	}
 
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg]));
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
 
-	uint16_t opcode = 0b1101'000'000'000'000 | (dReg << 9) | (size << 6) | ae;
+	uint16_t opcode = 0b1101'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -111,9 +111,9 @@ any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx
 		arg++; // the optional size is included so there is one extra child
 	}
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg+2]));
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg+2]));
 
-	uint16_t opcode = (0b1101'000'100'000'000 | (dReg << 9) | (size << 6) | ae);
+	uint16_t opcode = (0b1101'000'100'000'000 | (dReg << 9) | (size << 6) | effectiveAddress);
 	return finalize_instruction(opcode);
 }
 
@@ -135,9 +135,9 @@ any visitor::visitAdda(parser68000::AddaContext* ctx)
 
 		arg++; // the optional size is included so there is one extra child
 	}
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg]));
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
-	uint16_t opcode = 0b1101'000'011'000'000 | (aReg << 9) | (opmode << 6) | ae;
+	uint16_t opcode = 0b1101'000'011'000'000 | (aReg << 9) | (opmode << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -164,16 +164,16 @@ any visitor::visitAddq(parser68000::AddqContext* ctx)
 		immediate_data = 0; // 8 is treated as 0 in the instruction encoding
 	}
 
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg + 3]));
-	if (!isValidAddressingMode(ae, 0b111111111000))
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 3]));
+	if (!isValidAddressingMode(effectiveAddress, 0b111111111000))
 	{
 		addError("Invalid addressing mode: ", ctx->children[arg + 3]);
 	}
-	else if (size == 0 && 0b001'000 == (ae & 0b111'000))
+	else if (size == 0 && 0b001'000 == (effectiveAddress & 0b111'000))
 	{
 		addError("ADDQ to Address register should be word or long", ctx->children[arg + 3]);
 	}
-	uint16_t opcode = 0b0101'000'0'00'000'000 | (immediate_data << 9) | (size << 6) | ae;
+	uint16_t opcode = 0b0101'000'0'00'000'000 | (immediate_data << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -229,14 +229,14 @@ any visitor::visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx)
 		arg++; // the optional size is included so there is one extra child
 	}
 
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg]));
-	if (!isValidAddressingMode(ae, 0b101111'111111))
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111111))
 	{
 		addError("Invalid addressing mode: ", ctx->children[arg]);
 	}
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 
-	uint16_t opcode = 0b1100'000'000'000'000 | (dReg << 9) | (size << 6) | ae;
+	uint16_t opcode = 0b1100'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -253,13 +253,13 @@ any visitor::visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx
 		arg++; // the optional size is included so there is one extra child
 	}
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
-	if (!isValidAddressingMode(ae, 0b001111'111000))
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001111'111000))
 	{
 		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
 	}
 
-	uint16_t opcode = (0b1100'000'100'000'000 | (dReg << 9) | (size << 6) | ae);
+	uint16_t opcode = (0b1100'000'100'000'000 | (dReg << 9) | (size << 6) | effectiveAddress);
 	return finalize_instruction(opcode);
 }
 
@@ -278,12 +278,12 @@ any visitor::visitImmediate(parser68000::ImmediateContext* ctx)
 	}
 	visit(ctx->children[arg]);
 
-	uint16_t ae = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
-	if (!isValidAddressingMode(ae, 0b101111111000))
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
 	{
 		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
 	}
-	uint16_t opcode = 0b0000'0000'00'000'000 | (specific_opcode << 8) | (size << 6) | ae;
+	uint16_t opcode = 0b0000'0000'00'000'000 | (specific_opcode << 8) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -296,6 +296,260 @@ any visitor::visitAndi2ccr(parser68000::Andi2ccrContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitAndi2sr(parser68000::Andi2srContext* ctx)
+{
+	size = 1;
+	visit(ctx->children[1]);
+
+	uint16_t opcode = 0b0000'0010'0111'1100;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? dRegister COMMA dRegister
+/// </summary>
+any visitor::visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t dx = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+
+	uint16_t opcode = 0b1110'000'0'00'1'00'000 | (dx << 9) | (direction << 8) | (size << 6) | dy;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 2;
+	if (ctx->children.size() == 6) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg]));
+	if (immediate_data <= 0 || immediate_data > 8)
+	{
+		addError("Immediate data for ASL/ASR must be between 0 and 8", ctx->children[arg + 1]);
+		immediate_data = 0; // reset to 0 to avoid further errors
+	}
+	else if (immediate_data == 8)
+	{
+		immediate_data = 0; // 8 is treated as 0 in the instruction encoding
+	}
+	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+
+	uint16_t opcode = 0b1110'000'0'00'0'00'000 | (immediate_data << 9) | (direction << 8) | (size << 6) | dy;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ASL/ASR size? addressingMode
+/// </summary>
+any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx)
+{
+	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		if (size != 1)
+		{
+			addError("Invalid size for ASL/ASR, only .W is supported", ctx->children[1]);
+			size = 1;
+		}
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b1110'000'0'11'000'000 | (direction << 8) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// BCC address
+/// </summary>
+any visitor::visitBcc(parser68000::BccContext* ctx)
+{
+	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	uint32_t target = 0;
+	any address = visit(ctx->children[1]);
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		auto it = labels.find(label);
+		if (it == labels.end())
+		{
+			// During the 1st pass the label may not be defined yet
+			if (pass != 0)
+			{
+				addError("Label not found: " + label, ctx->children[0]);
+			}
+			target = 0; // Add a placeholder for the label
+		}
+		else
+		{
+			target = it->second;
+		}
+	}
+	else if (address.type() == typeid(int32_t))
+	{
+		target = any_cast<int32_t>(address);
+	}
+
+	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
+	if (offset > 0x7fff || offset < -0x8000)
+	{
+		addError("Address doesn't fit on in one word: " + std::to_string(offset), ctx->children[1]);
+		offset = 0x100; // to force 2 words for the instruction 
+	}
+	uint16_t opcode = 0;
+	if (address.type() == typeid(int32_t) && offset >= -128 && offset <= 127) // offset fits in one byte
+	{
+		uint16_t offset8 = (uint16_t)(offset & 0xff);
+		opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
+	}
+	else
+	{
+		// The offset could potentially fit in one byte but during the 1st pass the exact offset may be unknown
+		// so we need to always reserve two words for the instruction to avoid further address calculation errors. 
+		uint16_t offset16 = (uint16_t)(offset & 0xffff);
+		opcode = 0b0110'0000'0000'0000 | (condition << 8);
+		extensionsList.push_back(offset16); // Add the offset as an extension
+	}
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// BCHG dRegister COMMA addressingMode
+/// </summary>
+any visitor::visitBit_dRegister(parser68000::Bit_dRegisterContext* ctx) 
+{
+	uint16_t instruction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 1;
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[3]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[3]);
+	}
+	uint16_t opcode = 0b0000'000'1'00'000'000 | (dReg << 9) | (instruction << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// BCHG HASH number COMMA addressingMode
+/// </summary>
+any visitor::visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx)
+{
+	uint16_t instruction = any_cast<uint16_t>(visit(ctx->children[0]));
+
+	size = 0;
+	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[2]));
+	uint16_t data8 = (uint16_t)(immediate_data & 0xff);
+	extensionsList.push_back(data8);
+
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[4]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[4]);
+	}
+	if ((effectiveAddress & 0b111'000) == 0b000'000)
+	{
+		size = 2; // if the addressing mode is data register direct then the size must be long
+	}
+
+	if (immediate_data < 0 || (size == 0 && immediate_data > 7) || (size == 2 && immediate_data > 31))
+	{
+		addError(size == 0 
+			? "Immediate data for Bchg must be between 0 and 7"
+			: "Immediate data for Bchg must be between 0 and 31", ctx->children[2]);
+	}
+
+	uint16_t opcode = 0b0000'100'0'00'000'000 | (instruction << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+/// <summary>
+/// CHK addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitChk(parser68000::ChkContext* ctx)
+{
+	size = 1;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3]));
+	uint16_t opcode = 0b0100'000'110'000'000 | (dReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// CLR size? addressingMode
+/// </summary>
+any visitor::visitClr(parser68000::ClrContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'0010'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// CMP size? addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitCmp(parser68000::CmpContext* ctx)
+{
+	uint16_t size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (size == 0 && (effectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("CMP to Address register should be word or long", ctx->children[arg]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+	uint16_t opcode = 0b1011'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+/// <summary>
+/// NOP
+/// </summary>
 any visitor::visitNop(parser68000::NopContext* ctx)
 {
 	uint16_t opcode = 0b0100'1110'0111'0001;
@@ -590,20 +844,20 @@ any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
 	return adRegister;
 }
 
-bool visitor::isValidAddressingMode(unsigned short ea, unsigned short acceptable)
+bool visitor::isValidAddressingMode(unsigned short effectiveAddress, unsigned short acceptable)
 {
 	static const unsigned masks[] = {
 		1 << 11, 1 << 10, 1 << 9, 1 << 8, 1 << 7, 1 << 6, 1 << 5, // mode 000 to 110
 		1 << 4, 1 << 3, 1 << 2, 1 << 1, 1                         // mode 111 
 	};
-	unsigned mode = ea >> 3;
+	unsigned mode = effectiveAddress >> 3;
 	if (mode != 7)
 	{
 		return (acceptable & masks[mode]) == masks[mode];
 	}
 
 	static const unsigned offsets[] = { 7, 8, 10, 11, 9 }; // 000, 001, 100, 010, 011
-	mode = ea & 7;
+	mode = effectiveAddress & 7;
 	if (mode > 4)
 	{
 		return false;
