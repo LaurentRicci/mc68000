@@ -547,6 +547,55 @@ any visitor::visitCmp(parser68000::CmpContext* ctx)
 	uint16_t opcode = 0b1011'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// CMPA size? addressingMode COMMA aRegister
+/// </summary>
+any visitor::visitCmpa(parser68000::CmpaContext* ctx)
+{
+	uint16_t size = 0b011;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		if (size == 0)
+		{
+			addError("invalid size only .W or .L are supported", ctx->children[1]);
+		}
+		else if (size == 1)
+		{
+			size = 0b011; // for CMPA size .W is encoded as 0b011
+		}
+		else if (size == 2)
+		{
+			size = 0b111; // for CMPA size .L is encoded as 0b111
+		}
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
+	uint16_t opcode = 0b1011'000'000'000'000 | (aReg << 9) | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// CMPM size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement
+/// </summary>
+any visitor::visitCmpm(parser68000::CmpmContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+
+	uint16_t ay = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t ax = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
+	uint16_t opcode = 0b1011'000'1'00'001'000 | (ax << 9) | (size << 6) | ay;
+	return finalize_instruction(opcode);
+}
 /// <summary>
 /// NOP
 /// </summary>

@@ -887,6 +887,53 @@ BOOST_AUTO_TEST_CASE(cmp_long)
 	BOOST_CHECK_EQUAL(0x12, code[1]);
 	BOOST_CHECK_EQUAL(0x3456, code[2]);
 }
+// ====================================================================================================
+// CMPA instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(cmpa_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpa (a2),a4\n");
+	validate_hasValue<uint16_t>(0b1011'100'011'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmpa_byteFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpa.b a2,a4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(cmpa_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpa.l #$123456,a1\n");
+	validate_hasValue<uint16_t>(0b1011'001'111'111'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x12, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
+// ====================================================================================================
+// CMPM instructions
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(cmpm_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpm (a2)+,(a4)+\n");
+	validate_hasValue<uint16_t>(0b1011'100'1'01'001'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmpm_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpm.b (a4)+,(a2)+\n");
+	validate_hasValue<uint16_t>(0b1011'010'1'00'001'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(cmpm_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpm.l (a0)+,(a1)+\n");
+	validate_hasValue<uint16_t>(0b1011'001'1'10'001'000, opcode);
+}
+
 // -------------------------------
 // Label and variable tests
 // -------------------------------

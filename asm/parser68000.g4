@@ -38,6 +38,8 @@ instructionSection
     | chk
     | clr
     | cmp
+    | cmpa
+    | cmpm
     | nop
     | immediate
     | instruction size? arguments?
@@ -79,9 +81,7 @@ directive
     ;
 
 instruction
-    : CMPA
-    | CMPM
-    | DBCC
+    : DBCC
     | DIVS
     | DIVU
     | EOR
@@ -231,6 +231,14 @@ clr
 
 cmp
     : CMP size? addressingMode COMMA dRegister
+    ;
+
+cmpa
+    : CMPA size? addressingMode COMMA aRegister
+    ;
+
+cmpm
+    : CMPM size? aRegisterIndirectPostIncrement COMMA aRegisterIndirectPostIncrement
     ;
 
 nop

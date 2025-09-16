@@ -64,9 +64,10 @@ private:
 	virtual std::any visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx) override;
 
 	virtual std::any visitChk(parser68000::ChkContext* ctx) override;
-
     virtual std::any visitClr(parser68000::ClrContext* ctx) override;
 	virtual std::any visitCmp(parser68000::CmpContext* ctx) override;
+    virtual std::any visitCmpa(parser68000::CmpaContext* ctx) override;
+    virtual std::any visitCmpm(parser68000::CmpmContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
