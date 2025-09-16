@@ -40,6 +40,7 @@ instructionSection
     | cmp
     | cmpa
     | cmpm
+    | dbcc
     | nop
     | immediate
     | instruction size? arguments?
@@ -81,8 +82,7 @@ directive
     ;
 
 instruction
-    : DBCC
-    | DIVS
+    : DIVS
     | DIVU
     | EOR
     | EXG
@@ -163,6 +163,26 @@ bccInstruction returns [uint16_t value]
     | BSR { $value = 0b0001; }
     ;
 
+dbccInstruction returns [uint16_t value]
+    : DBCC { $value = 0b0100; }
+    | DBCS { $value = 0b0101; }
+    | DBEQ { $value = 0b0111; }
+    | DBNE { $value = 0b0110; }
+    | DBGE { $value = 0b1100; }
+    | DBGT { $value = 0b1110; }
+    | DBHI { $value = 0b0010; }
+    | DBLE { $value = 0b1111; }
+    | DBLS { $value = 0b0011; }
+    | DBLT { $value = 0b1101; }
+    | DBMI { $value = 0b1011; }
+    | DBPL { $value = 0b1010; }
+    | DBVC { $value = 0b1000; }
+    | DBVS { $value = 0b1001; }
+    | DBRA { $value = 0b0001; }
+    | DBF  { $value = 0b0001; }
+    | DBT  { $value = 0b0000; }
+    ;
+
 bitInstruction returns [uint16_t value]
     : BCHG { $value = 0b001; }
     | BCLR { $value = 0b010; }
@@ -239,6 +259,10 @@ cmpa
 
 cmpm
     : CMPM size? aRegisterIndirectPostIncrement COMMA aRegisterIndirectPostIncrement
+    ;
+
+dbcc
+    : dbccInstruction dRegister COMMA address
     ;
 
 nop

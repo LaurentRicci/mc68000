@@ -949,9 +949,102 @@ BOOST_AUTO_TEST_CASE(address1)
 
 }
 
+// ====================================================================================================
+// DBCC
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(dbcc_basic)
+{
+    asmparser parser;
+    auto opcode = parser.parseText(" dbcc d2, label\nlabel:\n");
+    validate_hasValue<uint16_t>(0b0101'0100'11001'010, opcode);
+    const std::vector<uint16_t>& code = parser.getCode();
+    BOOST_CHECK_EQUAL(2, code.size());
+    BOOST_CHECK_EQUAL(0x2, code[1]); // offset to label is 0
+}
 
+BOOST_AUTO_TEST_CASE(dbcc_numeric)
+{
+    asmparser parser;
+    auto opcode = parser.parseText(" dbcc d3, $1234\n");
+    validate_hasValue<uint16_t>(0b0101'0100'11001'011, opcode);
+    const std::vector<uint16_t>& code = parser.getCode();
+    BOOST_CHECK_EQUAL(2, code.size());
+    BOOST_CHECK_EQUAL(0x1232, code[1]); // offset = 0x1234 - 2
+}
 
+BOOST_AUTO_TEST_CASE(dbcc_labelUnknown)
+{
+    asmparser parser;
+    auto opcode = parser.parseText(" dbcc d2, missinglabel\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 
+BOOST_AUTO_TEST_CASE(dbcc_labelTooFar)
+{
+    asmparser parser;
+    auto opcode = parser.parseText(" dbcc d2, $12346\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 
+BOOST_AUTO_TEST_CASE(dbcc_all)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(
+		" dbcc d0, $20\n"
+		" dbcs d1, $20\n"
+		" dbeq d2, $20\n"
+		" dbne d3, $20\n"
+		" dbge d4, $20\n"
+		" dbgt d5, $20\n"
+		" dbhi d6, $20\n"
+		" dble d7, $20\n"
+		" dbls d0, $20\n"
+		" dblt d1, $20\n"
+		" dbmi d2, $20\n"
+		" dbpl d3, $20\n"
+		" dbvc d4, $20\n"
+		" dbvs d5, $20\n"
+		" dbt  d6, $20\n"
+		" dbf  d7, $20\n"
+		" dbra d0, $20\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2*17, code.size());
+	BOOST_CHECK_EQUAL(0x54C8, code[0]);
+	BOOST_CHECK_EQUAL(0x55C9, code[2]);
+	BOOST_CHECK_EQUAL(0x57CA, code[4]);
+	BOOST_CHECK_EQUAL(0x56CB, code[6]);
+	BOOST_CHECK_EQUAL(0x5CCC, code[8]);
+	BOOST_CHECK_EQUAL(0x5ECD, code[10]);
+	BOOST_CHECK_EQUAL(0x52CE, code[12]);
+	BOOST_CHECK_EQUAL(0x5FCF, code[14]);
+	BOOST_CHECK_EQUAL(0x53C8, code[16]);
+	BOOST_CHECK_EQUAL(0x5DC9, code[18]);
+	BOOST_CHECK_EQUAL(0x5BCA, code[20]);
+	BOOST_CHECK_EQUAL(0x5ACB, code[22]);
+	BOOST_CHECK_EQUAL(0x58CC, code[24]);
+	BOOST_CHECK_EQUAL(0x59CD, code[26]);
+	BOOST_CHECK_EQUAL(0x50CE, code[28]);
+	BOOST_CHECK_EQUAL(0x51CF, code[30]);
+	BOOST_CHECK_EQUAL(0x51C8, code[32]);
+
+	BOOST_CHECK_EQUAL(0x1e, code[1]);
+	BOOST_CHECK_EQUAL(0x1a, code[3]);
+	BOOST_CHECK_EQUAL(0x16, code[5]);
+	BOOST_CHECK_EQUAL(0x12, code[7]);
+	BOOST_CHECK_EQUAL(0x0e, code[9]);
+	BOOST_CHECK_EQUAL(0x0a, code[11]);
+	BOOST_CHECK_EQUAL(0x06, code[13]);
+	BOOST_CHECK_EQUAL(0x02, code[15]);
+	BOOST_CHECK_EQUAL(0xfffe, code[17]);
+	BOOST_CHECK_EQUAL(0xfffa, code[19]);
+	BOOST_CHECK_EQUAL(0xfff6, code[21]);
+	BOOST_CHECK_EQUAL(0xfff2, code[23]);
+	BOOST_CHECK_EQUAL(0xffee, code[25]);
+	BOOST_CHECK_EQUAL(0xffea, code[27]);
+	BOOST_CHECK_EQUAL(0xffe6, code[29]);
+	BOOST_CHECK_EQUAL(0xffe2, code[31]);
+	BOOST_CHECK_EQUAL(0xffde, code[33]);
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()

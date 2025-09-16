@@ -68,6 +68,7 @@ private:
 	virtual std::any visitCmp(parser68000::CmpContext* ctx) override;
     virtual std::any visitCmpa(parser68000::CmpaContext* ctx) override;
     virtual std::any visitCmpm(parser68000::CmpmContext* ctx) override;
+    virtual std::any visitDbcc(parser68000::DbccContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -122,6 +123,10 @@ private:
     }
 
     virtual std::any visitBitInstruction(parser68000::BitInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitDbccInstruction(parser68000::DbccInstructionContext* ctx) override {
         return ctx->value;
     }
     // Utilities
