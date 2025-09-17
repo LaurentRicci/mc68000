@@ -41,6 +41,8 @@ instructionSection
     | cmpa
     | cmpm
     | dbcc
+    | divs
+    | divu
     | nop
     | immediate
     | instruction size? arguments?
@@ -82,9 +84,7 @@ directive
     ;
 
 instruction
-    : DIVS
-    | DIVU
-    | EOR
+    : EOR
     | EXG
     | EXT
     | ILLEGAL
@@ -263,6 +263,14 @@ cmpm
 
 dbcc
     : dbccInstruction dRegister COMMA address
+    ;
+
+divs
+    : DIVS addressingMode COMMA dRegister
+    ;
+
+divu
+    : DIVU addressingMode COMMA dRegister
     ;
 
 nop

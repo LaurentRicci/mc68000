@@ -640,6 +640,28 @@ any visitor::visitDbcc(parser68000::DbccContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitDiv(tree::ParseTree* ctx, bool isSigned)
+{
+	size = 1;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = (isSigned? 0b1000'000'111'000'000 : 0b1000'000'011'000'000) | (dReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitDivs(parser68000::DivsContext* ctx)
+{
+	return visitDiv(ctx, true);
+}
+any visitor::visitDivu(parser68000::DivuContext* ctx)
+{
+	return visitDiv(ctx, false);
+}
+
+
 /// <summary>
 /// NOP
 /// </summary>

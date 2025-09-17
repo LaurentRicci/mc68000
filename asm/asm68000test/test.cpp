@@ -1047,4 +1047,37 @@ BOOST_AUTO_TEST_CASE(dbcc_all)
 
 }
 
+// ====================================================================================================
+// DIVS
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(divs_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" divs (a3)+,d2\n");
+	validate_hasValue<uint16_t>(0b1000'010'111'011'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(divs_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" divs a2, d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// DIVU
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(divu_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" divu -(a3),d4\n");
+	validate_hasValue<uint16_t>(0b1000'100'011'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(divu_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" divu a6, d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 BOOST_AUTO_TEST_SUITE_END()
