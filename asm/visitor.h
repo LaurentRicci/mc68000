@@ -69,8 +69,10 @@ private:
     virtual std::any visitCmpa(parser68000::CmpaContext* ctx) override;
     virtual std::any visitCmpm(parser68000::CmpmContext* ctx) override;
     virtual std::any visitDbcc(parser68000::DbccContext* ctx) override;
-	virtual std::any visitDivs(parser68000::DivsContext* ctx) override;
-	virtual std::any visitDivu(parser68000::DivuContext* ctx) override;
+    virtual std::any visitDivs(parser68000::DivsContext* ctx) override;
+    virtual std::any visitDivu(parser68000::DivuContext* ctx) override;
+    virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
+    virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -136,5 +138,6 @@ private:
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);
-	std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
+    std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
+    std::any visitMul(tree::ParseTree* ctx, bool isSigned);
 };

@@ -1080,4 +1080,39 @@ BOOST_AUTO_TEST_CASE(divu_failed)
 	auto opcode = parser.parseText(" divu a6, d2\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+
+// ====================================================================================================
+// MULS
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(muls_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" muls (a3)+,d2\n");
+	validate_hasValue<uint16_t>(0b1100'010'111'011'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(muls_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" muls a2, d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// MULU
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(mulu_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" mulu -(a3),d4\n");
+	validate_hasValue<uint16_t>(0b1100'100'011'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(mulu_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" divu a6, d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

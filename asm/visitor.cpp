@@ -652,15 +652,48 @@ any visitor::visitDiv(tree::ParseTree* ctx, bool isSigned)
 	uint16_t opcode = (isSigned? 0b1000'000'111'000'000 : 0b1000'000'011'000'000) | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+/// <summary>
+/// DIVS size? addressingMode COMMA dRegister
+/// </summary>
 any visitor::visitDivs(parser68000::DivsContext* ctx)
 {
 	return visitDiv(ctx, true);
 }
+
+/// <summary>
+/// DIVS size? addressingMode COMMA dRegister
+/// </summary>
 any visitor::visitDivu(parser68000::DivuContext* ctx)
 {
 	return visitDiv(ctx, false);
 }
 
+any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
+{
+	size = 1;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = (isSigned ? 0b1100'000'111'000'000 : 0b1100'000'011'000'000) | (dReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+/// <summary>
+/// MULS size? addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitMuls(parser68000::MulsContext* ctx)
+{
+	return visitMul(ctx, true);
+}
+/// <summary>
+/// MULU size? addressingMode COMMA dRegister
+/// </summary>
+any visitor::visitMulu(parser68000::MuluContext* ctx)
+{
+	return visitMul(ctx, false);
+}
 
 /// <summary>
 /// NOP

@@ -43,6 +43,8 @@ instructionSection
     | dbcc
     | divs
     | divu
+    | muls
+    | mulu
     | nop
     | immediate
     | instruction size? arguments?
@@ -99,8 +101,6 @@ instruction
     | MOVEM
     | MOVEP
     | MOVEQ
-    | MULS
-    | MULU
     | NBCD
     | NEG
     | NEGX
@@ -271,6 +271,14 @@ divs
 
 divu
     : DIVU addressingMode COMMA dRegister
+    ;
+
+muls
+    : MULS addressingMode COMMA dRegister
+    ;
+
+mulu
+    : MULU addressingMode COMMA dRegister
     ;
 
 nop
