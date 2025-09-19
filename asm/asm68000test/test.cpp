@@ -1104,6 +1104,45 @@ BOOST_AUTO_TEST_CASE(eor_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// EORI to CCR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(eori2ccr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  eori #$34, CCR\n");
+	validate_hasValue<uint16_t>(0b0000'1010'0011'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(eori2ccr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  eori #$345, CCR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// EORI to SR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(eori2sr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  eori #$432, SR\n");
+	validate_hasValue<uint16_t>(0b0000'1010'0111'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x432, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(eori2sr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  eori #$34567, SR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)
@@ -1137,4 +1176,42 @@ BOOST_AUTO_TEST_CASE(mulu_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+// ====================================================================================================
+// ORI to CCR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(ori2ccr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ori #$34, CCR\n");
+	validate_hasValue<uint16_t>(0b0000'0000'0011'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(ori2ccr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ori #$345, CCR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// ORI to SR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(ori2sr_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ori #$432, SR\n");
+	validate_hasValue<uint16_t>(0b0000'0000'0111'1100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x432, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(ori2sr_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ori #$34567, SR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -287,21 +287,33 @@ any visitor::visitImmediate(parser68000::ImmediateContext* ctx)
 	return finalize_instruction(opcode);
 }
 
-any visitor::visitAndi2ccr(parser68000::Andi2ccrContext* ctx)
+/// <summary>
+/// ANDI immediateData COMMA CCR
+/// EORI immediateData COMMA CCR
+/// ORI  immediateData COMMA CCR
+/// </summary>
+any visitor::visitToCCR(parser68000::ToCCRContext* ctx)
 {
 	size = 0;
+	uint16_t operation = any_cast<uint16_t>(visit(ctx->children[0]));
 	visit(ctx->children[1]);
 
-	uint16_t opcode = 0b0000'0010'0011'1100 ;
+	uint16_t opcode = 0b0000'0000'0011'1100 | (operation << 8);
 	return finalize_instruction(opcode);
 }
 
-any visitor::visitAndi2sr(parser68000::Andi2srContext* ctx)
+/// <summary>
+/// ANDI immediateData COMMA SR
+/// EORI immediateData COMMA SR
+/// ORI  immediateData COMMA SR
+/// </summary>
+any visitor::visitToSR(parser68000::ToSRContext* ctx)
 {
 	size = 1;
+	uint16_t operation = any_cast<uint16_t>(visit(ctx->children[0]));
 	visit(ctx->children[1]);
 
-	uint16_t opcode = 0b0000'0010'0111'1100;
+	uint16_t opcode = 0b0000'0000'0111'1100 | (operation << 8);
 	return finalize_instruction(opcode);
 }
 

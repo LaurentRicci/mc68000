@@ -51,8 +51,8 @@ private:
     virtual std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
     virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
 
-    virtual std::any visitAndi2ccr(parser68000::Andi2ccrContext* ctx) override;
-	virtual std::any visitAndi2sr(parser68000::Andi2srContext* ctx) override;
+    virtual std::any visitToCCR(parser68000::ToCCRContext* ctx) override;
+	virtual std::any visitToSR(parser68000::ToSRContext* ctx) override;
 
     virtual std::any visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx) override;
     virtual std::any visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx) override;
@@ -116,6 +116,10 @@ private:
     }
 
     virtual std::any visitImmediateInstruction(parser68000::ImmediateInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitToCCRorSRInstruction(parser68000::ToCCRorSRInstructionContext* ctx) override {
         return ctx->value;
     }
 

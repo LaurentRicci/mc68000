@@ -30,8 +30,8 @@ instructionSection
     | addq
     | addx 
     | and
-    | andi2ccr
-    | andi2sr
+    | toCCR
+    | toSR
     | aslAsr
     | bcc
     | bit
@@ -53,6 +53,14 @@ instructionSection
 
 immediate
     : immediateInstruction size? immediateData COMMA addressingMode
+    ;
+
+toCCR
+    : toCCRorSRInstruction immediateData COMMA CCR
+    ;
+
+toSR
+    : toCCRorSRInstruction immediateData COMMA SR
     ;
 
 size returns [uint16_t value]
@@ -139,6 +147,12 @@ immediateInstruction  returns [uint16_t value]
     | CMPI { $value = 0b1100;}
     ;
 
+toCCRorSRInstruction returns  [uint16_t value]
+    : ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    ;
+
 shiftInstruction returns [uint16_t value]
     : ASL { $value = 1; }
     | ASR { $value = 0; }
@@ -216,14 +230,6 @@ addx
 and
     : AND size? addressingMode COMMA dRegister #and_to_dRegister
     | AND size? dRegister COMMA addressingMode #and_from_dRegister
-    ;
-
-andi2ccr
-    : ANDI immediateData COMMA CCR
-    ;
-
-andi2sr
-    : ANDI immediateData COMMA SR
     ;
 
 aslAsr
