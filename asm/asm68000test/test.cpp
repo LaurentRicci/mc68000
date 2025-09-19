@@ -1080,7 +1080,29 @@ BOOST_AUTO_TEST_CASE(divu_failed)
 	auto opcode = parser.parseText(" divu a6, d2\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+// ====================================================================================================
+// EOR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(eor_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" eor d4,-(a3)\n");
+	validate_hasValue<uint16_t>(0b1011'100'101'100'011, opcode);
+}
 
+BOOST_AUTO_TEST_CASE(eor_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" eor.l d7,(a1)\n");
+	validate_hasValue<uint16_t>(0b1011'111'110'010'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(eor_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" eor.b d2,a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 // ====================================================================================================
 // MULS
 // ====================================================================================================

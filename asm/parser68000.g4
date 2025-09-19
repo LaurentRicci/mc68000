@@ -43,6 +43,7 @@ instructionSection
     | dbcc
     | divs
     | divu
+    | eor
     | muls
     | mulu
     | nop
@@ -86,8 +87,7 @@ directive
     ;
 
 instruction
-    : EOR
-    | EXG
+    : EXG
     | EXT
     | ILLEGAL
     | JMP
@@ -271,6 +271,10 @@ divs
 
 divu
     : DIVU addressingMode COMMA dRegister
+    ;
+
+eor
+    : EOR size? dRegister COMMA addressingMode
     ;
 
 muls

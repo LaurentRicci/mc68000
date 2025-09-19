@@ -668,6 +668,32 @@ any visitor::visitDivu(parser68000::DivuContext* ctx)
 	return visitDiv(ctx, false);
 }
 
+/// <summary>
+/// EOR size? dRegister COMMA addressingMode 
+/// </summary>
+/// <param name="ctx"></param>
+/// <returns></returns>
+any visitor::visitEor(parser68000::EorContext* ctx)
+{
+	uint16_t size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg+2]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg+2]);
+	}
+
+	uint16_t opcode = 0b1011'000'100'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 {
 	size = 1;
