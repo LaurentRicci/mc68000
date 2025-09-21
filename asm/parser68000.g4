@@ -30,14 +30,22 @@ instructionSection
     | addq
     | addx 
     | and
-    | andi2ccr
-    | andi2sr
+    | toCCR
+    | toSR
     | aslAsr
     | bcc
     | bit
     | chk
     | clr
     | cmp
+    | cmpa
+    | cmpm
+    | dbcc
+    | divs
+    | divu
+    | eor
+    | muls
+    | mulu
     | nop
     | immediate
     | instruction size? arguments?
@@ -45,6 +53,14 @@ instructionSection
 
 immediate
     : immediateInstruction size? immediateData COMMA addressingMode
+    ;
+
+toCCR
+    : toCCRorSRInstruction immediateData COMMA CCR
+    ;
+
+toSR
+    : toCCRorSRInstruction immediateData COMMA SR
     ;
 
 size returns [uint16_t value]
@@ -79,13 +95,7 @@ directive
     ;
 
 instruction
-    : CMPA
-    | CMPM
-    | DBCC
-    | DIVS
-    | DIVU
-    | EOR
-    | EXG
+    : EXG
     | EXT
     | ILLEGAL
     | JMP
@@ -99,8 +109,6 @@ instruction
     | MOVEM
     | MOVEP
     | MOVEQ
-    | MULS
-    | MULU
     | NBCD
     | NEG
     | NEGX
@@ -139,6 +147,12 @@ immediateInstruction  returns [uint16_t value]
     | CMPI { $value = 0b1100;}
     ;
 
+toCCRorSRInstruction returns  [uint16_t value]
+    : ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    ;
+
 shiftInstruction returns [uint16_t value]
     : ASL { $value = 1; }
     | ASR { $value = 0; }
@@ -161,6 +175,26 @@ bccInstruction returns [uint16_t value]
     | BVS { $value = 0b1001; }
     | BRA { $value = 0b0000; }
     | BSR { $value = 0b0001; }
+    ;
+
+dbccInstruction returns [uint16_t value]
+    : DBCC { $value = 0b0100; }
+    | DBCS { $value = 0b0101; }
+    | DBEQ { $value = 0b0111; }
+    | DBNE { $value = 0b0110; }
+    | DBGE { $value = 0b1100; }
+    | DBGT { $value = 0b1110; }
+    | DBHI { $value = 0b0010; }
+    | DBLE { $value = 0b1111; }
+    | DBLS { $value = 0b0011; }
+    | DBLT { $value = 0b1101; }
+    | DBMI { $value = 0b1011; }
+    | DBPL { $value = 0b1010; }
+    | DBVC { $value = 0b1000; }
+    | DBVS { $value = 0b1001; }
+    | DBRA { $value = 0b0001; }
+    | DBF  { $value = 0b0001; }
+    | DBT  { $value = 0b0000; }
     ;
 
 bitInstruction returns [uint16_t value]
@@ -198,14 +232,6 @@ and
     | AND size? dRegister COMMA addressingMode #and_from_dRegister
     ;
 
-andi2ccr
-    : ANDI immediateData COMMA CCR
-    ;
-
-andi2sr
-    : ANDI immediateData COMMA SR
-    ;
-
 aslAsr
     : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
     | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
@@ -231,6 +257,38 @@ clr
 
 cmp
     : CMP size? addressingMode COMMA dRegister
+    ;
+
+cmpa
+    : CMPA size? addressingMode COMMA aRegister
+    ;
+
+cmpm
+    : CMPM size? aRegisterIndirectPostIncrement COMMA aRegisterIndirectPostIncrement
+    ;
+
+dbcc
+    : dbccInstruction dRegister COMMA address
+    ;
+
+divs
+    : DIVS addressingMode COMMA dRegister
+    ;
+
+divu
+    : DIVU addressingMode COMMA dRegister
+    ;
+
+eor
+    : EOR size? dRegister COMMA addressingMode
+    ;
+
+muls
+    : MULS addressingMode COMMA dRegister
+    ;
+
+mulu
+    : MULU addressingMode COMMA dRegister
     ;
 
 nop

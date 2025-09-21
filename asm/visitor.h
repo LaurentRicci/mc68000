@@ -51,8 +51,8 @@ private:
     virtual std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
     virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
 
-    virtual std::any visitAndi2ccr(parser68000::Andi2ccrContext* ctx) override;
-	virtual std::any visitAndi2sr(parser68000::Andi2srContext* ctx) override;
+    virtual std::any visitToCCR(parser68000::ToCCRContext* ctx) override;
+	virtual std::any visitToSR(parser68000::ToSRContext* ctx) override;
 
     virtual std::any visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx) override;
     virtual std::any visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx) override;
@@ -64,9 +64,16 @@ private:
 	virtual std::any visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx) override;
 
 	virtual std::any visitChk(parser68000::ChkContext* ctx) override;
-
     virtual std::any visitClr(parser68000::ClrContext* ctx) override;
 	virtual std::any visitCmp(parser68000::CmpContext* ctx) override;
+    virtual std::any visitCmpa(parser68000::CmpaContext* ctx) override;
+    virtual std::any visitCmpm(parser68000::CmpmContext* ctx) override;
+    virtual std::any visitDbcc(parser68000::DbccContext* ctx) override;
+    virtual std::any visitDivs(parser68000::DivsContext* ctx) override;
+    virtual std::any visitDivu(parser68000::DivuContext* ctx) override;
+    virtual std::any visitEor(parser68000::EorContext* ctx) override;
+    virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
+    virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
@@ -112,6 +119,10 @@ private:
         return ctx->value;
     }
 
+    virtual std::any visitToCCRorSRInstruction(parser68000::ToCCRorSRInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
     virtual std::any visitShiftInstruction(parser68000::ShiftInstructionContext* ctx) override {
         return ctx->value;
 	}
@@ -123,9 +134,15 @@ private:
     virtual std::any visitBitInstruction(parser68000::BitInstructionContext* ctx) override {
         return ctx->value;
     }
+
+    virtual std::any visitDbccInstruction(parser68000::DbccInstructionContext* ctx) override {
+        return ctx->value;
+    }
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);
+    std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
+    std::any visitMul(tree::ParseTree* ctx, bool isSigned);
 };

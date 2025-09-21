@@ -48,7 +48,27 @@ CMP     options { caseInsensitive=true; } : 'cmp' ;
 CMPA    options { caseInsensitive=true; } : 'cmpa' ;
 CMPI    options { caseInsensitive=true; } : 'cmpi' ;
 CMPM    options { caseInsensitive=true; } : 'cmpm' ;
-DBCC    options { caseInsensitive=true; } : 'dbcc' ;
+
+DBCC     options { caseInsensitive=true; } : 'dbcc' ;
+DBCS     options { caseInsensitive=true; } : 'dbcs' ;
+DBEQ     options { caseInsensitive=true; } : 'dbeq' ;
+DBF      options { caseInsensitive=true; } : 'dbf'  ;
+DBGE     options { caseInsensitive=true; } : 'dbge' ;
+DBGT     options { caseInsensitive=true; } : 'dbgt' ;
+DBHI     options { caseInsensitive=true; } : 'dbhi' ;
+DBLE     options { caseInsensitive=true; } : 'dble' ;
+DBLS     options { caseInsensitive=true; } : 'dbls' ;
+DBLT     options { caseInsensitive=true; } : 'dblt' ;
+DBMI     options { caseInsensitive=true; } : 'dbmi' ;
+DBNE     options { caseInsensitive=true; } : 'dbne' ;
+DBPL     options { caseInsensitive=true; } : 'dbpl' ;
+DBRA     options { caseInsensitive=true; } : 'dbra' ;
+DBT      options { caseInsensitive=true; } : 'dbt'  ;
+DBVC     options { caseInsensitive=true; } : 'dbvc' ;
+DBVS     options { caseInsensitive=true; } : 'dbvs' ;
+
+
+
 DIVS    options { caseInsensitive=true; } : 'divs' ;
 DIVU    options { caseInsensitive=true; } : 'divu' ;
 EOR     options { caseInsensitive=true; } : 'eor' ;
