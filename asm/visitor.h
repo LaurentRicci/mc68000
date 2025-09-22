@@ -72,6 +72,8 @@ private:
     virtual std::any visitDivs(parser68000::DivsContext* ctx) override;
     virtual std::any visitDivu(parser68000::DivuContext* ctx) override;
     virtual std::any visitEor(parser68000::EorContext* ctx) override;
+    virtual std::any visitExg(parser68000::ExgContext* ctx) override;
+
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 

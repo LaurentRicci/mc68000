@@ -1143,6 +1143,33 @@ BOOST_AUTO_TEST_CASE(eori2sr_error)
 }
 
 // ====================================================================================================
+// EXG
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(exg_dreg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg d2,d4\n");
+	validate_hasValue<uint16_t>(0b1100'010'1'01000'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_areg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg a3,a5\n");
+	validate_hasValue<uint16_t>(0b1100'011'1'01001'101, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_dareg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg d0,a5\n");
+	validate_hasValue<uint16_t>(0b1100'000'1'10001'101, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_adreg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg a3,d5\n");
+	validate_hasValue<uint16_t>(0b1100'011'1'10001'101, opcode);
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

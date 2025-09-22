@@ -705,6 +705,34 @@ any visitor::visitEor(parser68000::EorContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// EXG adRegister COMMA adRegister
+/// </summary>
+any visitor::visitExg(parser68000::ExgContext* ctx)
+{
+	size = 2;
+	auto txt1 = ctx->children[1]->getText();
+	uint16_t reg1 = stoi(txt1.substr(1));
+	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
+
+	auto txt2 = ctx->children[3]->getText();
+	uint16_t reg2 = stoi(txt2.substr(1));
+	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
+
+	uint16_t opmode = 0b10001; // default to one data and one address register
+	if (isDataReg1 && isDataReg2)
+	{
+		opmode = 0b01000; // both are data registers
+	}
+	else if (!isDataReg1 && !isDataReg2)
+	{
+		opmode = 0b01001; // both are address registers
+	}
+
+	uint16_t opcode = 0b1100'000'1'00000'000 | (reg1 << 9) | (opmode << 3) | reg2;
+	return finalize_instruction(opcode);
+}
+
 
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 {
