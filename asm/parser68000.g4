@@ -45,6 +45,7 @@ instructionSection
     | divu
     | eor
     | exg
+    | ext
     | muls
     | mulu
     | nop
@@ -96,8 +97,7 @@ directive
     ;
 
 instruction
-    : EXT
-    | ILLEGAL
+    : ILLEGAL
     | JMP
     | JSR
     | LEA
@@ -285,6 +285,10 @@ eor
 
 exg
     : EXG adRegister COMMA adRegister
+    ;
+
+ext
+    : EXT size? dRegister
     ;
 
 muls

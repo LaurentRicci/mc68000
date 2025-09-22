@@ -1170,6 +1170,33 @@ BOOST_AUTO_TEST_CASE(exg_adreg)
 	validate_hasValue<uint16_t>(0b1100'011'1'10001'101, opcode);
 }
 // ====================================================================================================
+// EXT
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(ext_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext d2\n");
+	validate_hasValue<uint16_t>(0b0100'100'010'000'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.L d6\n");
+	validate_hasValue<uint16_t>(0b0100'100'011'000'110, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.w d1\n");
+	validate_hasValue<uint16_t>(0b0100'100'010'000'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.b d6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

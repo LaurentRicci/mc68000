@@ -733,6 +733,28 @@ any visitor::visitExg(parser68000::ExgContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitExt(parser68000::ExtContext* ctx)
+{
+	uint16_t opmode = 0b010;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("invalid size only .W or .L are supported", ctx->children[1]);
+		}
+		else if (size == 2)
+		{
+			opmode = 0b011; // for EXT size .L is encoded as 0b11
+		}
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t opcode = 0b0100'100'000'000'000 | (opmode << 6) | dReg ;
+	return finalize_instruction(opcode);
+}
+
 
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 {
