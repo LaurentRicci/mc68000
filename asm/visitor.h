@@ -72,6 +72,13 @@ private:
     virtual std::any visitDivs(parser68000::DivsContext* ctx) override;
     virtual std::any visitDivu(parser68000::DivuContext* ctx) override;
     virtual std::any visitEor(parser68000::EorContext* ctx) override;
+    virtual std::any visitExg(parser68000::ExgContext* ctx) override;
+	virtual std::any visitExt(parser68000::ExtContext* ctx) override;
+	virtual std::any visitIllegal(parser68000::IllegalContext* ctx) override;
+    virtual std::any visitJmp(parser68000::JmpContext* ctx) override;
+    virtual std::any visitJsr(parser68000::JsrContext* ctx) override;
+    virtual std::any visitLea(parser68000::LeaContext* ctx) override;
+
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 
@@ -94,6 +101,7 @@ private:
     std::any visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr, tree::ParseTree* pIndex);
     std::any visitARegisterIndirectIndexOld(parser68000::ARegisterIndirectIndexOldContext* ctx) override;
     std::any visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexNewContext* ctx) override;
+    std::any visitAbsolute(parser68000::AbsoluteContext* ctx) override; 
     std::any visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx) override;
 	std::any visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx) override;
     std::any visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementContext* ctx) override;
@@ -145,4 +153,6 @@ private:
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);
     std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
     std::any visitMul(tree::ParseTree* ctx, bool isSigned);
+    std::any visitAbsoluteSize(tree::ParseTree* ctx, int size);
+
 };

@@ -705,6 +705,95 @@ any visitor::visitEor(parser68000::EorContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// EXG adRegister COMMA adRegister
+/// </summary>
+any visitor::visitExg(parser68000::ExgContext* ctx)
+{
+	size = 2;
+	auto txt1 = ctx->children[1]->getText();
+	uint16_t reg1 = stoi(txt1.substr(1));
+	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
+
+	auto txt2 = ctx->children[3]->getText();
+	uint16_t reg2 = stoi(txt2.substr(1));
+	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
+
+	uint16_t opmode = 0b10001; // default to one data and one address register
+	if (isDataReg1 && isDataReg2)
+	{
+		opmode = 0b01000; // both are data registers
+	}
+	else if (!isDataReg1 && !isDataReg2)
+	{
+		opmode = 0b01001; // both are address registers
+	}
+
+	uint16_t opcode = 0b1100'000'1'00000'000 | (reg1 << 9) | (opmode << 3) | reg2;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// EXT size? dRegister
+/// </summary>
+any visitor::visitExt(parser68000::ExtContext* ctx)
+{
+	uint16_t opmode = 0b010;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("invalid size only .W or .L are supported", ctx->children[1]);
+		}
+		else if (size == 2)
+		{
+			opmode = 0b011; // for EXT size .L is encoded as 0b11
+		}
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t opcode = 0b0100'100'000'000'000 | (opmode << 6) | dReg ;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// ILLEGAL
+/// </summary>
+any visitor::visitIllegal(parser68000::IllegalContext* ctx)
+{
+	uint16_t opcode = 0b0100'1010'1111'1100;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// JMP addressingMode
+/// </summary>
+any visitor::visitJmp(parser68000::JmpContext* ctx)
+{
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'1110'11'000'000 | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// JSR addressingMode
+/// </summary>
+any visitor::visitJsr(parser68000::JsrContext* ctx)
+{
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'1110'10'000'000 | effectiveAddress;
+	return finalize_instruction(opcode);
+}
 
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 {
@@ -718,6 +807,23 @@ any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 	uint16_t opcode = (isSigned ? 0b1100'000'111'000'000 : 0b1100'000'011'000'000) | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// LEA addressingMode COMMA aRegister
+/// </summary>
+std::any visitor::visitLea(parser68000::LeaContext* ctx)
+{
+	size = 2;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = 0b0100'000'111'000'000 | (aReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>
@@ -725,6 +831,7 @@ any visitor::visitMuls(parser68000::MulsContext* ctx)
 {
 	return visitMul(ctx, true);
 }
+
 /// <summary>
 /// MULU size? addressingMode COMMA dRegister
 /// </summary>
@@ -870,11 +977,14 @@ any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexN
 }
 
 /// <summary>
-/// Addressing mode for absolute short: 42
+/// Helper function to handle absolute addressing modes with different sizes
 /// </summary>
-any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
+/// <param name="ctx">The parse tree context</param>
+/// <param name="size">The size of the absolute address (0 = not provided, 1 = word, 2 = long)</param>
+any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
 {
 	any address = visit(ctx->children[0]);
+	uint32_t target;
 	if (address.type() == typeid(std::string))
 	{
 		std::string label = any_cast<std::string>(address);
@@ -886,45 +996,86 @@ any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 			{
 				addError("Label not found: " + label, ctx->children[0]);
 			}
-			extensionsList.push_back(0); // Add a placeholder for the label
+			target = 0;
 		}
 		else
 		{
-			uint32_t displacement = it->second;
-			if (displacement > 0x7fff || displacement < -0x8000)
-			{
-				addError("Address doesn't fit on in one word: " + label, ctx->children[0]);
-			}
-			uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
-			extensionsList.push_back(displacement16);
+			target = it->second;
 		}
 	}
-	else if (address.type() == typeid(int32_t))
+	else
 	{
-		int32_t displacement = any_cast<int32_t>(address);
-		if (displacement > 0x7fff || displacement < -0x8000)
-		{
-			addError("Address doesn't fit on in one word: " + std::to_string(displacement), ctx->children[0] );
-		}
-		uint16_t displacement16 = (uint16_t)(displacement & 0xffff);
-		extensionsList.push_back(displacement16);
+		target = any_cast<int32_t>(address);
 	}
 
+	switch (size)
+	{
+		case 0: // size wasn't provided
+			if (target > 0x7fff && target < 0xffff8000)
+			{
+				// The address doesn't fit in one word so we need to use long
+				uint16_t displacementHigh = (uint16_t)(target >> 16);
+				uint16_t displacementLow = (uint16_t)(target & 0xffff);
+				extensionsList.push_back(displacementHigh);
+				extensionsList.push_back(displacementLow);
+
+				return (uint16_t)(0b111'001);
+			}
+			else
+			{
+				uint16_t displacement16 = (uint16_t)(target & 0xffff);
+				extensionsList.push_back(displacement16);
+				return (uint16_t)(0b111'000);
+			}
+			break;
+		case 1: // size is word
+			{
+				if (target > 0x7fff && target < 0xffff8000)
+				{
+					addError("Address doesn't fit on in one word: " , ctx->children[0]);
+				}
+				uint16_t displacement16 = (uint16_t)(target & 0xffff);
+				extensionsList.push_back(displacement16);
+				return (uint16_t)(0b111'000);
+			}
+		break;
+			case 2: // size is long
+			{
+				uint16_t displacementHigh = (uint16_t)(target >> 16);
+				uint16_t displacementLow = (uint16_t)(target & 0xffff);
+				extensionsList.push_back(displacementHigh);
+				extensionsList.push_back(displacementLow);
+
+				return (uint16_t)(0b111'001);
+			}
+			break;
+		default:
+			assert(!"we shouldnot be there");
+			break;
+	}
 	return (uint16_t)(0b111'000);
+}
+/// <summary>
+/// Addressing mode for absolute. Size not provided
+/// </summary>
+any visitor::visitAbsolute(parser68000::AbsoluteContext* ctx)
+{
+	return visitAbsoluteSize(ctx, 0);
+}
+/// <summary>
+/// Addressing mode for absolute long: 42.W
+/// </summary>
+any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
+{
+	return visitAbsoluteSize(ctx, 1);
 }
 
 /// <summary>
-/// Addressing mode for absolute long: 42L
+/// Addressing mode for absolute long: 42.L
 /// </summary>
 any visitor::visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx)
 {
-	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
-	uint16_t displacementHigh = (uint16_t)(displacement >> 16);
-	uint16_t displacementLow = (uint16_t)(displacement & 0xffff);
-	extensionsList.push_back(displacementHigh);
-	extensionsList.push_back(displacementLow);
-
-	return (uint16_t)(0b111'001);
+	return visitAbsoluteSize(ctx, 2);
 }
 
 /// <summary>

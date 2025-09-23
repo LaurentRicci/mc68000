@@ -44,6 +44,12 @@ instructionSection
     | divs
     | divu
     | eor
+    | exg
+    | ext
+    | illegal
+    | jmp
+    | jsr
+    | lea
     | muls
     | mulu
     | nop
@@ -95,13 +101,7 @@ directive
     ;
 
 instruction
-    : EXG
-    | EXT
-    | ILLEGAL
-    | JMP
-    | JSR
-    | LEA
-    | LINK
+    : LINK
     | LSL
     | LSR
     | MOVE
@@ -283,6 +283,30 @@ eor
     : EOR size? dRegister COMMA addressingMode
     ;
 
+exg
+    : EXG adRegister COMMA adRegister
+    ;
+
+ext
+    : EXT size? dRegister
+    ;
+
+illegal
+    : ILLEGAL
+    ;
+
+jmp
+    : JMP addressingMode
+    ;
+
+jsr
+    : JSR addressingMode
+    ;
+
+lea
+    : LEA addressingMode COMMA aRegister
+    ;
+
 muls
     : MULS addressingMode COMMA dRegister
     ;
@@ -352,6 +376,7 @@ addressingMode
     | aRegisterIndirectPreDecrement
     | aRegisterIndirectDisplacement
     | aRegisterIndirectIndex
+    | absolute
     | absoluteShort
     | absoluteLong
     | pcIndirectDisplacement
@@ -371,7 +396,8 @@ aRegisterIndirectIndex
     : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
     | OPENPAREN number  COMMA AREG  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
     ;
-absoluteShort : address ;
+absolute : address ;
+absoluteShort : address SIZEWORD;
 absoluteLong : address SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
 pcIndirectIndex : number  OPENPAREN  PC  COMMA  adRegisterSize  CLOSEPAREN ;

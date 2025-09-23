@@ -1143,6 +1143,135 @@ BOOST_AUTO_TEST_CASE(eori2sr_error)
 }
 
 // ====================================================================================================
+// EXG
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(exg_dreg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg d2,d4\n");
+	validate_hasValue<uint16_t>(0b1100'010'1'01000'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_areg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg a3,a5\n");
+	validate_hasValue<uint16_t>(0b1100'011'1'01001'101, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_dareg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg d0,a5\n");
+	validate_hasValue<uint16_t>(0b1100'000'1'10001'101, opcode);
+}
+BOOST_AUTO_TEST_CASE(exg_adreg)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg a3,d5\n");
+	validate_hasValue<uint16_t>(0b1100'011'1'10001'101, opcode);
+}
+// ====================================================================================================
+// EXT
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(ext_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext d2\n");
+	validate_hasValue<uint16_t>(0b0100'100'010'000'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.L d6\n");
+	validate_hasValue<uint16_t>(0b0100'100'011'000'110, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.w d1\n");
+	validate_hasValue<uint16_t>(0b0100'100'010'000'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(ext_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ext.b d6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// ILLEGAL
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(illegal)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  illegal\n");
+	validate_hasValue<uint16_t>(0x4afc, opcode);
+}
+// ====================================================================================================
+// JMP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(jmp_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp (a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1110'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(jmp_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp there\nthere:\n");
+	validate_hasValue<uint16_t>(0b0100'1110'11'111'000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x4, code[1]);
+}
+BOOST_AUTO_TEST_CASE(jmp_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// JMP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(jsr_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr (a2)\n");
+	validate_hasValue<uint16_t>(0b0100'1110'10'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(jsr_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr $123456\n");
+	validate_hasValue<uint16_t>(0b0100'1110'10'111'001, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x0012, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
+BOOST_AUTO_TEST_CASE(jsr_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr d3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// LEA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(lea_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  lea (a2), a0\n");
+	validate_hasValue<uint16_t>(0b0100'000'111'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(lea_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  lea d0, a0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)
