@@ -142,7 +142,18 @@ namespace addressing_mode
 
 	}
 
-	BOOST_AUTO_TEST_CASE(address_absoluteS)
+	BOOST_AUTO_TEST_CASE(address_absoluteW)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add $1234.W, d0\n");
+		validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x1234, code[1]);
+	}
+
+	BOOST_AUTO_TEST_CASE(address_absoluteWDefault)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add $1234, d0\n");
@@ -153,14 +164,14 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_absoluteS_error)
+	BOOST_AUTO_TEST_CASE(address_absoluteW_error)
 	{
 		asmparser parser;
-		auto opcode = parser.parseText(" add $12345, d0\n");
+		auto opcode = parser.parseText(" add $12345.W, d0\n");
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 
-	BOOST_AUTO_TEST_CASE(address_labelS)
+	BOOST_AUTO_TEST_CASE(address_labelW)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add data, d0\n add #1, d0\n nop\n nop\ndata:\n");
@@ -175,7 +186,7 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x4e71, code[5]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_labelS_error)
+	BOOST_AUTO_TEST_CASE(address_labelW_error)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add data, d0\n");
@@ -186,6 +197,18 @@ namespace addressing_mode
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add $12345678.L, d0\n");
+		validate_hasValue<uint16_t>(0b1101'000'001'111'001, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(3, code.size());
+		BOOST_CHECK_EQUAL(0x1234, code[1]);
+		BOOST_CHECK_EQUAL(0x5678, code[2]);
+	}
+
+	BOOST_AUTO_TEST_CASE(address_absoluteLDefault)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add $12345678, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'001, opcode);
 
 		const std::vector<uint16_t>& code = parser.getCode();

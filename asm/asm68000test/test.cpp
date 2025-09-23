@@ -1197,6 +1197,64 @@ BOOST_AUTO_TEST_CASE(ext_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// ILLEGAL
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(illegal)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  illegal\n");
+	validate_hasValue<uint16_t>(0x4afc, opcode);
+}
+// ====================================================================================================
+// JMP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(jmp_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp (a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1110'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(jmp_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp there\nthere:\n");
+	validate_hasValue<uint16_t>(0b0100'1110'11'111'000, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x4, code[1]);
+}
+BOOST_AUTO_TEST_CASE(jmp_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jmp a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// JMP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(jsr_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr (a2)\n");
+	validate_hasValue<uint16_t>(0b0100'1110'10'010'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(jsr_label)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr $123456\n");
+	validate_hasValue<uint16_t>(0b0100'1110'10'111'001, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x0012, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
+BOOST_AUTO_TEST_CASE(jsr_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  jsr d3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)
