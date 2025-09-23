@@ -1255,6 +1255,23 @@ BOOST_AUTO_TEST_CASE(jsr_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// LEA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(lea_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  lea (a2), a0\n");
+	validate_hasValue<uint16_t>(0b0100'000'111'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(lea_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  lea d0, a0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

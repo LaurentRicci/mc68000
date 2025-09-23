@@ -766,6 +766,7 @@ any visitor::visitIllegal(parser68000::IllegalContext* ctx)
 	uint16_t opcode = 0b0100'1010'1111'1100;
 	return finalize_instruction(opcode);
 }
+
 /// <summary>
 /// JMP addressingMode
 /// </summary>
@@ -779,6 +780,7 @@ any visitor::visitJmp(parser68000::JmpContext* ctx)
 	uint16_t opcode = 0b0100'1110'11'000'000 | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+
 /// <summary>
 /// JSR addressingMode
 /// </summary>
@@ -805,6 +807,23 @@ any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 	uint16_t opcode = (isSigned ? 0b1100'000'111'000'000 : 0b1100'000'011'000'000) | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// LEA addressingMode COMMA aRegister
+/// </summary>
+std::any visitor::visitLea(parser68000::LeaContext* ctx)
+{
+	size = 2;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = 0b0100'000'111'000'000 | (aReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>
@@ -812,6 +831,7 @@ any visitor::visitMuls(parser68000::MulsContext* ctx)
 {
 	return visitMul(ctx, true);
 }
+
 /// <summary>
 /// MULU size? addressingMode COMMA dRegister
 /// </summary>

@@ -49,6 +49,7 @@ instructionSection
     | illegal
     | jmp
     | jsr
+    | lea
     | muls
     | mulu
     | nop
@@ -100,8 +101,7 @@ directive
     ;
 
 instruction
-    : LEA
-    | LINK
+    : LINK
     | LSL
     | LSR
     | MOVE
@@ -301,6 +301,10 @@ jmp
 
 jsr
     : JSR addressingMode
+    ;
+
+lea
+    : LEA addressingMode COMMA aRegister
     ;
 
 muls
