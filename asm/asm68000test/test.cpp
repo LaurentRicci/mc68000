@@ -1270,7 +1270,31 @@ BOOST_AUTO_TEST_CASE(lea_failed)
 	auto opcode = parser.parseText("  lea d0, a0\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+// ====================================================================================================
+// LINK
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(link_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  link a6, #-16\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0101'0'110, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0xfff0, code[1]);
+}
 
+BOOST_AUTO_TEST_CASE(link_failedPlus)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  link a6, #40000\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(link_failedMinus)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  link a6, #-40000\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 // ====================================================================================================
 // MULS
 // ====================================================================================================

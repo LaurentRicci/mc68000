@@ -811,7 +811,7 @@ any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 /// <summary>
 /// LEA addressingMode COMMA aRegister
 /// </summary>
-std::any visitor::visitLea(parser68000::LeaContext* ctx)
+any visitor::visitLea(parser68000::LeaContext* ctx)
 {
 	size = 2;
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
@@ -821,6 +821,15 @@ std::any visitor::visitLea(parser68000::LeaContext* ctx)
 	}
 	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
 	uint16_t opcode = 0b0100'000'111'000'000 | (aReg << 9) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+any visitor::visitLink(parser68000::LinkContext* ctx)
+{
+	size = 1;
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	any _ = visit(ctx->children[3]);
+	uint16_t opcode = 0b0100'1110'0101'0'000 | aReg;
 	return finalize_instruction(opcode);
 }
 

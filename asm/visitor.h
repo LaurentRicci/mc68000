@@ -78,6 +78,7 @@ private:
     virtual std::any visitJmp(parser68000::JmpContext* ctx) override;
     virtual std::any visitJsr(parser68000::JsrContext* ctx) override;
     virtual std::any visitLea(parser68000::LeaContext* ctx) override;
+	virtual std::any visitLink(parser68000::LinkContext* ctx) override;
 
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;

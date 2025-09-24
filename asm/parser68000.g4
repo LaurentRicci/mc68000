@@ -50,6 +50,7 @@ instructionSection
     | jmp
     | jsr
     | lea
+    | link
     | muls
     | mulu
     | nop
@@ -101,8 +102,7 @@ directive
     ;
 
 instruction
-    : LINK
-    | LSL
+    : LSL
     | LSR
     | MOVE
     | MOVEA
@@ -305,6 +305,10 @@ jsr
 
 lea
     : LEA addressingMode COMMA aRegister
+    ;
+
+link
+    : LINK aRegister COMMA immediateData
     ;
 
 muls
