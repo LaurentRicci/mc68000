@@ -80,6 +80,10 @@ private:
     virtual std::any visitLea(parser68000::LeaContext* ctx) override;
 	virtual std::any visitLink(parser68000::LinkContext* ctx) override;
 
+    virtual std::any visitLslLsr_dRegister(parser68000::LslLsr_dRegisterContext* ctx) override;
+    virtual std::any visitLslLsr_immediateData(parser68000::LslLsr_immediateDataContext* ctx) override;
+    virtual std::any visitLslLsr_addressingMode(parser68000::LslLsr_addressingModeContext* ctx) override;
+
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 
@@ -147,6 +151,10 @@ private:
     virtual std::any visitDbccInstruction(parser68000::DbccInstructionContext* ctx) override {
         return ctx->value;
     }
+
+    virtual std::any visitLogicalShiftInstruction(parser68000::LogicalShiftInstructionContext* ctx) override {
+        return ctx->value;
+    }
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
@@ -155,5 +163,7 @@ private:
     std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
     std::any visitMul(tree::ParseTree* ctx, bool isSigned);
     std::any visitAbsoluteSize(tree::ParseTree* ctx, int size);
-
+    std::any visitShiftRegister(tree::ParseTree* ctx, uint16_t code);
+    std::any visitShiftImmediate(tree::ParseTree* ctx, uint16_t code);
+	std::any visitShiftAddressingMode(tree::ParseTree* ctx, uint16_t code);
 };

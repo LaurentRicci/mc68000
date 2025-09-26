@@ -51,6 +51,7 @@ instructionSection
     | jsr
     | lea
     | link
+    | lslLsr
     | muls
     | mulu
     | nop
@@ -102,9 +103,7 @@ directive
     ;
 
 instruction
-    : LSL
-    | LSR
-    | MOVE
+    : MOVE
     | MOVEA
     | MOVEM
     | MOVEP
@@ -156,6 +155,11 @@ toCCRorSRInstruction returns  [uint16_t value]
 shiftInstruction returns [uint16_t value]
     : ASL { $value = 1; }
     | ASR { $value = 0; }
+    ;
+
+logicalShiftInstruction returns [uint16_t value]
+    : LSL { $value = 1; }
+    | LSR { $value = 0; }
     ;
 
 bccInstruction returns [uint16_t value]
@@ -236,6 +240,12 @@ aslAsr
     : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
     | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
     | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
+    ;
+
+lslLsr
+    : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
+    | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
+    | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
     ;
 
 bcc

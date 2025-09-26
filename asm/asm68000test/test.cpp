@@ -562,7 +562,6 @@ BOOST_AUTO_TEST_CASE(asr_registers)
 	validate_hasValue<uint16_t>(0b1110'001'0'10'1'00'000, opcode);
 }
 
-
 // ====================================================================================================
 // Immediate instructions
 // ====================================================================================================
@@ -1367,4 +1366,80 @@ BOOST_AUTO_TEST_CASE(ori2sr_error)
 	auto opcode = parser.parseText("  ori #$34567, SR\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+// ====================================================================================================
+// LSL, LSR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(lsl_eam)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl (a3)\n");
+    validate_hasValue<uint16_t>(0b1110'001'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsr_eam)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsr (a4)\n");
+    validate_hasValue<uint16_t>(0b1110'001'0'11'010'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsl_eam_size)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.w (a3)\n");
+    validate_hasValue<uint16_t>(0b1110'001'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsl_eam_wrongsize)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.b (a3)\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(lsl_eam_error)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl a3\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(lsl_eam_2errors)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.l a3\n");
+    BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(lsl_immediate_b)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.b #1,d0\n");
+    validate_hasValue<uint16_t>(0b1110'001'1'00'0'01'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsr_immediate_b)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsr.b #1,d1\n");
+    validate_hasValue<uint16_t>(0b1110'001'0'00'0'01'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsl_immediate_w)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.w #8,d0\n");
+    validate_hasValue<uint16_t>(0b1110'000'1'01'0'01'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsl_immediate_error)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.w #12,d0\n");
+    BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(lsl_registers)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsl.l d1,d0\n");
+    validate_hasValue<uint16_t>(0b1110'001'1'10'1'01'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(lsr_registers)
+{
+    asmparser parser;
+    auto opcode = parser.parseText("  lsr.l d1,d0\n");
+    validate_hasValue<uint16_t>(0b1110'001'0'10'1'01'000, opcode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
