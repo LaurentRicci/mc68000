@@ -1444,6 +1444,48 @@ BOOST_AUTO_TEST_CASE(movea_byte)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// MOVE USP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(move_fromUsp)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move USP,a3\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0110'1'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(move_toUsp)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move a3,USP\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0110'0'011, opcode);
+}
+// ====================================================================================================
+// MOVE SR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(move_fromSr)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move SR,(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0000'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(move_fromSrError)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move SR,a0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(move_toSr)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move -(a2),SR\n");
+	validate_hasValue<uint16_t>(0b0100'0110'11'100'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(move_toSrError)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move a6,SR\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

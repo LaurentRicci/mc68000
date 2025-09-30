@@ -86,6 +86,11 @@ private:
 
 	virtual std::any visitMove(parser68000::MoveContext* ctx) override;
     virtual std::any visitMovea(parser68000::MoveaContext* ctx) override;
+    virtual std::any visitMoveusp(parser68000::MoveuspContext* ctx) override;
+    virtual std::any visitMove2usp(parser68000::Move2uspContext* ctx) override;
+    virtual std::any visitMovesr(parser68000::MovesrContext* ctx) override;
+    virtual std::any visitMove2sr(parser68000::Move2srContext* ctx) override;
+
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 

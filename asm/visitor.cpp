@@ -953,6 +953,43 @@ any visitor::visitMovea(parser68000::MoveaContext* ctx)
 	uint16_t opcode = 0b00'00'000'001'000'000 | (opSize << 12) | (aReg << 9) | sourceEffectiveAddress;
 	return finalize_instruction(opcode);
 }
+any visitor::visitMoveusp(parser68000::MoveuspContext* ctx)
+{
+	size = 2;
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = 0b0100'1110'0110'1'000 | aReg;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMove2usp(parser68000::Move2uspContext* ctx)
+{
+	size = 2;
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	uint16_t opcode = 0b0100'1110'0110'0'000 | aReg;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMovesr(parser68000::MovesrContext* ctx)
+{
+	size = 1;
+	uint16_t destinationEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[3]));
+	if (!isValidAddressingMode(destinationEffectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[3]);
+	}
+	uint16_t opcode = 0b0100'0000'11'000'000 | destinationEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMove2sr(parser68000::Move2srContext* ctx)
+{
+	size = 1;
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(sourceEffectiveAddress, 0b101111'111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'0110'11'000'000 | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>
@@ -1339,8 +1376,8 @@ void visitor::addError(const std::string& message, tree::ParseTree* ctx)
 	{
         if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx)) 
 		{
-            int line = prc->getStart()->getLine();
-            int col = prc->getStart()->getCharPositionInLine();
+			size_t line = prc->getStart()->getLine();
+			size_t col = prc->getStart()->getCharPositionInLine();
             errorList.add(message, line, col);
         } 
 		else
@@ -1354,8 +1391,8 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 {
 	if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx))
 	{
-		int line = prc->getStart()->getLine();
-		int col = prc->getStart()->getCharPositionInLine();
+		size_t line = prc->getStart()->getLine();
+		size_t col = prc->getStart()->getCharPositionInLine();
 		errorList.add(message, line, col);
 	}
 	else

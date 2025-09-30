@@ -54,6 +54,10 @@ instructionSection
     | lslLsr
     | move
     | movea
+    | moveusp
+    | move2usp
+    | movesr
+    | move2sr
     | muls
     | mulu
     | nop
@@ -327,6 +331,22 @@ move
 
 movea
     : MOVEA size? addressingMode COMMA aRegister
+    ;
+
+moveusp
+    : MOVE USP COMMA aRegister
+    ;
+
+move2usp
+    : MOVE aRegister COMMA USP
+    ;
+
+movesr
+    : MOVE SR COMMA addressingMode
+    ;
+
+move2sr
+    : MOVE addressingMode COMMA SR
     ;
 
 muls

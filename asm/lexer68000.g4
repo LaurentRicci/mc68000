@@ -160,10 +160,11 @@ HEXADECIMAL : '$' [0-9a-fA-F]+ ;
 //
 DREG : [dD][0-7] ;
 AREG : [aA][0-7] ;
-SP options  { caseInsensitive=true; } : 'sp' ;
-PC options  { caseInsensitive=true; } : 'pc' ;
+SP options  { caseInsensitive=true; } : 'sp'  ;
+PC options  { caseInsensitive=true; } : 'pc'  ;
 CCR options { caseInsensitive=true; } : 'ccr' ;
-SR options  { caseInsensitive=true; } : 'sr' ;
+SR options  { caseInsensitive=true; } : 'sr'  ;
+USP options { caseInsensitive=true; } : 'usp' ;
 
 //
 // Identifiers
