@@ -51,6 +51,13 @@ instructionSection
     | jsr
     | lea
     | link
+    | lslLsr
+    | move
+    | movea
+    | moveusp
+    | move2usp
+    | movesr
+    | move2sr
     | muls
     | mulu
     | nop
@@ -102,11 +109,7 @@ directive
     ;
 
 instruction
-    : LSL
-    | LSR
-    | MOVE
-    | MOVEA
-    | MOVEM
+    : MOVEM
     | MOVEP
     | MOVEQ
     | NBCD
@@ -156,6 +159,11 @@ toCCRorSRInstruction returns  [uint16_t value]
 shiftInstruction returns [uint16_t value]
     : ASL { $value = 1; }
     | ASR { $value = 0; }
+    ;
+
+logicalShiftInstruction returns [uint16_t value]
+    : LSL { $value = 1; }
+    | LSR { $value = 0; }
     ;
 
 bccInstruction returns [uint16_t value]
@@ -238,6 +246,12 @@ aslAsr
     | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
     ;
 
+lslLsr
+    : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
+    | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
+    | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
+    ;
+
 bcc
     : bccInstruction address
     ;
@@ -309,6 +323,30 @@ lea
 
 link
     : LINK aRegister COMMA immediateData
+    ;
+
+move
+    : MOVE size? addressingMode COMMA addressingMode
+    ;
+
+movea
+    : MOVEA size? addressingMode COMMA aRegister
+    ;
+
+moveusp
+    : MOVE USP COMMA aRegister
+    ;
+
+move2usp
+    : MOVE aRegister COMMA USP
+    ;
+
+movesr
+    : MOVE SR COMMA addressingMode
+    ;
+
+move2sr
+    : MOVE addressingMode COMMA SR
     ;
 
 muls

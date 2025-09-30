@@ -322,6 +322,33 @@ any visitor::visitToSR(parser68000::ToSRContext* ctx)
 /// </summary>
 any visitor::visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx)
 {
+	return visitShiftRegister(ctx, 0b00);
+}
+
+/// <summary>
+/// ASL/ASR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx)
+{
+	return visitShiftImmediate(ctx, 0b00);
+}
+
+/// <summary>
+/// ASL/ASR size? addressingMode
+/// </summary>
+any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx)
+{
+	return visitShiftAddressingMode(ctx, 0b00);
+}
+
+/// <summary>
+/// ASL/ASR/LSL/LSR size? dRegister COMMA dRegister
+/// </summary>
+/// <param name="ctx">Pointer to the parse tree context.</param>
+/// <param name="code">Instruction code differentiator: ASL/ASR 0 LSL/LSR 1.</param>
+/// <returns>The opcode.</returns>
+any visitor::visitShiftRegister(tree::ParseTree* ctx, uint16_t code)
+{
 	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
 
 	size = 1;
@@ -334,14 +361,17 @@ any visitor::visitAslAsr_dRegister(parser68000::AslAsr_dRegisterContext* ctx)
 	uint16_t dx = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 
-	uint16_t opcode = 0b1110'000'0'00'1'00'000 | (dx << 9) | (direction << 8) | (size << 6) | dy;
+	uint16_t opcode = 0b1110'000'0'00'1'00'000 | (dx << 9) | (direction << 8) | (size << 6) | (code << 3) | dy;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
-/// ASL/ASR size? HASH number COMMA dRegister
+/// ASL/ASR/LSL/LSR size? HASH number COMMA dRegister
 /// </summary>
-any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext* ctx)
+/// <param name="ctx">Pointer to the parse tree context.</param>
+/// <param name="code">Instruction code differentiator: ASL/ASR 0 LSL/LSR 1.</param>
+/// <returns>The opcode.</returns>
+any visitor::visitShiftImmediate(tree::ParseTree* ctx, uint16_t code)
 {
 	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
 
@@ -355,7 +385,7 @@ any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext*
 	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg]));
 	if (immediate_data <= 0 || immediate_data > 8)
 	{
-		addError("Immediate data for ASL/ASR must be between 0 and 8", ctx->children[arg + 1]);
+		addError("Immediate data for ASL/ASR must be between 0 and 8", ctx->children[arg]);
 		immediate_data = 0; // reset to 0 to avoid further errors
 	}
 	else if (immediate_data == 8)
@@ -364,14 +394,17 @@ any visitor::visitAslAsr_immediateData(parser68000::AslAsr_immediateDataContext*
 	}
 	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 
-	uint16_t opcode = 0b1110'000'0'00'0'00'000 | (immediate_data << 9) | (direction << 8) | (size << 6) | dy;
+	uint16_t opcode = 0b1110'0'00'0'00'0'00'000 | (immediate_data << 9) | (direction << 8) | (size << 6) | (code << 3) | dy;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
-/// ASL/ASR size? addressingMode
+/// ASL/ASR/LSL/LSR size? addressingMode
 /// </summary>
-any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContext* ctx)
+/// <param name="ctx">Pointer to the parse tree context.</param>
+/// <param name="code">Instruction code differentiator: ASL/ASR 0 LSL/LSR 1.</param>
+/// <returns></returns>
+any visitor::visitShiftAddressingMode(tree::ParseTree* ctx, uint16_t code)
 {
 	uint16_t direction = any_cast<uint16_t>(visit(ctx->children[0]));
 
@@ -388,11 +421,11 @@ any visitor::visitAslAsr_addressingMode(parser68000::AslAsr_addressingModeContex
 		arg++; // the optional size is included so there is one extra child
 	}
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
-	if (!isValidAddressingMode(effectiveAddress, 0b001111111000))
+	if (!isValidAddressingMode(effectiveAddress, 0b001111'111000))
 	{
 		addError("Invalid addressing mode: ", ctx->children[arg]);
 	}
-	uint16_t opcode = 0b1110'000'0'11'000'000 | (direction << 8) | effectiveAddress;
+	uint16_t opcode = 0b1110'000'0'11'000'000 | (code << 9) | (direction << 8) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -834,6 +867,130 @@ any visitor::visitLink(parser68000::LinkContext* ctx)
 }
 
 /// <summary>
+/// LSL/LSR size? dRegister COMMA dRegister
+/// </summary>
+any visitor::visitLslLsr_dRegister(parser68000::LslLsr_dRegisterContext* ctx)
+{
+	return visitShiftRegister(ctx, 0b01);
+}
+
+/// <summary>
+/// LSL/LSR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitLslLsr_immediateData(parser68000::LslLsr_immediateDataContext* ctx)
+{
+	return visitShiftImmediate(ctx, 0b01);
+}
+
+/// <summary>
+/// LSL/LSR size? addressingMode 
+/// </summary>
+any visitor::visitLslLsr_addressingMode(parser68000::LslLsr_addressingModeContext* ctx)
+{
+	return visitShiftAddressingMode(ctx, 0b01);
+}
+
+any visitor::visitMove(parser68000::MoveContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (size == 0 && (sourceEffectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("Move from Address register should be word or long", ctx->children[arg]);
+	}
+	uint16_t destinationEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (size == 0 && (destinationEffectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("Move to Address register should be word or long", ctx->children[arg + 2]);
+	}
+	if (!isValidAddressingMode(destinationEffectiveAddress, 0b111111'111000))
+	{
+		// Here we allow address register direct as destination as equivalent to MOVEA 
+		addError("Invalid destination addressing mode: ", ctx->children[arg + 2]);
+	}
+	uint16_t destinationMode = (destinationEffectiveAddress >> 3) & 0b111;
+	uint16_t destinationRegister = destinationEffectiveAddress & 0b111;
+	uint16_t opSize = size;
+	switch (size)
+	{
+	case 0: opSize = 0b01; break; // byte
+	case 1: opSize = 0b11; break; // word
+	case 2: opSize = 0b10; break; // long
+	}
+
+	uint16_t opcode = 0b00'00'000'000'000'000 | (opSize << 12) | (destinationRegister << 9) | (destinationMode << 6) | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMovea(parser68000::MoveaContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	if (size == 0)
+	{
+		addError("MOVEA should be word or long", ctx->children[arg + 2]);
+		size = 1; // default to word to avoid further errors
+	}
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
+	uint16_t opSize = size;
+	switch (size)
+	{
+	case 1: opSize = 0b11; break; // word
+	case 2: opSize = 0b10; break; // long
+	}
+
+	uint16_t opcode = 0b00'00'000'001'000'000 | (opSize << 12) | (aReg << 9) | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMoveusp(parser68000::MoveuspContext* ctx)
+{
+	size = 2;
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = 0b0100'1110'0110'1'000 | aReg;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMove2usp(parser68000::Move2uspContext* ctx)
+{
+	size = 2;
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	uint16_t opcode = 0b0100'1110'0110'0'000 | aReg;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMovesr(parser68000::MovesrContext* ctx)
+{
+	size = 1;
+	uint16_t destinationEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[3]));
+	if (!isValidAddressingMode(destinationEffectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[3]);
+	}
+	uint16_t opcode = 0b0100'0000'11'000'000 | destinationEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMove2sr(parser68000::Move2srContext* ctx)
+{
+	size = 1;
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(sourceEffectiveAddress, 0b101111'111111))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'0110'11'000'000 | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>
 any visitor::visitMuls(parser68000::MulsContext* ctx)
@@ -1219,8 +1376,8 @@ void visitor::addError(const std::string& message, tree::ParseTree* ctx)
 	{
         if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx)) 
 		{
-            int line = prc->getStart()->getLine();
-            int col = prc->getStart()->getCharPositionInLine();
+			size_t line = prc->getStart()->getLine();
+			size_t col = prc->getStart()->getCharPositionInLine();
             errorList.add(message, line, col);
         } 
 		else
@@ -1234,8 +1391,8 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 {
 	if (auto* prc = dynamic_cast<antlr4::ParserRuleContext*>(ctx))
 	{
-		int line = prc->getStart()->getLine();
-		int col = prc->getStart()->getCharPositionInLine();
+		size_t line = prc->getStart()->getLine();
+		size_t col = prc->getStart()->getCharPositionInLine();
 		errorList.add(message, line, col);
 	}
 	else
@@ -1243,3 +1400,4 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 		errorList.add(message, 0, 0);
 	}
 }
+

@@ -8,14 +8,14 @@ namespace mc68000
 	{
 	public:
 		// Constructor
-		error(const std::string& message, int line, int column)
+		error(const std::string& message, size_t line, size_t column)
 			: message(message), line(line), column(column)
 		{
 		}
 	private:
-		std::string message; // Error message
-		int line;            // Line number where the error occurred
-		int column;          // Column number where the error occurred
+		std::string message;    // Error message
+		size_t line;            // Line number where the error occurred
+		size_t column;          // Column number where the error occurred
 	};
 
 
@@ -25,7 +25,7 @@ namespace mc68000
 		// Constructor
 		errors() = default;
 		// Add an error message
-		void add(const std::string& message, int line, int column)
+		void add(const std::string& message, size_t line, size_t column)
 		{
 			error_messages.push_back(error(message, line, column));
 		}
