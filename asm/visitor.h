@@ -84,6 +84,8 @@ private:
     virtual std::any visitLslLsr_immediateData(parser68000::LslLsr_immediateDataContext* ctx) override;
     virtual std::any visitLslLsr_addressingMode(parser68000::LslLsr_addressingModeContext* ctx) override;
 
+	virtual std::any visitMove(parser68000::MoveContext* ctx) override;
+    virtual std::any visitMovea(parser68000::MoveaContext* ctx) override;
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 

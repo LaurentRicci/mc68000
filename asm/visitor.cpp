@@ -890,6 +890,69 @@ any visitor::visitLslLsr_addressingMode(parser68000::LslLsr_addressingModeContex
 	return visitShiftAddressingMode(ctx, 0b01);
 }
 
+any visitor::visitMove(parser68000::MoveContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (size == 0 && (sourceEffectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("Move from Address register should be word or long", ctx->children[arg]);
+	}
+	uint16_t destinationEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (size == 0 && (destinationEffectiveAddress & 0b111'000) == 0b001'000)
+	{
+		addError("Move to Address register should be word or long", ctx->children[arg + 2]);
+	}
+	if (!isValidAddressingMode(destinationEffectiveAddress, 0b111111'111000))
+	{
+		// Here we allow address register direct as destination as equivalent to MOVEA 
+		addError("Invalid destination addressing mode: ", ctx->children[arg + 2]);
+	}
+	uint16_t destinationMode = (destinationEffectiveAddress >> 3) & 0b111;
+	uint16_t destinationRegister = destinationEffectiveAddress & 0b111;
+	uint16_t opSize = size;
+	switch (size)
+	{
+	case 0: opSize = 0b01; break; // byte
+	case 1: opSize = 0b11; break; // word
+	case 2: opSize = 0b10; break; // long
+	}
+
+	uint16_t opcode = 0b00'00'000'000'000'000 | (opSize << 12) | (destinationRegister << 9) | (destinationMode << 6) | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitMovea(parser68000::MoveaContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	if (size == 0)
+	{
+		addError("MOVEA should be word or long", ctx->children[arg + 2]);
+		size = 1; // default to word to avoid further errors
+	}
+	uint16_t sourceEffectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
+	uint16_t opSize = size;
+	switch (size)
+	{
+	case 1: opSize = 0b11; break; // word
+	case 2: opSize = 0b10; break; // long
+	}
+
+	uint16_t opcode = 0b00'00'000'001'000'000 | (opSize << 12) | (aReg << 9) | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>

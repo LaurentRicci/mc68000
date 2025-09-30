@@ -52,6 +52,8 @@ instructionSection
     | lea
     | link
     | lslLsr
+    | move
+    | movea
     | muls
     | mulu
     | nop
@@ -103,9 +105,7 @@ directive
     ;
 
 instruction
-    : MOVE
-    | MOVEA
-    | MOVEM
+    : MOVEM
     | MOVEP
     | MOVEQ
     | NBCD
@@ -319,6 +319,14 @@ lea
 
 link
     : LINK aRegister COMMA immediateData
+    ;
+
+move
+    : MOVE size? addressingMode COMMA addressingMode
+    ;
+
+movea
+    : MOVEA size? addressingMode COMMA aRegister
     ;
 
 muls
