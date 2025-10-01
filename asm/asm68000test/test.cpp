@@ -1564,6 +1564,57 @@ BOOST_AUTO_TEST_CASE(movem_fromMemoryFailed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// MOVEP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(movep_toMemory)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep.l d3, 8(a1)\n");
+	validate_hasValue<uint16_t>(0b0000'011'111'001'001, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(8, code[1]);
+}
+BOOST_AUTO_TEST_CASE(movep_toMemoryDefault)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep d5, 8(a3)\n");
+	validate_hasValue<uint16_t>(0b0000'101'110'001'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(8, code[1]);
+}
+BOOST_AUTO_TEST_CASE(movep_toMemoryFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep.b d3, 8(a1)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(movep_fromMemory)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep.l 42(a3), d6\n");
+	validate_hasValue<uint16_t>(0b0000'110'101'001'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(42, code[1]);
+}
+BOOST_AUTO_TEST_CASE(movep_fromMemoryDefault)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep 24(a7), d0\n");
+	validate_hasValue<uint16_t>(0b0000'000'100'001'111, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(24, code[1]);
+}
+BOOST_AUTO_TEST_CASE(movep_fromMemoryFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movep.b 8(a1), d5\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

@@ -93,6 +93,8 @@ private:
     virtual std::any visitMove2sr(parser68000::Move2srContext* ctx) override;
     virtual std::any visitMovem_toMemory(parser68000::Movem_toMemoryContext* ctx) override;
     virtual std::any visitMovem_fromMemory(parser68000::Movem_fromMemoryContext* ctx) override;
+    virtual std::any visitMovep_toMemory(parser68000::Movep_toMemoryContext* ctx) override;
+    virtual std::any visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx) override;
 
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;

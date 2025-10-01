@@ -1103,6 +1103,65 @@ any visitor::visitMovem_fromMemory(parser68000::Movem_fromMemoryContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+any visitor::visitMovep_toMemory(parser68000::Movep_toMemoryContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("MOVEP should be word or long", ctx->children[arg + 2]);
+			size = 1; // default to word to avoid further errors
+		}
+	}
+	uint16_t opSize = size;
+	switch (size)
+	{
+		case 1: opSize = 0b110; break; // word
+		case 2: opSize = 0b111; break; // long
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	assert((effectiveAddress & 0b111'000) == 0b101'000);
+	uint16_t aReg = effectiveAddress & 0b111;
+
+	uint16_t opcode = 0b0000'000'000'001'000 | (dReg << 9) | (opSize << 6) | aReg;
+	return finalize_instruction(opcode);
+}
+
+any visitor::visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("MOVEP should be word or long", ctx->children[arg + 2]);
+			size = 1; // default to word to avoid further errors
+		}
+	}
+	uint16_t opSize = size;
+	switch (size)
+	{
+		case 1: opSize = 0b100; break; // word
+		case 2: opSize = 0b101; break; // long
+	}
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	assert((effectiveAddress & 0b111'000) == 0b101'000);
+	uint16_t aReg = effectiveAddress & 0b111;
+
+	uint16_t opcode = 0b0000'000'000'001'000 | (dReg << 9) | (opSize << 6) | aReg;
+	return finalize_instruction(opcode);
+}
+
+
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
 /// </summary>
