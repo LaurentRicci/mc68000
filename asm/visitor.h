@@ -75,6 +75,7 @@ private:
     virtual std::any visitExg(parser68000::ExgContext* ctx) override;
 	virtual std::any visitExt(parser68000::ExtContext* ctx) override;
 	virtual std::any visitIllegal(parser68000::IllegalContext* ctx) override;
+    virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
     virtual std::any visitJmp(parser68000::JmpContext* ctx) override;
     virtual std::any visitJsr(parser68000::JsrContext* ctx) override;
     virtual std::any visitLea(parser68000::LeaContext* ctx) override;
@@ -90,14 +91,19 @@ private:
     virtual std::any visitMove2usp(parser68000::Move2uspContext* ctx) override;
     virtual std::any visitMovesr(parser68000::MovesrContext* ctx) override;
     virtual std::any visitMove2sr(parser68000::Move2srContext* ctx) override;
+    virtual std::any visitMovem_toMemory(parser68000::Movem_toMemoryContext* ctx) override;
+    virtual std::any visitMovem_fromMemory(parser68000::Movem_fromMemoryContext* ctx) override;
 
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
 
     std::any visitNop(parser68000::NopContext* ctx) override;
 
-    virtual std::any visitImmediate(parser68000::ImmediateContext* ctx) override;
-
+    // Register list
+    virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
+    virtual std::any visitRegisterListRegister(parser68000::RegisterListRegisterContext* ctx) override;
+    virtual std::any visitRegisterListRange(parser68000::RegisterListRangeContext* ctx) override;
+    virtual std::any visitRegisterRange(parser68000::RegisterRangeContext* ctx) override;
 
 	// Addressing modes
     std::any visitDRegister(parser68000::DRegisterContext* context) override;

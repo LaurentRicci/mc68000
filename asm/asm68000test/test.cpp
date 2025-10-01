@@ -1486,6 +1486,84 @@ BOOST_AUTO_TEST_CASE(move_toSrError)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// MOVEM
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(movem_toMemory)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.l d0/d1/a2,-(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1'0'001'1'100'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b11000000'00100000, code[1]); // bitmask for d0,d1,a2
+}
+
+BOOST_AUTO_TEST_CASE(movem_toMemoryRange)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.l d0-d4/d6/a2,-(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1'0'001'1'100'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b11111010'00100000, code[1]); // bitmask for d0,d1,d2,d3,d4,d6,a2
+}
+
+BOOST_AUTO_TEST_CASE(movem_toMemoryWord)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.w d0-d4/d6/a2, 8(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1'0'001'0'101'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0b00000100'01011111, code[1]); // bitmask for d0,d1,d2,d3,d4,d6,a2
+	BOOST_CHECK_EQUAL(8, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(movem_toMemoryFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.w d0-d4/d6/a2, (a3)+\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(movem_fromMemory)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.l (a3)+, d0/d1/a2\n");
+	validate_hasValue<uint16_t>(0b0100'1'1'001'1'011'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b00000100'00000011, code[1]); // bitmask for d0,d1,a2
+}
+
+BOOST_AUTO_TEST_CASE(movem_fromMemoryRange)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.l (a3)+, d0-d4/d6/a2\n");
+	validate_hasValue<uint16_t>(0b0100'1'1'001'1'011'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0b00000100'01011111, code[1]); // bitmask for d0,d1,d2,d3,d4,d6,a2
+}
+
+BOOST_AUTO_TEST_CASE(movem_fromMemoryWord)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.w 8(a3), d0-d4/d6/a2\n");
+	validate_hasValue<uint16_t>(0b0100'1'1'001'0'101'011, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0b00000100'01011111, code[1]); // bitmask for d0,d1,d2,d3,d4,d6,a2
+	BOOST_CHECK_EQUAL(8, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(movem_fromMemoryFailed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movem.w -(a3), d0-d4/d6/a2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

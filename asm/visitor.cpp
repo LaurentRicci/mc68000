@@ -890,6 +890,9 @@ any visitor::visitLslLsr_addressingMode(parser68000::LslLsr_addressingModeContex
 	return visitShiftAddressingMode(ctx, 0b01);
 }
 
+/// <summary>
+/// MOVE size? addressingMode COMMA addressingMode
+/// </summary>
 any visitor::visitMove(parser68000::MoveContext* ctx)
 {
 	size = 1;
@@ -927,6 +930,10 @@ any visitor::visitMove(parser68000::MoveContext* ctx)
 	uint16_t opcode = 0b00'00'000'000'000'000 | (opSize << 12) | (destinationRegister << 9) | (destinationMode << 6) | sourceEffectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// MOVEA size? addressingMode COMMA aRegister
+/// </summary>
 any visitor::visitMovea(parser68000::MoveaContext* ctx)
 {
 	size = 1;
@@ -953,6 +960,10 @@ any visitor::visitMovea(parser68000::MoveaContext* ctx)
 	uint16_t opcode = 0b00'00'000'001'000'000 | (opSize << 12) | (aReg << 9) | sourceEffectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// MOVE USP COMMA aRegister
+/// </summary>
 any visitor::visitMoveusp(parser68000::MoveuspContext* ctx)
 {
 	size = 2;
@@ -960,6 +971,10 @@ any visitor::visitMoveusp(parser68000::MoveuspContext* ctx)
 	uint16_t opcode = 0b0100'1110'0110'1'000 | aReg;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// MOVE aRegister COMMA USP
+/// </summary>
 any visitor::visitMove2usp(parser68000::Move2uspContext* ctx)
 {
 	size = 2;
@@ -967,6 +982,10 @@ any visitor::visitMove2usp(parser68000::Move2uspContext* ctx)
 	uint16_t opcode = 0b0100'1110'0110'0'000 | aReg;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// MOVE SR COMMA addressingMode
+/// </summary>
 any visitor::visitMovesr(parser68000::MovesrContext* ctx)
 {
 	size = 1;
@@ -978,6 +997,10 @@ any visitor::visitMovesr(parser68000::MovesrContext* ctx)
 	uint16_t opcode = 0b0100'0000'11'000'000 | destinationEffectiveAddress;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// MOVE addressingMode COMMA SR
+/// </summary>
 any visitor::visitMove2sr(parser68000::Move2srContext* ctx)
 {
 	size = 1;
@@ -987,6 +1010,96 @@ any visitor::visitMove2sr(parser68000::Move2srContext* ctx)
 		addError("Invalid addressing mode: ", ctx->children[1]);
 	}
 	uint16_t opcode = 0b0100'0110'11'000'000 | sourceEffectiveAddress;
+	return finalize_instruction(opcode);
+}
+inline uint16_t invertRegisterList(uint16_t regList)
+{
+	uint16_t regListInverted = 0;
+	for (int i = 0; i < 16; i++)
+	{
+		if (regList & (1 << i))
+		{
+			regListInverted |= (1 << (15 - i));
+		}
+	}
+	return regListInverted;
+}
+
+/// <summary>
+/// MOVEM size? registerList COMMA addressingMode
+/// </summary>
+any visitor::visitMovem_toMemory(parser68000::Movem_toMemoryContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("MOVEM should be word or long", ctx->children[arg + 2]);
+			size = 1; // default to word to avoid further errors
+		}
+	}
+	uint16_t opSize = size;
+	switch (size)
+	{
+		case 1: opSize = 0; break; // word
+		case 2: opSize = 1; break; // long
+	}
+
+	uint16_t regList = any_cast<uint16_t>(visit(ctx->children[arg]));
+	extensionsList.push_back(regList);
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001011'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
+	}
+	if ((effectiveAddress & 0b111'000) == 0b100'000)
+	{
+		// effective address is predecrement mode, the register list is inverted
+		regList = invertRegisterList(regList);
+		extensionsList[0] = regList;
+	}
+
+	uint16_t opcode = 0b0100'1'0'001'0'000'000 | (opSize << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+/// <summary>
+/// MOVEM size? addressingMode COMMA registerList
+/// </summary>
+any visitor::visitMovem_fromMemory(parser68000::Movem_fromMemoryContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+		if (size == 0)
+		{
+			addError("MOVEM should be word or long", ctx->children[arg + 2]);
+			size = 1; // default to word to avoid further errors
+		}
+	}
+	uint16_t opSize = size;
+	switch (size)
+	{
+		case 1: opSize = 0; break; // word
+		case 2: opSize = 1; break; // long
+	}
+
+	uint16_t regList = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
+	extensionsList.push_back(regList);
+
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001101'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
+	}
+
+	uint16_t opcode = 0b0100'1'1'001'0'000'000 | (opSize << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -1014,7 +1127,73 @@ any visitor::visitNop(parser68000::NopContext* ctx)
 	uint16_t opcode = 0b0100'1110'0111'0001;
 	return finalize_instruction(opcode);
 }
+// ====================================================================================================
+// Register lists
+// ====================================================================================================
+any visitor::visitRegisterList(parser68000::RegisterListContext* ctx)
+{
+	uint16_t regList = 0;
+	for (size_t i = 0; i < ctx->children.size(); i += 2) // skip separators
+	{
+		regList |= any_cast<uint16_t>(visit(ctx->children[i]));
+	}
+	return regList;
+}
+any visitor::visitRegisterListRegister(parser68000::RegisterListRegisterContext* ctx)
+{
+	auto txt = ctx->children[0]->getText();
+	uint16_t reg = stoi(txt.substr(1));
+	bool isDataReg = (txt[0] == 'D') || (txt[0] == 'd');
+	if (isDataReg)
+	{
+		return (uint16_t)(1 << reg);
+	}
+	else
+	{
+		return (uint16_t)(1 << (8 + reg));
+	}
+}
+any visitor::visitRegisterListRange(parser68000::RegisterListRangeContext* ctx)
+{
+	return visit(ctx->children[0]);
+}
+any visitor::visitRegisterRange(parser68000::RegisterRangeContext* ctx)
+{
+	auto txt1 = ctx->children[0]->getText();
+	uint16_t reg1 = stoi(txt1.substr(1));
+	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
 
+	auto txt2 = ctx->children[2]->getText();
+	uint16_t reg2 = stoi(txt2.substr(1));
+	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
+
+	if (isDataReg1 != isDataReg2)
+	{
+		addError("Register range must be both data or both address registers", ctx);
+		return (uint16_t)0;
+	}
+	if (reg1 > reg2)
+	{
+		addError("Invalid register range, start register must be less than or equal to end register", ctx);
+		return (uint16_t)0;
+	}
+	uint16_t regList = 0;
+	if (isDataReg1)
+	{
+		for (uint16_t r = reg1; r <= reg2; r++)
+		{
+			regList |= (1 << r);
+		}
+	}
+	else
+	{
+		for (uint16_t r = reg1; r <= reg2; r++)
+		{
+			regList |= (1 << (8 + r));
+		}
+	}
+	return regList;
+}
 // ====================================================================================================
 // Addressing modes
 // ====================================================================================================

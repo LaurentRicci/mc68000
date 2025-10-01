@@ -58,6 +58,7 @@ instructionSection
     | move2usp
     | movesr
     | move2sr
+    | movem
     | muls
     | mulu
     | nop
@@ -109,8 +110,7 @@ directive
     ;
 
 instruction
-    : MOVEM
-    | MOVEP
+    : MOVEP
     | MOVEQ
     | NBCD
     | NEG
@@ -349,6 +349,11 @@ move2sr
     : MOVE addressingMode COMMA SR
     ;
 
+movem
+    : MOVEM size? registerList COMMA addressingMode     #movem_toMemory
+    | MOVEM size? addressingMode COMMA registerList     #movem_fromMemory
+    ;
+
 muls
     : MULS addressingMode COMMA dRegister
     ;
@@ -382,8 +387,8 @@ registerList
     ;
 
 registerListElement
-    : adRegister
-    | registerRange
+    : adRegister        #registerListRegister
+    | registerRange     #registerListRange
     ;
 
 adRegister
