@@ -1615,6 +1615,27 @@ BOOST_AUTO_TEST_CASE(movep_fromMemoryFailed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// MOVEQ
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(moveq)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #42, d6\n");
+	validate_hasValue<uint16_t>(0b0111'110'0'0010'1010, opcode);
+}
+BOOST_AUTO_TEST_CASE(moveq_negative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #-42, d6\n");
+	validate_hasValue<uint16_t>(0b0111'110'0'1101'0110, opcode);
+}
+BOOST_AUTO_TEST_CASE(moveq_outOfRange)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #1234, d6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)

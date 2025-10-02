@@ -60,6 +60,7 @@ instructionSection
     | move2sr
     | movem
     | movep
+    | moveq
     | muls
     | mulu
     | nop
@@ -111,8 +112,7 @@ directive
     ;
 
 instruction
-    : MOVEQ
-    | NBCD
+    : NBCD
     | NEG
     | NEGX
     | NOP
@@ -357,6 +357,10 @@ movem
 movep
     : MOVEP size? dRegister COMMA aRegisterIndirectDisplacement         #movep_toMemory
     | MOVEP size? aRegisterIndirectDisplacement COMMA dRegister         #movep_fromMemory
+    ;
+
+moveq
+    : MOVEQ HASH number COMMA dRegister
     ;
 
 muls

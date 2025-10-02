@@ -1066,6 +1066,7 @@ any visitor::visitMovem_toMemory(parser68000::Movem_toMemoryContext* ctx)
 	uint16_t opcode = 0b0100'1'0'001'0'000'000 | (opSize << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
+
 /// <summary>
 /// MOVEM size? addressingMode COMMA registerList
 /// </summary>
@@ -1103,6 +1104,9 @@ any visitor::visitMovem_fromMemory(parser68000::Movem_fromMemoryContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// MOVEP size? dRegister COMMA aRegisterIndirectDisplacement 
+/// </summary>
 any visitor::visitMovep_toMemory(parser68000::Movep_toMemoryContext* ctx)
 {
 	size = 1;
@@ -1132,6 +1136,9 @@ any visitor::visitMovep_toMemory(parser68000::Movep_toMemoryContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// MOVEP size? aRegisterIndirectDisplacement COMMA dRegister
+/// </summary>
 any visitor::visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx)
 {
 	size = 1;
@@ -1161,6 +1168,23 @@ any visitor::visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// MOVEQ HASH number COMMA dRegister
+/// </summary>
+any visitor::visitMoveq(parser68000::MoveqContext* ctx)
+{
+	size = 2;
+	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[2]));
+	if (immediate_data < -128 || immediate_data > 127)
+	{
+		addError("Immediate data for MOVEQ must be between -128 and 127", ctx->children[1]);
+		immediate_data = 0;
+	}
+	uint16_t data8 = (uint16_t)(immediate_data & 0xff);
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[4])) & 0b111;
+	uint16_t opcode = 0b0111'000'0'0000'0000 | (dReg << 9) | data8;
+	return finalize_instruction(opcode);
+}
 
 /// <summary>
 /// MULS size? addressingMode COMMA dRegister
