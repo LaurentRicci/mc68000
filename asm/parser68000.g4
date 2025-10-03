@@ -29,7 +29,7 @@ instructionSection
     | adda
     | addq
     | addx 
-    | and
+    | andOr
     | toCCR
     | toSR
     | aslAsr
@@ -211,6 +211,11 @@ bitInstruction returns [uint16_t value]
     | BTST { $value = 0b000; }
     ;
 
+andOrInstruction returns [uint16_t value]
+    : AND { $value = 0b1100; }
+    | OR  { $value = 0b1000; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -234,9 +239,9 @@ addx
     | ADDX size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
     ;
 
-and
-    : AND size? addressingMode COMMA dRegister #and_to_dRegister
-    | AND size? dRegister COMMA addressingMode #and_from_dRegister
+andOr
+    : andOrInstruction size? addressingMode COMMA dRegister #andOr_to_dRegister
+    | andOrInstruction size? dRegister COMMA addressingMode #andOr_from_dRegister
     ;
 
 aslAsr

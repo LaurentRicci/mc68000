@@ -48,8 +48,8 @@ private:
     virtual std::any visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx) override;
     virtual std::any visitAddx_indirect(parser68000::Addx_indirectContext* ctx) override;
     
-    virtual std::any visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx) override;
-    virtual std::any visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx) override;
+    virtual std::any visitAndOr_to_dRegister(parser68000::AndOr_to_dRegisterContext* ctx) override;
+    virtual std::any visitAndOr_from_dRegister(parser68000::AndOr_from_dRegisterContext* ctx) override;
 
     virtual std::any visitToCCR(parser68000::ToCCRContext* ctx) override;
 	virtual std::any visitToSR(parser68000::ToSRContext* ctx) override;
@@ -174,6 +174,11 @@ private:
     virtual std::any visitLogicalShiftInstruction(parser68000::LogicalShiftInstructionContext* ctx) override {
         return ctx->value;
     }
+
+    virtual std::any visitAndOrInstruction(parser68000::AndOrInstructionContext* ctx) override {
+        return ctx->value;
+	}
+
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);

@@ -1758,6 +1758,81 @@ BOOST_AUTO_TEST_CASE(not_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// OR
+// ====================================================================================================
+// OR: Dn,<ea> (Dn is source, <ea> is destination)
+BOOST_AUTO_TEST_CASE(or_from)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or d2,-(a3)\n");
+	validate_hasValue<uint16_t>(0b1000'010'101'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w d2,(a3)\n");
+	validate_hasValue<uint16_t>(0b1000'010'101'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.b d1,(a2)\n");
+	validate_hasValue<uint16_t>(0b1000'001'100'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.l d3,(a4)\n");
+	validate_hasValue<uint16_t>(0b1000'011'110'010'100, opcode);
+}
+
+// or: <ea>,Dn (<ea> is source, Dn is destination)
+BOOST_AUTO_TEST_CASE(or_to)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or (a3)+,d2\n");
+	validate_hasValue<uint16_t>(0b1000'010'001'011'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w (a3),d2\n");
+	validate_hasValue<uint16_t>(0b1000'010'001'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.b (a2),d1\n");
+	validate_hasValue<uint16_t>(0b1000'001'000'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.l (a4),d3\n");
+	validate_hasValue<uint16_t>(0b1000'011'010'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w d0,a1\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// Invalid addressing mode: or from address register to Dn
+BOOST_AUTO_TEST_CASE(or_to_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w a1,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // ORI to CCR
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(ori2ccr_valid)

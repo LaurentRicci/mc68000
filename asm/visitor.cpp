@@ -217,13 +217,14 @@ any visitor::visitAddx_indirect(parser68000::Addx_indirectContext* ctx)
 
 /// <summary>
 /// AND size? addressingMode COMMA dRegister #and_to_dRegister
+/// OR  size? addressingMode COMMA dRegister #and_to_dRegister
 /// </summary>
-any visitor::visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx)
+any visitor::visitAndOr_to_dRegister(parser68000::AndOr_to_dRegisterContext* ctx)
 {
-	auto sz = ctx->children.size();
+	uint16_t instructionCode = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t size = 1;
 	int arg = 1;
-	if (sz == 5)
+	if (ctx->children.size() == 5)
 	{
 		size = any_cast<uint16_t>(visit(ctx->children[1]));
 		arg++; // the optional size is included so there is one extra child
@@ -236,15 +237,17 @@ any visitor::visitAnd_to_dRegister(parser68000::And_to_dRegisterContext* ctx)
 	}
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 
-	uint16_t opcode = 0b1100'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
+	uint16_t opcode = 0b0000'000'000'000'000 | (instructionCode << 12) | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
 /// AND size? dRegister COMMA addressingMode #and_from_dRegister
+/// OR  size? dRegister COMMA addressingMode #and_from_dRegister
 /// </summary>
-any visitor::visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx)
+any visitor::visitAndOr_from_dRegister(parser68000::AndOr_from_dRegisterContext* ctx)
 {
+	uint16_t instructionCode = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5)
@@ -259,7 +262,7 @@ any visitor::visitAnd_from_dRegister(parser68000::And_from_dRegisterContext* ctx
 		addError("Invalid addressing mode: ", ctx->children[arg + 2]);
 	}
 
-	uint16_t opcode = (0b1100'000'100'000'000 | (dReg << 9) | (size << 6) | effectiveAddress);
+	uint16_t opcode = 0b0000'000'100'000'000 | (instructionCode << 12) | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
