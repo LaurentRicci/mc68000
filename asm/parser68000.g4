@@ -63,7 +63,11 @@ instructionSection
     | moveq
     | muls
     | mulu
+    | nbcd
+    | neg
+    | negx
     | nop
+    | not
     | immediate
     | instruction size? arguments?
     ;
@@ -112,12 +116,7 @@ directive
     ;
 
 instruction
-    : NBCD
-    | NEG
-    | NEGX
-    | NOP
-    | NOT
-    | OR
+    : OR
     | PEA
     | ROL
     | ROR
@@ -371,8 +370,24 @@ mulu
     : MULU addressingMode COMMA dRegister
     ;
 
+nbcd
+    : NBCD addressingMode
+    ;
+
+neg
+    : NEG size? addressingMode
+    ;
+
+negx
+    : NEGX size? addressingMode
+    ;
+
 nop
     : NOP
+    ;
+
+not
+    : NOT size? addressingMode
     ;
 
 // emptyLine : WS ;

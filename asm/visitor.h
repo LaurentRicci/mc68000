@@ -99,8 +99,11 @@ private:
 
     virtual std::any visitMuls(parser68000::MulsContext* ctx) override;
     virtual std::any visitMulu(parser68000::MuluContext* ctx) override;
-
-    std::any visitNop(parser68000::NopContext* ctx) override;
+	virtual std::any visitNbcd(parser68000::NbcdContext* ctx) override;
+    virtual std::any visitNeg(parser68000::NegContext* ctx) override;
+    virtual std::any visitNegx(parser68000::NegxContext* ctx) override;
+    virtual std::any visitNop(parser68000::NopContext* ctx) override;
+    virtual std::any visitNot(parser68000::NotContext* ctx) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;

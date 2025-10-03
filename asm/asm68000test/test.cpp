@@ -1670,6 +1670,94 @@ BOOST_AUTO_TEST_CASE(mulu_failed)
 }
 
 // ====================================================================================================
+// NBCD
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(nbcd_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" nbcd -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1000'00'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(nbcd_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" nbcd a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NEG
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(neg_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0100'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(neg_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0100'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(neg_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NEGX
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(negx_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0000'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(negx_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0000'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(negx_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NOT
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(not_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0110'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(not_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0110'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(not_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // ORI to CCR
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(ori2ccr_valid)

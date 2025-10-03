@@ -1203,6 +1203,84 @@ any visitor::visitMulu(parser68000::MuluContext* ctx)
 }
 
 /// <summary>
+/// NBCD addressingMode
+/// </summary>
+any visitor::visitNbcd(parser68000::NbcdContext* ctx)
+{
+	size = 0;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'1000'00'000'000 | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// NEG size? addressingMode
+/// </summary>
+any visitor::visitNeg(parser68000::NegContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'0100'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// NEGX size? addressingMode
+/// </summary>
+any visitor::visitNegx(parser68000::NegxContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'0000'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// NOT size? addressingMode
+/// </summary>
+any visitor::visitNot(parser68000::NotContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'0110'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
 /// NOP
 /// </summary>
 any visitor::visitNop(parser68000::NopContext* ctx)
