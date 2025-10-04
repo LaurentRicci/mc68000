@@ -1363,6 +1363,34 @@ any visitor::visitRoxlRoxr_addressingMode(parser68000::RoxlRoxr_addressingModeCo
 {
 	return visitShiftAddressingMode(ctx, 0b10);
 }
+
+/// <summary>
+/// RTE
+/// </summary>
+any visitor::visitRte(parser68000::RteContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0011;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// RTR
+/// </summary>
+any visitor::visitRtr(parser68000::RtrContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0111;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// RTS
+/// </summary>
+any visitor::visitRts(parser68000::RtsContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0101;
+	return finalize_instruction(opcode);
+}
+
 // ====================================================================================================
 // Register lists
 // ====================================================================================================

@@ -72,6 +72,9 @@ instructionSection
     | resetInstruction
     | rolRor
     | roxlRoxr
+    | rte
+    | rtr
+    | rts
     | immediate
     | instruction size? arguments?
     ;
@@ -120,10 +123,7 @@ directive
     ;
 
 instruction
-    : RTE
-    | RTR
-    | RTS
-    | SBCD
+    : SBCD
     | SCC
     | STOP
     | SUB
@@ -420,6 +420,18 @@ roxlRoxr
     : rotateXInstruction size? dRegister COMMA dRegister                #RoxlRoxr_dRegister
     | rotateXInstruction size? HASH number COMMA dRegister              #RoxlRoxr_immediateData
     | rotateXInstruction size? addressingMode                           #RoxlRoxr_addressingMode
+    ;
+
+rte 
+    : RTE
+    ;
+
+rtr 
+    : RTR
+    ;
+
+rts
+    : RTS
     ;
 
 // emptyLine : WS ;

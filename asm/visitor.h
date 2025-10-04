@@ -111,6 +111,9 @@ private:
     virtual std::any visitRoxlRoxr_immediateData(parser68000::RoxlRoxr_immediateDataContext* ctx) override;
     virtual std::any visitRoxlRoxr_addressingMode(parser68000::RoxlRoxr_addressingModeContext* ctx) override;
 
+    virtual std::any visitRte(parser68000::RteContext* ctx) override;
+    virtual std::any visitRtr(parser68000::RtrContext* ctx) override;
+    virtual std::any visitRts(parser68000::RtsContext* ctx) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;

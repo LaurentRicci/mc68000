@@ -2055,4 +2055,26 @@ BOOST_AUTO_TEST_CASE(roxr_registers)
 	validate_hasValue<uint16_t>(0b1110'001'0'10'1'10'000, opcode);
 }
 
+// ====================================================================================================
+// RTE, RTR, RTS
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(rte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rte\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0011, opcode);
+}
+BOOST_AUTO_TEST_CASE(rtr)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rtr\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0111, opcode);
+}
+BOOST_AUTO_TEST_CASE(rts)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rts\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0101, opcode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
