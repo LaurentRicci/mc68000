@@ -29,7 +29,7 @@ instructionSection
     | adda
     | addq
     | addx 
-    | and
+    | andOr
     | toCCR
     | toSR
     | aslAsr
@@ -60,9 +60,16 @@ instructionSection
     | move2sr
     | movem
     | movep
+    | moveq
     | muls
     | mulu
+    | nbcd
+    | neg
+    | negx
     | nop
+    | not
+    | pea
+    | resetInstruction
     | immediate
     | instruction size? arguments?
     ;
@@ -111,15 +118,7 @@ directive
     ;
 
 instruction
-    : MOVEQ
-    | NBCD
-    | NEG
-    | NEGX
-    | NOP
-    | NOT
-    | OR
-    | PEA
-    | ROL
+    : ROL
     | ROR
     | ROXL
     | ROXR
@@ -212,6 +211,11 @@ bitInstruction returns [uint16_t value]
     | BTST { $value = 0b000; }
     ;
 
+andOrInstruction returns [uint16_t value]
+    : AND { $value = 0b1100; }
+    | OR  { $value = 0b1000; }
+    ;
+
 abcd
     : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
     | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
@@ -235,9 +239,9 @@ addx
     | ADDX size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
     ;
 
-and
-    : AND size? addressingMode COMMA dRegister #and_to_dRegister
-    | AND size? dRegister COMMA addressingMode #and_from_dRegister
+andOr
+    : andOrInstruction size? addressingMode COMMA dRegister #andOr_to_dRegister
+    | andOrInstruction size? dRegister COMMA addressingMode #andOr_from_dRegister
     ;
 
 aslAsr
@@ -359,6 +363,10 @@ movep
     | MOVEP size? aRegisterIndirectDisplacement COMMA dRegister         #movep_fromMemory
     ;
 
+moveq
+    : MOVEQ HASH number COMMA dRegister
+    ;
+
 muls
     : MULS addressingMode COMMA dRegister
     ;
@@ -367,8 +375,32 @@ mulu
     : MULU addressingMode COMMA dRegister
     ;
 
+nbcd
+    : NBCD addressingMode
+    ;
+
+neg
+    : NEG size? addressingMode
+    ;
+
+negx
+    : NEGX size? addressingMode
+    ;
+
 nop
     : NOP
+    ;
+
+not
+    : NOT size? addressingMode
+    ;
+
+resetInstruction // using rest as name would conflict with the 'reset' used by ANTLR
+    : RESET
+    ;
+
+pea
+    : PEA addressingMode
     ;
 
 // emptyLine : WS ;

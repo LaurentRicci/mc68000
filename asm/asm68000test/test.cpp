@@ -1615,6 +1615,27 @@ BOOST_AUTO_TEST_CASE(movep_fromMemoryFailed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
+// MOVEQ
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(moveq)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #42, d6\n");
+	validate_hasValue<uint16_t>(0b0111'110'0'0010'1010, opcode);
+}
+BOOST_AUTO_TEST_CASE(moveq_negative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #-42, d6\n");
+	validate_hasValue<uint16_t>(0b0111'110'0'1101'0110, opcode);
+}
+BOOST_AUTO_TEST_CASE(moveq_outOfRange)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  moveq #1234, d6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
 // MULS
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(muls_ok)
@@ -1648,6 +1669,169 @@ BOOST_AUTO_TEST_CASE(mulu_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+// ====================================================================================================
+// NBCD
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(nbcd_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" nbcd -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'1000'00'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(nbcd_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" nbcd a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NEG
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(neg_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0100'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(neg_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0100'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(neg_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" neg a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NEGX
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(negx_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0000'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(negx_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0000'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(negx_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" negx a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// NOT
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(not_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not -(a3)\n");
+	validate_hasValue<uint16_t>(0b0100'0110'01'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(not_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not.b (a1)+\n");
+	validate_hasValue<uint16_t>(0b0100'0110'00'011'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(not_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" not a6\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// OR
+// ====================================================================================================
+// OR: Dn,<ea> (Dn is source, <ea> is destination)
+BOOST_AUTO_TEST_CASE(or_from)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or d2,-(a3)\n");
+	validate_hasValue<uint16_t>(0b1000'010'101'100'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w d2,(a3)\n");
+	validate_hasValue<uint16_t>(0b1000'010'101'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.b d1,(a2)\n");
+	validate_hasValue<uint16_t>(0b1000'001'100'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.l d3,(a4)\n");
+	validate_hasValue<uint16_t>(0b1000'011'110'010'100, opcode);
+}
+
+// or: <ea>,Dn (<ea> is source, Dn is destination)
+BOOST_AUTO_TEST_CASE(or_to)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or (a3)+,d2\n");
+	validate_hasValue<uint16_t>(0b1000'010'001'011'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w (a3),d2\n");
+	validate_hasValue<uint16_t>(0b1000'010'001'010'011, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.b (a2),d1\n");
+	validate_hasValue<uint16_t>(0b1000'001'000'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_to_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.l (a4),d3\n");
+	validate_hasValue<uint16_t>(0b1000'011'010'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(or_from_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w d0,a1\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// Invalid addressing mode: or from address register to Dn
+BOOST_AUTO_TEST_CASE(or_to_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  or.w a1,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 // ====================================================================================================
 // ORI to CCR
 // ====================================================================================================
@@ -1687,4 +1871,33 @@ BOOST_AUTO_TEST_CASE(ori2sr_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+// ====================================================================================================
+// PEA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(pea_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  pea 16(a4)\n");
+	validate_hasValue<uint16_t>(0b0100'1000'01'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(16, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(pea_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  pea a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// RESET
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(reset)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  reset\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0000, opcode);
+}
 BOOST_AUTO_TEST_SUITE_END()
