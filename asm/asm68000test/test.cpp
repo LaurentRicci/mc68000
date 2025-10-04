@@ -1871,4 +1871,33 @@ BOOST_AUTO_TEST_CASE(ori2sr_error)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 
+// ====================================================================================================
+// PEA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(pea_valid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  pea 16(a4)\n");
+	validate_hasValue<uint16_t>(0b0100'1000'01'101'100, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(16, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(pea_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  pea a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// RESET
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(reset)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  reset\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0000, opcode);
+}
 BOOST_AUTO_TEST_SUITE_END()

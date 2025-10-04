@@ -1291,6 +1291,31 @@ any visitor::visitNop(parser68000::NopContext* ctx)
 	uint16_t opcode = 0b0100'1110'0111'0001;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// PEA addressingMode
+/// </summary>
+any visitor::visitPea(parser68000::PeaContext* ctx)
+{
+	size = 2;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'1000'01'000'000 | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// RESET
+/// </summary>
+any visitor::visitResetInstruction(parser68000::ResetInstructionContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0000;
+	return finalize_instruction(opcode);
+}
+
 // ====================================================================================================
 // Register lists
 // ====================================================================================================

@@ -97,6 +97,7 @@ NOT     options { caseInsensitive=true; } : 'not' ;
 OR      options { caseInsensitive=true; } : 'or' ;
 ORI     options { caseInsensitive=true; } : 'ori' ;
 PEA     options { caseInsensitive=true; } : 'pea' ;
+RESET   options { caseInsensitive=true; } : 'reset' ;
 ROL     options { caseInsensitive=true; } : 'rol' ;
 ROR     options { caseInsensitive=true; } : 'ror' ;
 ROXL    options { caseInsensitive=true; } : 'roxl' ;

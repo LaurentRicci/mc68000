@@ -68,6 +68,8 @@ instructionSection
     | negx
     | nop
     | not
+    | pea
+    | resetInstruction
     | immediate
     | instruction size? arguments?
     ;
@@ -116,9 +118,7 @@ directive
     ;
 
 instruction
-    : OR
-    | PEA
-    | ROL
+    : ROL
     | ROR
     | ROXL
     | ROXR
@@ -393,6 +393,14 @@ nop
 
 not
     : NOT size? addressingMode
+    ;
+
+resetInstruction // using rest as name would conflict with the 'reset' used by ANTLR
+    : RESET
+    ;
+
+pea
+    : PEA addressingMode
     ;
 
 // emptyLine : WS ;
