@@ -1316,6 +1316,53 @@ any visitor::visitResetInstruction(parser68000::ResetInstructionContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// ROL/ROR size? dRegister COMMA dRegister
+/// </summary>
+any visitor::visitRolRor_dRegister(parser68000::RolRor_dRegisterContext* ctx)
+{
+	return visitShiftRegister(ctx, 0b11);
+}
+
+/// <summary>
+/// ROL/ROR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitRolRor_immediateData(parser68000::RolRor_immediateDataContext* ctx)
+{
+	return visitShiftImmediate(ctx, 0b11);
+}
+
+/// <summary>
+/// ROL/ROR size? addressingMode 
+/// </summary>
+any visitor::visitRolRor_addressingMode(parser68000::RolRor_addressingModeContext* ctx)
+{
+	return visitShiftAddressingMode(ctx, 0b11);
+}
+
+/// <summary>
+/// ROXL/ROXR size? dRegister COMMA dRegister
+/// </summary>
+any visitor::visitRoxlRoxr_dRegister(parser68000::RoxlRoxr_dRegisterContext* ctx)
+{
+	return visitShiftRegister(ctx, 0b10);
+}
+
+/// <summary>
+/// ROXL/ROXR size? HASH number COMMA dRegister
+/// </summary>
+any visitor::visitRoxlRoxr_immediateData(parser68000::RoxlRoxr_immediateDataContext* ctx)
+{
+	return visitShiftImmediate(ctx, 0b10);
+}
+
+/// <summary>
+/// ROXL/ROXR size? addressingMode 
+/// </summary>
+any visitor::visitRoxlRoxr_addressingMode(parser68000::RoxlRoxr_addressingModeContext* ctx)
+{
+	return visitShiftAddressingMode(ctx, 0b10);
+}
 // ====================================================================================================
 // Register lists
 // ====================================================================================================

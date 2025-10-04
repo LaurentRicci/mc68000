@@ -104,6 +104,13 @@ private:
     virtual std::any visitPea(parser68000::PeaContext* ctx) override;
     virtual std::any visitResetInstruction(parser68000::ResetInstructionContext* ctx) override;
 
+    virtual std::any visitRolRor_dRegister(parser68000::RolRor_dRegisterContext* ctx) override;
+    virtual std::any visitRolRor_immediateData(parser68000::RolRor_immediateDataContext* ctx) override;
+    virtual std::any visitRolRor_addressingMode(parser68000::RolRor_addressingModeContext* ctx) override;
+    virtual std::any visitRoxlRoxr_dRegister(parser68000::RoxlRoxr_dRegisterContext* ctx) override;
+    virtual std::any visitRoxlRoxr_immediateData(parser68000::RoxlRoxr_immediateDataContext* ctx) override;
+    virtual std::any visitRoxlRoxr_addressingMode(parser68000::RoxlRoxr_addressingModeContext* ctx) override;
+
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
@@ -176,6 +183,14 @@ private:
     }
 
     virtual std::any visitAndOrInstruction(parser68000::AndOrInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitRotateInstruction(parser68000::RotateInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitRotateXInstruction(parser68000::RotateXInstructionContext* ctx) override {
         return ctx->value;
     }
 

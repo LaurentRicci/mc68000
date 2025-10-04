@@ -1900,4 +1900,159 @@ BOOST_AUTO_TEST_CASE(reset)
 	auto opcode = parser.parseText("  reset\n");
 	validate_hasValue<uint16_t>(0b0100'1110'0111'0000, opcode);
 }
+
+// ====================================================================================================
+// ROL, ROR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(rol_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'011'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(ror_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ror (a4)\n");
+	validate_hasValue<uint16_t>(0b1110'011'0'11'010'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(ror_eam_size)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ror.w (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'011'0'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(rol_eam_wrongsize)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.b (a3)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(rol_eam_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(rol_eam_2errors)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.l a3\n");
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(rol_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.b #1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'00'0'11'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(ror_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ror.b #1,d1\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'00'0'11'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(rol_immediate_w)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.w #8,d0\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'01'0'11'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(rol_immediate_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.w #12,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(rol_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  rol.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'10'1'11'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(ror_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  ror.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'10'1'11'000, opcode);
+}
+
+// ====================================================================================================
+// ROXL, ROXR
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(roxl_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'010'1'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxr_eam)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxr (a4)\n");
+	validate_hasValue<uint16_t>(0b1110'010'0'11'010'100, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxr_eam_size)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxr.w (a3)\n");
+	validate_hasValue<uint16_t>(0b1110'010'0'11'010'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxl_eam_wrongsize)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.b (a3)\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(roxl_eam_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl a3\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(roxl_eam_2errors)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.l a3\n");
+	BOOST_CHECK_EQUAL(2, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(roxl_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.b #1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'00'0'10'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxr_immediate_b)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxr.b #1,d1\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'00'0'10'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxl_immediate_w)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.w #8,d0\n");
+	validate_hasValue<uint16_t>(0b1110'000'1'01'0'10'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxl_immediate_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.w #12,d0\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(roxl_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxl.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'1'10'1'10'000, opcode);
+}
+BOOST_AUTO_TEST_CASE(roxr_registers)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  roxr.l d1,d0\n");
+	validate_hasValue<uint16_t>(0b1110'001'0'10'1'10'000, opcode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
