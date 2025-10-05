@@ -70,6 +70,11 @@ instructionSection
     | not
     | pea
     | resetInstruction
+    | rolRor
+    | roxlRoxr
+    | rte
+    | rtr
+    | rts
     | immediate
     | instruction size? arguments?
     ;
@@ -118,14 +123,7 @@ directive
     ;
 
 instruction
-    : ROL
-    | ROR
-    | ROXL
-    | ROXR
-    | RTE
-    | RTR
-    | RTS
-    | SBCD
+    : SBCD
     | SCC
     | STOP
     | SUB
@@ -165,6 +163,15 @@ logicalShiftInstruction returns [uint16_t value]
     | LSR { $value = 0; }
     ;
 
+rotateInstruction returns [uint16_t value]
+    : ROL { $value = 1; }
+    | ROR { $value = 0; }
+    ;
+
+rotateXInstruction returns [uint16_t value]
+    : ROXL { $value = 1; }
+    | ROXR { $value = 0; }
+    ;
 bccInstruction returns [uint16_t value]
     : BCC { $value = 0b0100; }
     | BCS { $value = 0b0101; }
@@ -250,12 +257,6 @@ aslAsr
     | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
     ;
 
-lslLsr
-    : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
-    | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
-    | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
-    ;
-
 bcc
     : bccInstruction address
     ;
@@ -329,6 +330,12 @@ link
     : LINK aRegister COMMA immediateData
     ;
 
+lslLsr
+    : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
+    | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
+    | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
+    ;
+
 move
     : MOVE size? addressingMode COMMA addressingMode
     ;
@@ -395,12 +402,36 @@ not
     : NOT size? addressingMode
     ;
 
-resetInstruction // using rest as name would conflict with the 'reset' used by ANTLR
+pea
+    : PEA addressingMode
+    ;
+
+resetInstruction // using reset as name would conflict with the 'reset' used by ANTLR
     : RESET
     ;
 
-pea
-    : PEA addressingMode
+rolRor
+    : rotateInstruction size? dRegister COMMA dRegister                #RolRor_dRegister
+    | rotateInstruction size? HASH number COMMA dRegister              #RolRor_immediateData
+    | rotateInstruction size? addressingMode                           #RolRor_addressingMode
+    ;
+
+roxlRoxr
+    : rotateXInstruction size? dRegister COMMA dRegister                #RoxlRoxr_dRegister
+    | rotateXInstruction size? HASH number COMMA dRegister              #RoxlRoxr_immediateData
+    | rotateXInstruction size? addressingMode                           #RoxlRoxr_addressingMode
+    ;
+
+rte 
+    : RTE
+    ;
+
+rtr 
+    : RTR
+    ;
+
+rts
+    : RTS
     ;
 
 // emptyLine : WS ;
