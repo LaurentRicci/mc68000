@@ -67,6 +67,23 @@ DBT      options { caseInsensitive=true; } : 'dbt'  ;
 DBVC     options { caseInsensitive=true; } : 'dbvc' ;
 DBVS     options { caseInsensitive=true; } : 'dbvs' ;
 
+SCC     options { caseInsensitive=true; } : 'scc' ;
+SCS     options { caseInsensitive=true; } : 'scs' ;
+SEQ     options { caseInsensitive=true; } : 'seq' ;
+SF      options { caseInsensitive=true; } : 'sf'  ;
+SGE     options { caseInsensitive=true; } : 'sge' ;
+SGT     options { caseInsensitive=true; } : 'sgt' ;
+SHI     options { caseInsensitive=true; } : 'shi' ;
+SLE     options { caseInsensitive=true; } : 'sle' ;
+SLS     options { caseInsensitive=true; } : 'sls' ;
+SLT     options { caseInsensitive=true; } : 'slt' ;
+SMI     options { caseInsensitive=true; } : 'smi' ;
+SNE     options { caseInsensitive=true; } : 'sne' ;
+SPL     options { caseInsensitive=true; } : 'spl' ;
+SRA     options { caseInsensitive=true; } : 'sra' ;
+ST      options { caseInsensitive=true; } : 'st'  ;
+SVC     options { caseInsensitive=true; } : 'svc' ;
+SVS     options { caseInsensitive=true; } : 'svs' ;
 
 
 DIVS    options { caseInsensitive=true; } : 'divs' ;
@@ -106,7 +123,6 @@ RTE     options { caseInsensitive=true; } : 'rte' ;
 RTR     options { caseInsensitive=true; } : 'rtr' ;
 RTS     options { caseInsensitive=true; } : 'rts' ;
 SBCD    options { caseInsensitive=true; } : 'sbcd' ;
-SCC     options { caseInsensitive=true; } : 'scc' ;
 STOP    options { caseInsensitive=true; } : 'stop' ;
 SUB     options { caseInsensitive=true; } : 'sub' ;
 SUBA    options { caseInsensitive=true; } : 'suba' ;

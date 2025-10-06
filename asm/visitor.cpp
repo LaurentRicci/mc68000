@@ -65,22 +65,32 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 	return any();
 }
 
-any visitor::visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx)
+/// <summary>
+/// ABCD dRegister COMMA dRegister 
+/// SBCD dRegister COMMA dRegister 
+/// </summary>
+any visitor::visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
     uint16_t dy = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
     uint16_t dx = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
 
-    uint16_t opcode = 0b1100'000'10000'0'000 | (dx << 9) | dy;
-    return opcode;
+    uint16_t opcode = 0b0000'000'10000'0'000 | (code << 12)| (dx << 9) | dy;
+    return finalize_instruction(opcode);
 }
 
-any visitor::visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) 
+/// <summary>
+/// ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement
+/// SBCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement
+/// </summary>
+any visitor::visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx) 
 {
-    uint16_t ay = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
+	uint16_t ay = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
     uint16_t ax = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
 
-    uint16_t opcode = 0b1100'000'10000'1'000 | (ax << 9) | ay;
-    return opcode;
+    uint16_t opcode = 0b0000'000'10000'1'000 | (code << 12) | (ax << 9) | ay;
+    return finalize_instruction(opcode);
 }
 
 any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
@@ -1388,6 +1398,19 @@ any visitor::visitRtr(parser68000::RtrContext* ctx)
 any visitor::visitRts(parser68000::RtsContext* ctx)
 {
 	uint16_t opcode = 0b0100'1110'0111'0101;
+	return finalize_instruction(opcode);
+}
+
+any visitor::visitScc(parser68000::SccContext* ctx)
+{
+	size = 1;
+	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0])) & 0b1111;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0101'0000'11'000'000 | (condition << 8) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 

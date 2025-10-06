@@ -24,7 +24,7 @@ labelSection returns [std::string value]
 commentLine : COMMENTLINE;
 
 instructionSection
-    : abcd
+    : asbcd
     | add
     | adda
     | addq
@@ -75,6 +75,7 @@ instructionSection
     | rte
     | rtr
     | rts
+    | scc
     | immediate
     | instruction size? arguments?
     ;
@@ -123,9 +124,7 @@ directive
     ;
 
 instruction
-    : SBCD
-    | SCC
-    | STOP
+    : STOP
     | SUB
     | SUBA
     | SUBQ
@@ -211,6 +210,26 @@ dbccInstruction returns [uint16_t value]
     | DBT  { $value = 0b0000; }
     ;
 
+sccInstruction returns [uint16_t value]
+    : SCC { $value = 0b0100; }
+    | SCS { $value = 0b0101; }
+    | SEQ { $value = 0b0111; }
+    | SNE { $value = 0b0110; }
+    | SGE { $value = 0b1100; }
+    | SGT { $value = 0b1110; }
+    | SHI { $value = 0b0010; }
+    | SLE { $value = 0b1111; }
+    | SLS { $value = 0b0011; }
+    | SLT { $value = 0b1101; }
+    | SMI { $value = 0b1011; }
+    | SPL { $value = 0b1010; }
+    | SVC { $value = 0b1000; }
+    | SVS { $value = 0b1001; }
+    | SRA { $value = 0b0001; }
+    | SF  { $value = 0b0001; }
+    | ST  { $value = 0b0000; }
+    ;
+
 bitInstruction returns [uint16_t value]
     : BCHG { $value = 0b001; }
     | BCLR { $value = 0b010; }
@@ -223,9 +242,14 @@ andOrInstruction returns [uint16_t value]
     | OR  { $value = 0b1000; }
     ;
 
-abcd
-    : ABCD dRegister COMMA dRegister                                         #abcd_dRegister
-    | ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcd_indirect
+asbcdInstruction returns [uint16_t value]
+    : ABCD { $value = 0b1100; }
+    | SBCD { $value = 0b1000; }
+    ;
+
+asbcd
+    : asbcdInstruction dRegister COMMA dRegister                                         #asbcd_dRegister
+    | asbcdInstruction aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #asbcd_indirect
     ;
 
 add
@@ -432,6 +456,10 @@ rtr
 
 rts
     : RTS
+    ;
+
+scc
+    : sccInstruction addressingMode
     ;
 
 // emptyLine : WS ;

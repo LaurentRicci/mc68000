@@ -2077,4 +2077,59 @@ BOOST_AUTO_TEST_CASE(rts)
 	validate_hasValue<uint16_t>(0b0100'1110'0111'0101, opcode);
 }
 
+// ====================================================================================================
+// SBCD
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(sbcd_register)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  sbcd d1,d5\n");
+	validate_hasValue<uint16_t>(0b1000'101'10000'0'001, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(sbcd_decrement)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  SBCD -(a6), -(a1)\n");
+	validate_hasValue<uint16_t>(0b1000'001'10000'1'110, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(sbcd_fail)
+{
+	asmparser parser;
+	auto error = parser.checkSyntax("  sbcd d2,(a4)\n");
+	BOOST_CHECK_EQUAL(1, error);
+}
+// ====================================================================================================
+// SCC
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(scc_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  scc d5\n");
+	validate_hasValue<uint16_t>(0b0101'0100'11'000'101, opcode);
+}
+BOOST_AUTO_TEST_CASE(scc_all)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" scc d0\n scs d1\n seq d2\n sf  d3\n sge d4\n sgt d5\n shi d6\n sle d7\n sls (a0)+\n slt (a1)+\n smi (a2)+\n sne (a3)+\n spl (a4)+\n st  (a5)+\n svc (a6)+\n svs (a7)+\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(16, code.size());
+	BOOST_CHECK_EQUAL(0x54C0, code[0]);
+	BOOST_CHECK_EQUAL(0x55C1, code[1]);
+	BOOST_CHECK_EQUAL(0x57C2, code[2]);
+	BOOST_CHECK_EQUAL(0x51C3, code[3]);
+	BOOST_CHECK_EQUAL(0x5CC4, code[4]);
+	BOOST_CHECK_EQUAL(0x5EC5, code[5]);
+	BOOST_CHECK_EQUAL(0x52C6, code[6]);
+	BOOST_CHECK_EQUAL(0x5FC7, code[7]);
+	BOOST_CHECK_EQUAL(0x53D8, code[8]);
+	BOOST_CHECK_EQUAL(0x5DD9, code[9]);
+	BOOST_CHECK_EQUAL(0x5BDA, code[10]);
+	BOOST_CHECK_EQUAL(0x56DB, code[11]);
+	BOOST_CHECK_EQUAL(0x5ADC, code[12]);
+	BOOST_CHECK_EQUAL(0x50DD, code[13]);
+	BOOST_CHECK_EQUAL(0x58DE, code[14]);
+	BOOST_CHECK_EQUAL(0x59DF, code[15]);
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -33,8 +33,8 @@ private:
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
     // Instructions
-    virtual std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
-    virtual std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
+    virtual std::any visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx) override;
+    virtual std::any visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx) override;
 
     virtual std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     virtual std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
@@ -114,6 +114,7 @@ private:
     virtual std::any visitRte(parser68000::RteContext* ctx) override;
     virtual std::any visitRtr(parser68000::RtrContext* ctx) override;
     virtual std::any visitRts(parser68000::RtsContext* ctx) override;
+	virtual std::any visitScc(parser68000::SccContext* ctx) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
@@ -197,6 +198,13 @@ private:
         return ctx->value;
     }
 
+    virtual std::any visitAsbcdInstruction(parser68000::AsbcdInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitSccInstruction(parser68000::SccInstructionContext* ctx) override {
+        return ctx->value;
+    }
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
