@@ -93,8 +93,13 @@ any visitor::visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx)
     return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// ADD size? addressingMode COMMA dRegister 
+/// SUB size? addressingMode COMMA dRegister 
+/// </summary>
 any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	auto sz = ctx->children.size();
 	uint16_t size = 1;
 	int arg = 1;
@@ -107,13 +112,18 @@ any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
 
-	uint16_t opcode = 0b1101'000'000'000'000 | (dReg << 9) | (size << 6) | effectiveAddress;
+	uint16_t opcode = 0b0000'000'000'000'000 | (code << 12) | (dReg << 9) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// ADD size? dRegister COMMA addressingMode
+/// SUB size? dRegister COMMA addressingMode
+/// </summary>
 any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx)
 {
-	uint16_t size = 1; 
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
+	uint16_t size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5)
 	{
@@ -123,12 +133,19 @@ any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg+2]));
 
-	uint16_t opcode = (0b1101'000'100'000'000 | (dReg << 9) | (size << 6) | effectiveAddress);
+	uint16_t opcode = (0b0000'000'100'000'000 | (code << 12) | (dReg << 9) | (size << 6) | effectiveAddress);
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// ADDA size? addressingMode COMMA aRegister
+/// SUBA size? addressingMode COMMA aRegister
+/// </summary>
+/// <param name="ctx"></param>
+/// <returns></returns>
 any visitor::visitAdda(parser68000::AddaContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t opmode = 0b011;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
@@ -147,15 +164,17 @@ any visitor::visitAdda(parser68000::AddaContext* ctx)
 	}
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
-	uint16_t opcode = 0b1101'000'011'000'000 | (aReg << 9) | (opmode << 6) | effectiveAddress;
+	uint16_t opcode = 0b0000'000'011'000'000 | (code << 12) | (aReg << 9) | (opmode << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
 /// ADDQ size? HASH number COMMA addressingMode
+/// SUBQ size? HASH number COMMA addressingMode
 /// </summary>
 any visitor::visitAddq(parser68000::AddqContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 6) // if there is a size specified
@@ -166,7 +185,7 @@ any visitor::visitAddq(parser68000::AddqContext* ctx)
 	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg+1]));
 	if (immediate_data <= 0 || immediate_data > 8)
 	{
-		addError("Immediate data for ADDQ must be between 0 and 8", ctx->children[arg+1]);
+		addError("Immediate data for ADDQ/SUBQ must be between 0 and 8", ctx->children[arg+1]);
 		immediate_data = 0; // reset to 0 to avoid further errors
 	}
 	else if (immediate_data == 8)
@@ -181,17 +200,19 @@ any visitor::visitAddq(parser68000::AddqContext* ctx)
 	}
 	else if (size == 0 && 0b001'000 == (effectiveAddress & 0b111'000))
 	{
-		addError("ADDQ to Address register should be word or long", ctx->children[arg + 3]);
+		addError("ADDQ/SUBQ to Address register should be word or long", ctx->children[arg + 3]);
 	}
-	uint16_t opcode = 0b0101'000'0'00'000'000 | (immediate_data << 9) | (size << 6) | effectiveAddress;
+	uint16_t opcode = 0b0101'000'0'00'000'000 | (immediate_data << 9) | (code << 8) | (size << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
 /// <summary>
 /// ADDX size? dRegister COMMA dRegister
+/// SUBX size? dRegister COMMA dRegister
 /// </summary>
 any visitor::visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
@@ -202,7 +223,7 @@ any visitor::visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx)
 	uint16_t dy = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t dx = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
 
-	uint16_t opcode = 0b1101'000'1'00'00'0'000 | (dx << 9) | (size << 6) | dy;
+	uint16_t opcode = 0b0000'000'1'00'00'0'000 | (code << 12) | (dx << 9) | (size << 6) | dy;
 	return finalize_instruction(opcode);
 }
 
@@ -211,6 +232,7 @@ any visitor::visitAddx_dRegister(parser68000::Addx_dRegisterContext* ctx)
 /// </summary>
 any visitor::visitAddx_indirect(parser68000::Addx_indirectContext* ctx)
 {
+	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
@@ -221,7 +243,7 @@ any visitor::visitAddx_indirect(parser68000::Addx_indirectContext* ctx)
 	uint16_t ay = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t ax = any_cast<uint16_t>(visit(ctx->children[arg+2])) & 0b111;
 
-	uint16_t opcode = 0b1101'000'1'00'00'1'000 | (ax << 9) | (size << 6) | ay;
+	uint16_t opcode = 0b0000'000'1'00'00'1'000 | (code << 12) | (ax << 9) | (size << 6) | ay;
 	return finalize_instruction(opcode);
 }
 

@@ -206,6 +206,27 @@ private:
     virtual std::any visitSccInstruction(parser68000::SccInstructionContext* ctx) override {
         return ctx->value;
     }
+
+    virtual std::any visitAddSubInstruction(parser68000::AddSubInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddaSubaInstruction(parser68000::AddaSubaInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddiSubiInstruction(parser68000::AddiSubiInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddqSubqInstruction(parser68000::AddqSubqInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddxSubxInstruction(parser68000::AddxSubxInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
     // Utilities
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);

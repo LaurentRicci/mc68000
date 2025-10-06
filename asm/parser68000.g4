@@ -247,27 +247,52 @@ asbcdInstruction returns [uint16_t value]
     | SBCD { $value = 0b1000; }
     ;
 
+addSubInstruction returns [uint16_t value]
+    : ADD { $value = 0b1101; }
+    | SUB { $value = 0b1001; }
+    ;
+
+addaSubaInstruction returns [uint16_t value]
+    : ADDA { $value = 0b1101; }
+    | SUBA { $value = 0b1001; }
+    ;
+
+addiSubiInstruction returns [uint16_t value]
+    : ADDI { $value = 0b0110; }
+    | SUBI { $value = 0b0100; }
+    ;
+
+addqSubqInstruction returns [uint16_t value]
+    : ADDQ { $value = 0b0; }
+    | SUBQ { $value = 0b1; }
+    ;
+
+addxSubxInstruction returns [uint16_t value]
+    : ADDX { $value = 0b1101; }
+    | SUBX { $value = 0b1001; }
+    ;
+
 asbcd
     : asbcdInstruction dRegister COMMA dRegister                                         #asbcd_dRegister
     | asbcdInstruction aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #asbcd_indirect
     ;
 
 add
-    : ADD size? addressingMode COMMA dRegister #add_to_dRegister
-    | ADD size? dRegister COMMA addressingMode #add_from_dRegister
+    : addSubInstruction size? addressingMode COMMA dRegister #add_to_dRegister
+    | addSubInstruction size? dRegister COMMA addressingMode #add_from_dRegister
     ;
 
 adda
-    : ADDA size? addressingMode COMMA aRegister
+    : addaSubaInstruction size? addressingMode COMMA aRegister
     ;
 
 addq
-    : ADDQ size? HASH number COMMA addressingMode
+    : addqSubqInstruction size? HASH number COMMA addressingMode
     ;
 
 addx
-    : ADDX size? dRegister COMMA dRegister                                         #addx_dRegister
-    | ADDX size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
+    : addxSubxInstruction size? dRegister COMMA dRegister                                         #addx_dRegister
+    | addxSubxInstruction size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
     ;
 
 andOr

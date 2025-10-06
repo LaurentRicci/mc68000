@@ -2144,4 +2144,206 @@ BOOST_AUTO_TEST_CASE(stop_ok)
 	BOOST_CHECK_EQUAL(2, code.size());
 	BOOST_CHECK_EQUAL(0x2700, code[1]);
 }
+
+// ====================================================================================================
+// SUB
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(sub_from)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  sub d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b1001'010'101'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(sub_from_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  sub.l d2,(a4)\n");
+	validate_hasValue<uint16_t>(0b1001'010'110'010'100, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(sub_to)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  sub (a5)+, d4\n");
+	validate_hasValue<uint16_t>(0b1001'100'001'011'101, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(sub_to_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  sub.b (a2), d0\n");
+	validate_hasValue<uint16_t>(0b1001'000'000'010'010, opcode);
+}
+// ====================================================================================================
+// SUBA
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(suba_word_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  suba d2,A4\n");
+	validate_hasValue<uint16_t>(0b1001'100'011'000'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(suba_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  suba.b a2,A4\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+BOOST_AUTO_TEST_CASE(suba_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  suba.w a2,A4\n");
+	validate_hasValue<uint16_t>(0b1001'100'011'001'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(suba_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  suba.l (a2),A4\n");
+	validate_hasValue<uint16_t>(0b1001'100'111'010'010, opcode);
+}
+// ====================================================================================================
+// SUBI
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(subi_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subi.b #$34,(a2)\n");
+	validate_hasValue<uint16_t>(0b0000'0100'00'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x34, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(subi_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subi.w #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0100'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(subi_word_default)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subi #$1234,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0100'01'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(subi_extended)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("   subi.w #$3456, $78(A4)\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x046c, code[0]);
+	BOOST_CHECK_EQUAL(0x3456, code[1]);
+	BOOST_CHECK_EQUAL(0x0078, code[2]);
+}
+
+
+BOOST_AUTO_TEST_CASE(subi_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subi.l #$12345678,d2\n");
+	validate_hasValue<uint16_t>(0b0000'0100'10'000'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x1234, code[1]);
+	BOOST_CHECK_EQUAL(0x5678, code[2]);
+}
+
+BOOST_AUTO_TEST_CASE(subi_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subi #1,4(PC)\n  subi #2,4(PC,D0)\n  subi #3,#4\n");
+	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
+}
+// ====================================================================================================
+// SUBQ
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(subq)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq #4,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'100'1'01'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(subq_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq.b #4,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'100'1'00'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(subq_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq.l #8,(a2)\n");
+	validate_hasValue<uint16_t>(0b0101'000'1'10'010'010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(1, code.size());
+}
+
+BOOST_AUTO_TEST_CASE(subq_byte_error)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq.b #4,a2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(subq_invalid_data)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq.b #9,d2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
+
+BOOST_AUTO_TEST_CASE(subq_invalid)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subq #1,4(PC)\n  subq #2,4(PC,D0)\n  subq #3,#4\n");
+	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
+}
+
+// ====================================================================================================
+// SUBX
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(subx_register_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subx.w d2,d4\n");
+	validate_hasValue<uint16_t>(0b1001'100'1'01'00'0'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(subx_register_byte)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subx.b d2,d4\n");
+	validate_hasValue<uint16_t>(0b1001'100'1'00'00'0'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(subx_memory_word)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subx.w -(a2),-(a4)\n");
+	validate_hasValue<uint16_t>(0b1001'100'1'01'00'1'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(subx_memory_long)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  subx.l -(a2),-(a4)\n");
+	validate_hasValue<uint16_t>(0b1001'100'1'10'00'1'010, opcode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
