@@ -870,6 +870,9 @@ any visitor::visitLea(parser68000::LeaContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// LINK aRegister COMMA immediateData
+/// </summary>
 any visitor::visitLink(parser68000::LinkContext* ctx)
 {
 	size = 1;
@@ -1401,6 +1404,11 @@ any visitor::visitRts(parser68000::RtsContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// SCC addressingMode
+/// </summary>
+/// <param name="ctx"></param>
+/// <returns></returns>
 any visitor::visitScc(parser68000::SccContext* ctx)
 {
 	size = 1;
@@ -1414,6 +1422,16 @@ any visitor::visitScc(parser68000::SccContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// STOP immediateData
+/// </summary>
+any visitor::visitStop(parser68000::StopContext* ctx)
+{
+	size = 1;
+	any _ = visit(ctx->children[1]); // immediate data
+	uint16_t opcode = 0b0100'1110'0111'0010;
+	return finalize_instruction(opcode);
+}
 // ====================================================================================================
 // Register lists
 // ====================================================================================================

@@ -2132,4 +2132,16 @@ BOOST_AUTO_TEST_CASE(scc_all)
 	BOOST_CHECK_EQUAL(0x58DE, code[14]);
 	BOOST_CHECK_EQUAL(0x59DF, code[15]);
 }
+// ====================================================================================================
+// STOP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(stop_ok)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  stop #$2700\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0111'0010, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x2700, code[1]);
+}
 BOOST_AUTO_TEST_SUITE_END()

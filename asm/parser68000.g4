@@ -76,6 +76,7 @@ instructionSection
     | rtr
     | rts
     | scc
+    | stop
     | immediate
     | instruction size? arguments?
     ;
@@ -124,8 +125,7 @@ directive
     ;
 
 instruction
-    : STOP
-    | SUB
+    : SUB
     | SUBA
     | SUBQ
     | SUBX
@@ -460,6 +460,10 @@ rts
 
 scc
     : sccInstruction addressingMode
+    ;
+
+stop
+    : STOP immediateData
     ;
 
 // emptyLine : WS ;
