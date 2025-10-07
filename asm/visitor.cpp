@@ -1454,6 +1454,17 @@ any visitor::visitStop(parser68000::StopContext* ctx)
 	uint16_t opcode = 0b0100'1110'0111'0010;
 	return finalize_instruction(opcode);
 }
+
+/// <summary>
+/// SWAP dRegister
+/// </summary>
+any visitor::visitSwap(parser68000::SwapContext* ctx)
+{
+	size = 1;
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t opcode = 0b0100'1000'0100'0'000 | dReg;
+	return finalize_instruction(opcode);
+}
 // ====================================================================================================
 // Register lists
 // ====================================================================================================

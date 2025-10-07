@@ -2345,5 +2345,13 @@ BOOST_AUTO_TEST_CASE(subx_memory_long)
 	auto opcode = parser.parseText("  subx.l -(a2),-(a4)\n");
 	validate_hasValue<uint16_t>(0b1001'100'1'10'00'1'010, opcode);
 }
-
+// ====================================================================================================
+// SWAP
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(swap)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  swap d2\n");
+	validate_hasValue<uint16_t>(0b0100'1000'0100'0'010, opcode);
+}
 BOOST_AUTO_TEST_SUITE_END()

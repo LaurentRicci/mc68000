@@ -77,6 +77,7 @@ instructionSection
     | rts
     | scc
     | stop
+    | swap
     | immediate
     | instruction size? arguments?
     ;
@@ -125,12 +126,7 @@ directive
     ;
 
 instruction
-    : SUB
-    | SUBA
-    | SUBQ
-    | SUBX
-    | SWAP
-    | TAS
+    : TAS
     | TRAP
     | TRAPV
     | TST
@@ -489,6 +485,10 @@ scc
 
 stop
     : STOP immediateData
+    ;
+
+swap
+    : SWAP dRegister
     ;
 
 // emptyLine : WS ;
