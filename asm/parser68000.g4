@@ -79,8 +79,11 @@ instructionSection
     | stop
     | swap
     | tas
+    | trap
+    | trapv
+    | tst
+    | unlk
     | immediate
-    | instruction size? arguments?
     ;
 
 immediate
@@ -124,13 +127,6 @@ directive
     | SECTION
     | SET
     | SIMHALT
-    ;
-
-instruction
-    : TRAP
-    | TRAPV
-    | TST
-    | UNLK
     ;
 
 immediateInstruction  returns [uint16_t value]
@@ -493,6 +489,22 @@ swap
 
 tas
     : TAS addressingMode
+    ;
+
+trap
+    : TRAP HASH number
+    ;
+
+trapv
+    : TRAPV
+    ;
+
+tst
+    : TST size? addressingMode
+    ;
+
+unlk
+    : UNLK aRegister
     ;
 
 // emptyLine : WS ;
