@@ -33,8 +33,8 @@ private:
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
     // Instructions
-    virtual std::any visitAbcd_dRegister(parser68000::Abcd_dRegisterContext* ctx) override;
-    virtual std::any visitAbcd_indirect(parser68000::Abcd_indirectContext* ctx) override;
+    virtual std::any visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx) override;
+    virtual std::any visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx) override;
 
     virtual std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     virtual std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
@@ -114,6 +114,10 @@ private:
     virtual std::any visitRte(parser68000::RteContext* ctx) override;
     virtual std::any visitRtr(parser68000::RtrContext* ctx) override;
     virtual std::any visitRts(parser68000::RtsContext* ctx) override;
+	virtual std::any visitScc(parser68000::SccContext* ctx) override;
+    virtual std::any visitStop(parser68000::StopContext* ctx) override;
+    virtual std::any visitSwap(parser68000::SwapContext* ctx) override;
+    virtual std::any visitTas(parser68000::TasContext* cts) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
@@ -194,6 +198,34 @@ private:
     }
 
     virtual std::any visitRotateXInstruction(parser68000::RotateXInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAsbcdInstruction(parser68000::AsbcdInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitSccInstruction(parser68000::SccInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddSubInstruction(parser68000::AddSubInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddaSubaInstruction(parser68000::AddaSubaInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddiSubiInstruction(parser68000::AddiSubiInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddqSubqInstruction(parser68000::AddqSubqInstructionContext* ctx) override {
+        return ctx->value;
+    }
+
+    virtual std::any visitAddxSubxInstruction(parser68000::AddxSubxInstructionContext* ctx) override {
         return ctx->value;
     }
 
