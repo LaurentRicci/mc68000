@@ -78,6 +78,7 @@ instructionSection
     | scc
     | stop
     | swap
+    | tas
     | immediate
     | instruction size? arguments?
     ;
@@ -126,8 +127,7 @@ directive
     ;
 
 instruction
-    : TAS
-    | TRAP
+    : TRAP
     | TRAPV
     | TST
     | UNLK
@@ -489,6 +489,10 @@ stop
 
 swap
     : SWAP dRegister
+    ;
+
+tas
+    : TAS addressingMode
     ;
 
 // emptyLine : WS ;

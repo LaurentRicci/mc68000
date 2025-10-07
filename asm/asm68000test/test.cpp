@@ -2354,4 +2354,19 @@ BOOST_AUTO_TEST_CASE(swap)
 	auto opcode = parser.parseText("  swap d2\n");
 	validate_hasValue<uint16_t>(0b0100'1000'0100'0'010, opcode);
 }
+// ====================================================================================================
+// TAS
+// ====================================================================================================
+BOOST_AUTO_TEST_CASE(tas)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  tas d2\n");
+	validate_hasValue<uint16_t>(0b0100'1010'11'000'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(tas_failed)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  tas a2\n");
+	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+}
 BOOST_AUTO_TEST_SUITE_END()

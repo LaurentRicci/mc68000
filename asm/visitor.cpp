@@ -1461,10 +1461,24 @@ any visitor::visitStop(parser68000::StopContext* ctx)
 any visitor::visitSwap(parser68000::SwapContext* ctx)
 {
 	size = 1;
-	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
 	uint16_t opcode = 0b0100'1000'0100'0'000 | dReg;
 	return finalize_instruction(opcode);
 }
+
+any visitor::visitTas(parser68000::TasContext* ctx)
+{
+	size = 0; // TAS is always byte size
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[1]);
+	}
+	uint16_t opcode = 0b0100'1010'11'000'000 | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+
+
 // ====================================================================================================
 // Register lists
 // ====================================================================================================
@@ -1917,4 +1931,5 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 		errorList.add(message, 0, 0);
 	}
 }
+
 

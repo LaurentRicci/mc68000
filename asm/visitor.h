@@ -117,6 +117,7 @@ private:
 	virtual std::any visitScc(parser68000::SccContext* ctx) override;
     virtual std::any visitStop(parser68000::StopContext* ctx) override;
     virtual std::any visitSwap(parser68000::SwapContext* ctx) override;
+    virtual std::any visitTas(parser68000::TasContext* cts) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
