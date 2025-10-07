@@ -118,6 +118,10 @@ private:
     virtual std::any visitStop(parser68000::StopContext* ctx) override;
     virtual std::any visitSwap(parser68000::SwapContext* ctx) override;
     virtual std::any visitTas(parser68000::TasContext* cts) override;
+	virtual std::any visitTrap(parser68000::TrapContext* ctx) override;
+	virtual std::any visitTrapv(parser68000::TrapvContext* ctx) override;
+	virtual std::any visitTst(parser68000::TstContext* ctx) override;
+	virtual std::any visitUnlk(parser68000::UnlkContext* ctx) override;
 
     // Register list
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;

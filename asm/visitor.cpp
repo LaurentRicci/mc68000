@@ -1466,6 +1466,9 @@ any visitor::visitSwap(parser68000::SwapContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// TAS addressingMode
+/// </summary>
 any visitor::visitTas(parser68000::TasContext* ctx)
 {
 	size = 0; // TAS is always byte size
@@ -1478,6 +1481,56 @@ any visitor::visitTas(parser68000::TasContext* ctx)
 	return finalize_instruction(opcode);
 }
 
+/// <summary>
+/// TRAP HASH number
+/// </summary>
+any visitor::visitTrap(parser68000::TrapContext* ctx)
+{
+	int32_t vector = any_cast<int32_t>(visit(ctx->children[2]));
+	if (vector < 0 || vector > 15)
+	{
+		addError("Trap vector must be between 0 and 15", ctx->children[2]);
+		vector = 0;
+	}
+	uint16_t opcode = 0b0100'1110'0100'0000 | vector;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// TRAPV
+/// </summary>
+any visitor::visitTrapv(parser68000::TrapvContext* ctx)
+{
+	uint16_t opcode = 0b0100'1110'0111'0110;
+	return finalize_instruction(opcode);
+}
+
+/// <summary>
+/// TST size? addressingMode
+/// </summary>
+any visitor::visitTst(parser68000::TstContext* ctx)
+{
+	size = 1;
+	int arg = 1;
+	if (ctx->children.size() == 3) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+	}
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
+	if (!isValidAddressingMode(effectiveAddress, 0b101111'111000))
+	{
+		addError("Invalid addressing mode: ", ctx->children[arg]);
+	}
+	uint16_t opcode = 0b0100'1010'00'000'000 | (size << 6) | effectiveAddress;
+	return finalize_instruction(opcode);
+}
+any visitor::visitUnlk(parser68000::UnlkContext* ctx)
+{
+	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
+	uint16_t opcode = 0b0100'1110'0101'1'000 | aReg;
+	return finalize_instruction(opcode);
+}
 
 // ====================================================================================================
 // Register lists
