@@ -13,7 +13,7 @@
 
 using namespace antlr4;
 
-bool asmparser::parseFile(const char *filename) 
+bool asmparser::parseFile(const char *filename, bool showTree) 
 {
 	std::ifstream sourceFile(filename);
 
@@ -27,9 +27,21 @@ bool asmparser::parseFile(const char *filename)
 	tree::ParseTreeWalker walker;
 	walker.walk(new listener(), tree);
 
-	auto s = tree->toStringTree(&parser);
-	std::cout << "Parse Tree: " << s << std::endl;
-
+	if (showTree)
+	{
+		auto s = tree->toStringTree(&parser);
+		std::cout << "Parse Tree: " << s << std::endl;
+	}
+	auto errs = errorsList.get();
+	if (!errs.empty())
+	{
+		std::cout << "Errors found during parsing:" << std::endl;
+		for (const auto& error : errs)
+		{
+			std::cout << error.toString() << std::endl;
+		}
+		return false;
+	}
 	return true;
 }
 

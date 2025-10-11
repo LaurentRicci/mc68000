@@ -12,6 +12,10 @@ namespace mc68000
 			: message(message), line(line), column(column)
 		{
 		}
+		std::string toString() const
+		{
+			return "Line " + std::to_string(line) + ", Column " + std::to_string(column) + ": " + message;
+		}
 	private:
 		std::string message;    // Error message
 		size_t line;            // Line number where the error occurred

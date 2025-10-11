@@ -27,10 +27,10 @@
 CR      EQU $0d  ;ASCII equates
 LF      EQU $0A
 TAB     EQU $09
-CTRLC   EQU S03
+CTRLC   EQU $03
 CTRLH   EQU $08
 CTRLS   EQU $13
-CTRLX   EQU S18
+CTRLX   EQU $18
 
 BUFLEN  EQU 80   ;length of keyboard input butter
 
@@ -39,23 +39,23 @@ BUFLEN  EQU 80   ;length of keyboard input butter
 * Standard jump table. You can change these addresses if you are
 * customizing this interpreter for a different environment.
 *
-    START   BRA.L CSTART    ; Cold Start entry point
-    GOWARM  BRA.L WSTART    ; Warm Start entry point
-    GOOOT   BRA.L OUTC      ; Jump to character-out routine
-    COIN    BRA.L INC       ; jump to character-in routine
-    GOAUXO  BRA.L AUXOUT    ; Jump to auxiliary-out routine
-    GOAUXI  BRA.L AUXIN     ; Jump to auxiliary-in routine
-    GOBYF.  BRA.L  BYEBYE   ; Jump to monitor, DOS, etc.
+START   BRA   CSTART    ; Cold Start entry point
+GOWARM  BRA   WSTART    ; Warm Start entry point
+GOOOT   BRA   OUTC      ; Jump to character-out routine
+COIN    BRA   INC       ; jump to character-in routine
+GOAUXO  BRA   AUXOUT    ; Jump to auxiliary-out routine
+GOAUXI  BRA   AUXIN     ; Jump to auxiliary-in routine
+GOBYE   BRA    BYEBYE   ; Jump to monitor, DOS, etc.
 *	
 * Modifiable system constants:
-    TXTBGN DC.L	TXT         ; beginning of program memory
-    ENDMEM DC.L	$8000	    ; end of available memory
+TXTBGN DC.L	TXT         ; beginning of program memory
+ENDMEM DC.L	$8000       ; end of available memory
 
 * The main interpreter starts here: 
 *
 CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer 
         LEA     INITMSG, A6    ;tell who we are
-        BSR.L   PRMESG
+        BSR     PRMESG
         MOVE.L  TXTBGN, TXTUNF ;init. end-of-program pointer 
         MOVE.L  ENDMEM,D0      ;get address of end of memory 
         SUB.L   #2048,D0       ;reserve 2K for the stack
@@ -68,14 +68,14 @@ WSTART CLR.L    DO             ;Initialize internal variables
         MOVE.L  DO, CURRNT     ;current line number pointer - 0 
         MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
         LEA     ONMSG,A6       ;display "OK"
-        BSR.L   PRMESG
+        BSR     PRMESG
 ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
-        BSR.L   GETLN          ;read a line.
-        BSR.L   TOUPBUF        ;convert to upper case
+        BSR     GETLN          ;read a line.
+        BSR     TOUPBUF        ;convert to upper case
         MOVE.L  AO, A4         ;save pointer to end of line 
         LEA     BUFFER, AO     ;point to the beginning of line
-        BSR.L   TSTNUM         ;is there a number there? 
-        BSR.L   IGNBLK         ;skip trailing blanks
+        BSR     TSTNUM         ;is there a number there? 
+        BSR     IGNBLK         ;skip trailing blanks
         TST     DI             ;does line no. exist? (or nonzero?) 
         BEQ.L   DIRECT         ;If not, its a direct statement
         CMP.L   ISFEFF,D1      ;see if line no. is <- 16 bits 
@@ -84,13 +84,13 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         ROR     #8, D1         ;(Kludge to store a word on a 
         MOVE.B  D1,-(A0)       ;possible byte boundary)
         ROL     #8,D1 
-        BSR.L   FNDLN          ;find this line in save area 
+        BSR     FNDLN          ;find this line in save area 
         MOVE.L  Al,A5          ;save possible line pointer 
         BNE     ST4            ;if not found, insert
-        BSR.L   ENDNXT         ;find the next line (into Al) 
+        BSR     ENDNXT         ;find the next line (into Al) 
         MOVE.L  A5,A2          ;pointer to line to be deleted 
         MOVE.L  TXTUNF, A3     ;points to top of save area 
-        BSR.L   MVUP           ;move up to delete
+        BSR     MVUP           ;move up to delete
         MOVE.L  A2, TXTUNF     ;update the end pointer
 ST4     MOVE.L  A4, D0         ;calculate the length of new line
         SUB.L   AO, DO 
@@ -105,11 +105,11 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
         MOVE.L  A3, TXTUNF     ;if so, store new end position 
         MOVE.L  A6,A1          ;points to old unfilled area 
         MOVE.L  A5,A2          ;points to beginning of move area 
-        BSR.L   MVDOWN         ;move things out of the way
+        BSR     MVDOWN         ;move things out of the way
         MOVE.L  AO,A1          ;set up to do the insertion
         MOVE.L  A5,A2
         MOVE.L  A4, A3 
-        BSR.L   MVUP           ;do It
+        BSR     MVUP           ;do It
         BRA     ST3            ;go back and get another line
 
 

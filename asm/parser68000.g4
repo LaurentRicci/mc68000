@@ -112,15 +112,15 @@ directive
     : DC size  dataList
     | DCB size?
     | DS size?  number
-    | END  address
-    | EQU
+    | END address
+    | EQU number
     | FAIL
     | INCLUDE
     | INCBIN
     | LIST
     | NOLIST
     | MEMORY
-    | OPT
+    | OPT  identifiers
     | ORG  number
     | PAGE
     | REG
@@ -597,10 +597,14 @@ dataList
 
 dataListElement
     : number
-    | STRING
+    | ID
     ;
 
 address returns [std::any value]
     : number     { $value = $number.value; }
     | ID         { $value = $ID.text; }
+    ;
+
+identifiers
+    : ID (COMMA ID)*
     ;
