@@ -1,3 +1,56 @@
+*****************************************************************
+*	Tiny BASIC for the Motorola MC68000                         *
+*                                                               *
+*	                                                            *
+*                                                               *
+* Derived from Palo Alto Tiny BASIC as published in the May 1976*
+* issue of Dr. Dobb's Journal. Adapted to the 68000 by:         *
+*       Gordon Brandly                                          *
+*       Apt. C 8710-97th Ave                                    *
+*       Edmonton, Alberta                                       *
+*       Canada T6C 2C1                                          *
+*                                                               *
+*                                                               *
+* This version is for MEX68KECB Educational Computer Board I/0. *
+*                                                               *
+* Copyright (C) 1984 by Gordon Brandly. This program may be	    *
+* freely distributed for personal use only. All commercial      *
+* rights are reserved.                                          *
+*****************************************************************
+
+* Vers. 1.0	1984/7/17	- Original version by Gordon. Brandly
+*       1.1 1984/12/9   - Addition of 'S. print term by Marvin Lipford
+*       1.2 1985/4/9    - Bug fix in multiply routine by Rick Murray
+
+        OPT FRS,BRS ;forward ref.'s c branches default to short
+    
+CR      EQU $0d  ;ASCII equates
+LF      EQU $0A
+TAB     EQU $09
+CTRLC   EQU S03
+CTRLH   EQU $08
+CTRLS   EQU $13
+CTRLX   EQU S18
+
+BUFLEN  EQU 80   ;length of keyboard input butter
+
+    ORG $900    ;first free address using Tutor
+*	
+* Standard jump table. You can change these addresses if you are
+* customizing this interpreter for a different environment.
+*
+    START   BRA.L CSTART    ; Cold Start entry point
+    GOWARM  BRA.L WSTART    ; Warm Start entry point
+    GOOOT   BRA.L OUTC      ; Jump to character-out routine
+    COIN    BRA.L INC       ; jump to character-in routine
+    GOAUXO  BRA.L AUXOUT    ; Jump to auxiliary-out routine
+    GOAUXI  BRA.L AUXIN     ; Jump to auxiliary-in routine
+    GOBYF.  BRA.L  BYEBYE   ; Jump to monitor, DOS, etc.
+*	
+* Modifiable system constants:
+    TXTBGN DC.L	TXT         ; beginning of program memory
+    ENDMEM DC.L	$8000	    ; end of available memory
+
 * The main interpreter starts here: 
 *
 CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer 
@@ -5,9 +58,9 @@ CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer
         BSR.L   PRMESG
         MOVE.L  TXTBGN, TXTUNF ;init. end-of-program pointer 
         MOVE.L  ENDMEM,D0      ;get address of end of memory 
-        SUB.L   #2048,D0     ;reserve 2K for the stack
+        SUB.L   #2048,D0       ;reserve 2K for the stack
         MOVE.L  DO, STKLMT 
-        SUB.L   #108,D0      ;reserve variable area (27 long words) 
+        SUB.L   #108,D0        ;reserve variable area (27 long words) 
         MOVE.L  DO,VARBGN
 WSTART CLR.L    DO             ;Initialize internal variables
         MOVE.L  DO, LOPVAR
@@ -58,4 +111,5 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
         MOVE.L  A4, A3 
         BSR.L   MVUP           ;do It
         BRA     ST3            ;go back and get another line
+
 
