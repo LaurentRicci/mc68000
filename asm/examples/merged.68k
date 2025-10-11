@@ -73,13 +73,13 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         BSR     GETLN          ;read a line.
         BSR     TOUPBUF        ;convert to upper case
         MOVE.L  AO, A4         ;save pointer to end of line 
-        LEA     BUFFER, AO     ;point to the beginning of line
+        LEA     BUFFER, A0     ;point to the beginning of line
         BSR     TSTNUM         ;is there a number there? 
         BSR     IGNBLK         ;skip trailing blanks
         TST     DI             ;does line no. exist? (or nonzero?) 
-        BEQ.L   DIRECT         ;If not, its a direct statement
+        BEQ     DIRECT         ;If not, its a direct statement
         CMP.L   ISFEFF,D1      ;see if line no. is <- 16 bits 
-        BCC.L   QHOW           ;if not, we've overflowed 
+        BCC     QHOW           ;if not, we've overflowed 
         MOVE.B  D1,-(A0)       ;store the binary line no. 
         ROR     #8, D1         ;(Kludge to store a word on a 
         MOVE.B  D1,-(A0)       ;possible byte boundary)
@@ -93,15 +93,15 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         BSR     MVUP           ;move up to delete
         MOVE.L  A2, TXTUNF     ;update the end pointer
 ST4     MOVE.L  A4, D0         ;calculate the length of new line
-        SUB.L   AO, DO 
+        SUB.L   A0, D0 
         CMP.L   03,D0          ;is it just a line no. i CR? 
         BEQ     ST3            ;if so, it was just a delete 
         MOVE.L  TXTUNF, A3     ;compute new end
         MOVE.L  A3,A6 
-        ADD.L   DO,A3 
-        MOVE.L  VARBGN, DO     ;see if there's enough room
-        CMP.L   A3, DO 
-        BLS.L   QSORRY         ;If not, say so
+        ADD.L   D0,A3 
+        MOVE.L  VARBGN, D0     ;see if there's enough room
+        CMP.L   A3, D0 
+        BLS     QSORRY         ;If not, say so
         MOVE.L  A3, TXTUNF     ;if so, store new end position 
         MOVE.L  A6,A1          ;points to old unfilled area 
         MOVE.L  A5,A2          ;points to beginning of move area 
