@@ -234,6 +234,16 @@ private:
     }
 
     // Utilities
+    inline uint16_t aRegister(const std::string& s)
+    {
+        if (s == "p" || s == "P")
+        {
+            // special case for A7 which is also the stack pointer
+            return (uint16_t)7;
+        }
+        return (uint16_t)stoi(s);
+    }
+
     uint16_t finalize_instruction(uint16_t opcode);
     void addError(const std::string& message, tree::ParseTree* ctx);
     void addPass0Error(const std::string& message, tree::ParseTree* ctx);
