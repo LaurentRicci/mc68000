@@ -535,6 +535,7 @@ registerListElement
 adRegister
     : AREG
     | DREG
+    | SP
     ;
 
 adRegisterSize
@@ -572,17 +573,17 @@ addressingMode
     | immediateData
     ;
 dRegister : DREG ;
-aRegister : AREG ;
-aRegisterIndirect : OPENPAREN AREG CLOSEPAREN ;
-aRegisterIndirectPostIncrement : OPENPAREN  AREG  CLOSEPAREN  PLUS ;
-aRegisterIndirectPreDecrement : DASH  OPENPAREN  AREG  CLOSEPAREN ;
+aRegister : AREG | SP ;
+aRegisterIndirect : OPENPAREN (AREG | SP) CLOSEPAREN ;
+aRegisterIndirectPostIncrement : OPENPAREN  (AREG | SP)  CLOSEPAREN  PLUS ;
+aRegisterIndirectPreDecrement : DASH  OPENPAREN  (AREG | SP)  CLOSEPAREN ;
 aRegisterIndirectDisplacement
-    : number  OPENPAREN  AREG  CLOSEPAREN            #aRegisterIndirectDisplacementOld
-    | OPENPAREN number COMMA AREG CLOSEPAREN         #aRegisterIndirectDisplacementNew
+    : number  OPENPAREN  (AREG | SP)  CLOSEPAREN            #aRegisterIndirectDisplacementOld
+    | OPENPAREN number COMMA (AREG | SP) CLOSEPAREN         #aRegisterIndirectDisplacementNew
     ;
 aRegisterIndirectIndex
-    : number  OPENPAREN  AREG  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
-    | OPENPAREN number  COMMA AREG  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
+    : number  OPENPAREN  (AREG | SP)  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
+    | OPENPAREN number  COMMA (AREG | SP)  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
     ;
 absolute : address ;
 absoluteShort : address SIZEWORD;

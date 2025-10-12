@@ -37,6 +37,21 @@ BOOST_AUTO_TEST_CASE(error)
 	BOOST_CHECK_EQUAL(1, error);
 }
 
+// -------------------------------
+// Label and variable tests
+// -------------------------------
+BOOST_AUTO_TEST_CASE(address1)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("label1:\n add #1, d0\nlabel2:\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(2, labels.size());
+	BOOST_CHECK(labels.find("label1") != labels.end());
+	BOOST_CHECK(labels.find("label2") != labels.end());
+
+}
+
 BOOST_AUTO_TEST_CASE(label1)
 {
 	asmparser parser;
@@ -153,6 +168,12 @@ BOOST_AUTO_TEST_CASE(adda_word)
 	asmparser parser;
 	auto opcode = parser.parseText("  adda.w a2,A4\n");
 	validate_hasValue<uint16_t>(0b1101'100'011'001'010, opcode);
+}
+BOOST_AUTO_TEST_CASE(adda_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  adda.w a2,SP\n");
+	validate_hasValue<uint16_t>(0b1101'111'011'001'010, opcode);
 }
 BOOST_AUTO_TEST_CASE(adda_long)
 {
@@ -895,12 +916,21 @@ BOOST_AUTO_TEST_CASE(cmpa_default)
 	auto opcode = parser.parseText("  cmpa (a2),a4\n");
 	validate_hasValue<uint16_t>(0b1011'100'011'010'010, opcode);
 }
+
+BOOST_AUTO_TEST_CASE(cmpa_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  cmpa (a2),SP\n");
+	validate_hasValue<uint16_t>(0b1011'111'011'010'010, opcode);
+}
+
 BOOST_AUTO_TEST_CASE(cmpa_byteFailed)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  cmpa.b a2,a4\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+
 BOOST_AUTO_TEST_CASE(cmpa_long)
 {
 	asmparser parser;
@@ -931,21 +961,6 @@ BOOST_AUTO_TEST_CASE(cmpm_long)
 	asmparser parser;
 	auto opcode = parser.parseText("  cmpm.l (a0)+,(a1)+\n");
 	validate_hasValue<uint16_t>(0b1011'001'1'10'001'000, opcode);
-}
-
-// -------------------------------
-// Label and variable tests
-// -------------------------------
-BOOST_AUTO_TEST_CASE(address1)
-{
-	asmparser parser;
-	auto opcode = parser.parseText("label1:\n add #1, d0\nlabel2:\n");
-
-	auto labels = parser.getLabels();
-	BOOST_CHECK_EQUAL(2, labels.size());
-	BOOST_CHECK(labels.find("label1") != labels.end());
-	BOOST_CHECK(labels.find("label2") != labels.end());
-
 }
 
 // ====================================================================================================
@@ -1168,6 +1183,13 @@ BOOST_AUTO_TEST_CASE(exg_adreg)
 	auto opcode = parser.parseText("  exg a3,d5\n");
 	validate_hasValue<uint16_t>(0b1100'011'1'10001'101, opcode);
 }
+
+BOOST_AUTO_TEST_CASE(exg_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  exg SP,d5\n");
+	validate_hasValue<uint16_t>(0b1100'111'1'10001'101, opcode);
+}
 // ====================================================================================================
 // EXT
 // ====================================================================================================
@@ -1229,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(jmp_failed)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
-// JMP
+// JSR
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(jsr_ok)
 {
@@ -1263,6 +1285,13 @@ BOOST_AUTO_TEST_CASE(lea_ok)
 	validate_hasValue<uint16_t>(0b0100'000'111'010'010, opcode);
 }
 
+BOOST_AUTO_TEST_CASE(lea_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  lea (a2), SP\n");
+	validate_hasValue<uint16_t>(0b0100'111'111'010'010, opcode);
+}
+
 BOOST_AUTO_TEST_CASE(lea_failed)
 {
 	asmparser parser;
@@ -1282,12 +1311,20 @@ BOOST_AUTO_TEST_CASE(link_ok)
 	BOOST_CHECK_EQUAL(0xfff0, code[1]);
 }
 
+BOOST_AUTO_TEST_CASE(link_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  link SP, #-16\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0101'0'111, opcode);
+}
+
 BOOST_AUTO_TEST_CASE(link_failedPlus)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  link a6, #40000\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+
 BOOST_AUTO_TEST_CASE(link_failedMinus)
 {
 	asmparser parser;
@@ -1417,13 +1454,19 @@ BOOST_AUTO_TEST_CASE(move_invalidDestination)
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
 // ====================================================================================================
-// MOVE
+// MOVEA
 // ====================================================================================================
 BOOST_AUTO_TEST_CASE(movea_default)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  movea d1,a3\n");
 	validate_hasValue<uint16_t>(0b00'11'011'001'000'001, opcode);
+}
+BOOST_AUTO_TEST_CASE(movea_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  movea d1,SP\n");
+	validate_hasValue<uint16_t>(0b00'11'111'001'000'001, opcode);
 }
 BOOST_AUTO_TEST_CASE(movea_word)
 {
@@ -1457,6 +1500,12 @@ BOOST_AUTO_TEST_CASE(move_toUsp)
 	asmparser parser;
 	auto opcode = parser.parseText("  move a3,USP\n");
 	validate_hasValue<uint16_t>(0b0100'1110'0110'0'011, opcode);
+}
+BOOST_AUTO_TEST_CASE(move_SPtoUsp)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  move SP,USP\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0110'0'111, opcode);
 }
 // ====================================================================================================
 // MOVE SR
@@ -2184,23 +2233,33 @@ BOOST_AUTO_TEST_CASE(suba_word_default)
 	auto opcode = parser.parseText("  suba d2,A4\n");
 	validate_hasValue<uint16_t>(0b1001'100'011'000'010, opcode);
 }
+
 BOOST_AUTO_TEST_CASE(suba_byte)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  suba.b a2,A4\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+
 BOOST_AUTO_TEST_CASE(suba_word)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  suba.w a2,A4\n");
 	validate_hasValue<uint16_t>(0b1001'100'011'001'010, opcode);
 }
+
 BOOST_AUTO_TEST_CASE(suba_long)
 {
 	asmparser parser;
 	auto opcode = parser.parseText("  suba.l (a2),A4\n");
 	validate_hasValue<uint16_t>(0b1001'100'111'010'010, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(suba_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  suba.l (a2),SP\n");
+	validate_hasValue<uint16_t>(0b1001'111'111'010'010, opcode);
 }
 // ====================================================================================================
 // SUBI
@@ -2439,5 +2498,12 @@ BOOST_AUTO_TEST_CASE(unlk)
 	asmparser parser;
 	auto opcode = parser.parseText("  UNLK a6\n");
 	validate_hasValue<uint16_t>(0b0100'1110'0101'1'110, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(unlk_SP)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  UNLK SP\n");
+	validate_hasValue<uint16_t>(0b0100'1110'0101'1'111, opcode);
 }
 BOOST_AUTO_TEST_SUITE_END()

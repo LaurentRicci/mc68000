@@ -780,11 +780,11 @@ any visitor::visitExg(parser68000::ExgContext* ctx)
 {
 	size = 2;
 	auto txt1 = ctx->children[1]->getText();
-	uint16_t reg1 = stoi(txt1.substr(1));
+	uint16_t reg1 = aRegister(txt1.substr(1));
 	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
 
 	auto txt2 = ctx->children[3]->getText();
-	uint16_t reg2 = stoi(txt2.substr(1));
+	uint16_t reg2 = aRegister(txt2.substr(1));
 	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
 
 	uint16_t opmode = 0b10001; // default to one data and one address register
@@ -1618,8 +1618,7 @@ any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 /// </summary>
 any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 {
-	auto s = ctx->getText().substr(1);
-    auto reg = stoi(s);
+    auto reg = aRegister(ctx->getText().substr(1));
     return (uint16_t)(0b001'000 | reg);
 }
 
@@ -1629,7 +1628,7 @@ any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* context)
 {
 	auto s = context->children[1]->getText().substr(1);
-	auto reg = stoi(s);
+	auto reg = aRegister(s);
 	return (uint16_t)(0b010'000 | reg);
 }
 
@@ -1639,7 +1638,7 @@ any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* conte
 any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectPostIncrementContext* ctx)
 {
 	auto s = ctx->children[1]->getText().substr(1);
-	auto reg = stoi(s);
+	auto reg = aRegister(s);
 	return (uint16_t)(0b011'000 | reg);
 }
 
@@ -1649,7 +1648,7 @@ any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectP
 any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPreDecrementContext* ctx)
 {
 	auto s = ctx->children[2]->getText().substr(1);
-	auto reg = stoi(s);
+	auto reg = aRegister(s);
     return (uint16_t)(0b100'000 | reg);
 }
 
@@ -1668,7 +1667,7 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	extensionsList.push_back((uint16_t)(displacement & 0xffff));
 
 	auto s = pRegistr->getText().substr(1);
-	auto reg = stoi(s);
+	auto reg = aRegister(s);
 	return (uint16_t)(0b101'000 | reg);
 }
 
@@ -1706,7 +1705,7 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	extensionsList.push_back((index << 11) | displacement8);
 	
 	auto s = pRregistr->getText().substr(1);
-	auto reg = stoi(s);
+	auto reg = aRegister(s);
 	return (uint16_t)(0b110'000 | reg);
 }
 
@@ -1901,15 +1900,16 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
 {
 	auto s = ctx->children[0]->getText();
-	auto reg = stoi(s.substr(1));
 	// The returned value is formatted for the aRegisterIndirectIndex addressing mode
-	if (s[0] == 'a' || s[0] == 'A')
+	if (s[0] == 'd' || s[0] == 'D')
 	{
-		return (uint16_t)(0b1'000'0 | (reg << 1));
+		auto reg = stoi(s.substr(1));
+		return (uint16_t)(0b0'000'0 | (reg << 1));
 	}
 	else
 	{
-		return (uint16_t)(0b0'000'0 | (reg << 1));
+		auto reg = aRegister(s.substr(1));
+		return (uint16_t)(0b1'000'0 | (reg << 1));
 	}
 }
 
