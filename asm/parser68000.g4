@@ -513,6 +513,7 @@ number returns [int32_t value]
     : OCTAL         { $value = std::strtol($OCTAL.text.c_str()+1, nullptr, 8);        }
     | DECIMAL       { $value = std::stoi($DECIMAL.text.c_str());                      }
     | HEXADECIMAL   { $value = std::strtol($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
+    | CHARACTER     { $value = (int32_t)$CHARACTER.text[1];                           }
     ;
 
 
