@@ -111,5 +111,123 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
         MOVE.L  A4, A3 
         BSR     MVUP           ;do It
         BRA     ST3            ;go back and get another line
+*
+*******************************************************************
+* *** Tables *** DIRECT *** EXEC ***
+*
+* This section of the code tests a string against a table. When
+* a match is found, control is transferred to the section of
+* code according to the table.
+*
+* At 'EXEC', AO should point to the string, Al should point to
+* the character table, and A2 should point to the execution
+* table. At 'DIRECT', AO should point to the string, A: and
+* A2 will be set up to point to TABI and TAB1.1, which are
+* the tables of all direct and statement commands.
+*
+* A '.' in the string will terminate the test and the partial
+* match will be considered as a match, e.g. 'P.', 'PR.','PRI.',
+* 'PRIN.', or 'PRINT' will all match 'PRINT'.
+*
+* There are two tables: the character table and the execution
+* table. the character table consists of any number of text items.
+* Each item is a string of characters with the last character's
+* high bit set to one. The execution table holds a 16-bit
+* execution addresses that correspond to each entry in the
+* character table.
+*
+* The end of the character table is a 0 byte which corresponds
+* to the default routine In the execution table, which is
+* executed if none of the other table items are matched.
+*
+* Character-:matching tables: 
+TAB1   DC.B   'LIS',   ('T'+$80)   ;Direct commands
+       DC.B   'LOA',   ('D'+$80)
+       DC.B   'NE',    ('W'+$80)
+       DC.B   'RU',    ('N'+$80)
+       DC.B   'SAV',   ('E'+$80)
+TAB2   DC.B   'NEX',   ('T'+$80)   ;Direct / statement
+       DC.B   'LE',    ('T'+$80)
+       DC.B   'I',     ('F'+$80)
+       DC.B   'GOT',   ('O'+$80)
+       DC.B   'GOSU',  ('B'+$80)
+       DC.B   'RETUR', ('N'+$80)
+       DC.B   'RE',    ('M'+$80)
+       DC.B   'FO',    ('R'+$80)
+       DC.B   'INPU',  ('T'+$80)
+       DC.B   'PRIN',  ('T'+$80)
+       DC.B   'POK',   ('E'+$80)
+       DC.B   'STO',   ('P'+$80)
+       DC.B   'BY',    ('E'+$80)
+       DC.B   'CAL',   ('L'+$80)
+       DC.B   0
+TAB4   DC.B   'PEE',   ('K'+$80)   ;Functions
+       DC.B   'RN',    ('D'+$80)
+       DC.B   'AB',    ('S'+$80)
+       DC.B   'SIZ'    ('E'+$80)
+       DC.B   0
+TABS   DC.B   'T',     ('O'+$80)   ;'TO" in "FCR"
+       DC.B   0
+TAB6   DC.B   'STE',   ('P'+$80)   ;"STEP" in "FOR"
+       DC.B   0
+TAB8    DC.B    '>',('='+$80)          ;Relational operators
+        DC.B    '<',('>'+$80)
+        DC.B    ('>'+$80)
+        DC.B    ('='+$80)
+        DC.B    '<',('='+$80)
+        DC.B    ('<'+$80)
+        DC.B    0
+        DC.B    0      ;<- for aligning on a word boundary
 
-
+* Execution address tables:
+TAB1.1  DC.W    LIST                   ;Direct commands
+        DC.W    LOAD
+        DC.W    NEW
+        DC.W    RUN
+        DC.W    SAVE
+TA82.1 DC.W     NEXT                   ;Direct / statement
+        DC.W    LET
+        DC.W    IF
+        DC.W    GOTO
+        DC.W    GOSUB
+        DC.W    RETURN
+        DC.W    REM
+        DC.W    FOR
+        DC.W    INPUT
+        DC.W    PRINT
+        DC.W    POKE
+        DC.W    STOP
+        DC.W    GOBYE
+        DC.W    CALL
+        DC.W    DEFLT
+TAB4.1  DC.W    PEEK                   ;Functions
+        DC.W    RND
+        DC.W    ABS
+        DC.W    SIZE
+        DC.W    XP40
+TABS5.1  DC.W    FR1                    ;"TO" in "FOR"
+        DC.W    QWHAT
+TAB6.1  DC.W    FR2                    ;"STEP" in "FOR" 
+        DC.W    FR3
+TAB8.1  DC.W    XP11   ; >=              ;Relational operators
+        DC.W    XP12   ; <>
+        DC.W    XP13   ; >
+        DC.W    XP15   ; =
+        DC.W    XP14   ; <=
+        DC.W    XP16   ; <
+        DC.W    XP17
+*
+DIRECT LEA      TAB1,A1
+        LEA     TAB1.1,A2
+EXEC    BSR.L   IGNBLK                 ;ignore leading blanks
+        MOVE.L A0,A3                   ;save the pointer
+        CLR.B   D2                     ;clear match flag
+EXLP    MOVE.B  (A0)+,D0             ;get the program character
+        MOVE.B  (A1),D1                ;get the table character
+        BNE     EXNGO                  ;If end of table,
+        MOVE.L A3,A0                   ;restore the text pointer and...
+        BRA     EXGO                   ;execute the default.
+EXNGO   MOVE.B DO,D3                   ;Else check for period...
+        AND.B   D2,D3                  ;and a match.
+        CMP.B   #'.',D3
+        BEQ     EXGO                   ;if so, execute
