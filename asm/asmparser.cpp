@@ -5,7 +5,6 @@
 #include "lexer68000.h"
 #include "parser68000.h"
 #include "parser68000BaseListener.h"
-#include "listener.h"
 #include "asmparser.h"
 #include "visitor.h"
 
@@ -25,7 +24,7 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 	tree::ParseTree *tree = parser.prog();
 
 	tree::ParseTreeWalker walker;
-	walker.walk(new listener(), tree);
+	walker.walk(new parser68000BaseListener(), tree);
 
 	if (showTree)
 	{
@@ -60,8 +59,6 @@ std::any asmparser::parseText(const char* text)
 
 	parser68000 parser(&tokens);
 	tree::ParseTree* tree = parser.prog();
-//	tree::ParseTreeWalker walker;
-//	walker.walk(new listener(), tree);
 
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)

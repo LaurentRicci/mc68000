@@ -377,6 +377,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x4, code[1]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_immediate_char)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add.b #'A', d0\n");
+		validate_hasValue<uint16_t>(0b1101'000'000'111'100, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x41, code[1]);
+	}
+
 	BOOST_AUTO_TEST_CASE(address_immediate_short_error)
 	{
 		asmparser parser;
