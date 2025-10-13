@@ -59,24 +59,24 @@ CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer
         MOVE.L  TXTBGN, TXTUNF ;init. end-of-program pointer 
         MOVE.L  ENDMEM,D0      ;get address of end of memory 
         SUB.L   #2048,D0       ;reserve 2K for the stack
-        MOVE.L  DO, STKLMT 
+        MOVE.L  D0, STKLMT 
         SUB.L   #108,D0        ;reserve variable area (27 long words) 
-        MOVE.L  DO,VARBGN
-WSTART CLR.L    DO             ;Initialize internal variables
-        MOVE.L  DO, LOPVAR
-        MOVE.L  DO, STKGOS
-        MOVE.L  DO, CURRNT     ;current line number pointer - 0 
+        MOVE.L  D0,VARBGN
+WSTART  CLR.L    D0             ;Initialize internal variables
+        MOVE.L  D0, LOPVAR
+        MOVE.L  D0, STKGOS
+        MOVE.L  D0, CURRNT     ;current line number pointer - 0 
         MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
         LEA     ONMSG,A6       ;display "OK"
         BSR     PRMESG
 ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
         BSR     GETLN          ;read a line.
         BSR     TOUPBUF        ;convert to upper case
-        MOVE.L  AO, A4         ;save pointer to end of line 
+        MOVE.L  A0, A4         ;save pointer to end of line 
         LEA     BUFFER, A0     ;point to the beginning of line
         BSR     TSTNUM         ;is there a number there? 
         BSR     IGNBLK         ;skip trailing blanks
-        TST     DI             ;does line no. exist? (or nonzero?) 
+        TST     D1             ;does line no. exist? (or nonzero?) 
         BEQ     DIRECT         ;If not, its a direct statement
         CMP.L   ISFEFF,D1      ;see if line no. is <- 16 bits 
         BCC     QHOW           ;if not, we've overflowed 
@@ -85,9 +85,9 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         MOVE.B  D1,-(A0)       ;possible byte boundary)
         ROL     #8,D1 
         BSR     FNDLN          ;find this line in save area 
-        MOVE.L  Al,A5          ;save possible line pointer 
+        MOVE.L  A1,A5          ;save possible line pointer 
         BNE     ST4            ;if not found, insert
-        BSR     ENDNXT         ;find the next line (into Al) 
+        BSR     ENDNXT         ;find the next line (into A1) 
         MOVE.L  A5,A2          ;pointer to line to be deleted 
         MOVE.L  TXTUNF, A3     ;points to top of save area 
         BSR     MVUP           ;move up to delete
@@ -106,7 +106,7 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
         MOVE.L  A6,A1          ;points to old unfilled area 
         MOVE.L  A5,A2          ;points to beginning of move area 
         BSR     MVDOWN         ;move things out of the way
-        MOVE.L  AO,A1          ;set up to do the insertion
+        MOVE.L  A0,A1          ;set up to do the insertion
         MOVE.L  A5,A2
         MOVE.L  A4, A3 
         BSR     MVUP           ;do It
@@ -119,10 +119,10 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
 * a match is found, control is transferred to the section of
 * code according to the table.
 *
-* At 'EXEC', AO should point to the string, Al should point to
+* At 'EXEC', A0 should point to the string, A1 should point to
 * the character table, and A2 should point to the execution
-* table. At 'DIRECT', AO should point to the string, A: and
-* A2 will be set up to point to TABI and TAB1.1, which are
+* table. At 'DIRECT', A0 should point to the string, A: and
+* A2 will be set up to point to TABI and TAB1_1, which are
 * the tables of all direct and statement commands.
 *
 * A '.' in the string will terminate the test and the partial
@@ -180,12 +180,12 @@ TAB8    DC.B    '>',('='+$80)          ;Relational operators
         DC.B    0      ;<- for aligning on a word boundary
 
 * Execution address tables:
-TAB1.1  DC.W    LIST                   ;Direct commands
+TAB1_1  DC.W    LIST                   ;Direct commands
         DC.W    LOAD
         DC.W    NEW
         DC.W    RUN
         DC.W    SAVE
-TA82.1 DC.W     NEXT                   ;Direct / statement
+TAB2_1 DC.W     NEXT                   ;Direct / statement
         DC.W    LET
         DC.W    IF
         DC.W    GOTO
@@ -200,16 +200,16 @@ TA82.1 DC.W     NEXT                   ;Direct / statement
         DC.W    GOBYE
         DC.W    CALL
         DC.W    DEFLT
-TAB4.1  DC.W    PEEK                   ;Functions
+TAB4_1  DC.W    PEEK                   ;Functions
         DC.W    RND
         DC.W    ABS
         DC.W    SIZE
         DC.W    XP40
-TABS5.1  DC.W    FR1                    ;"TO" in "FOR"
+TAB5_1  DC.W    FR1                    ;"TO" in "FOR"
         DC.W    QWHAT
-TAB6.1  DC.W    FR2                    ;"STEP" in "FOR" 
+TAB6_1  DC.W    FR2                    ;"STEP" in "FOR" 
         DC.W    FR3
-TAB8.1  DC.W    XP11   ; >=              ;Relational operators
+TAB8_1  DC.W    XP11   ; >=              ;Relational operators
         DC.W    XP12   ; <>
         DC.W    XP13   ; >
         DC.W    XP15   ; =
@@ -218,7 +218,7 @@ TAB8.1  DC.W    XP11   ; >=              ;Relational operators
         DC.W    XP17
 *
 DIRECT LEA      TAB1,A1
-        LEA     TAB1.1,A2
+        LEA     TAB1_1,A2
 EXEC    BSR.L   IGNBLK                 ;ignore leading blanks
         MOVE.L A0,A3                   ;save the pointer
         CLR.B   D2                     ;clear match flag
@@ -227,7 +227,67 @@ EXLP    MOVE.B  (A0)+,D0             ;get the program character
         BNE     EXNGO                  ;If end of table,
         MOVE.L A3,A0                   ;restore the text pointer and...
         BRA     EXGO                   ;execute the default.
-EXNGO   MOVE.B DO,D3                   ;Else check for period...
+EXNGO   MOVE.B D0,D3                   ;Else check for period...
         AND.B   D2,D3                  ;and a match.
         CMP.B   #'.',D3
         BEQ     EXGO                   ;if so, execute
+         AND.B     #$7F,D1                       ;ignore the table's high bit
+         OMP.B     D0,D1                         ;is there a match?
+         BEQ       EXMAT
+         ADDQ.L    #2,A2                         ;if not, try the next entry
+         MOVE.L A3,A0                            ;reset the program pointer
+         CLR.B     D2                            ;sorry, no match
+EXI      TST.B     (A1)+                         ;get to the end of the entry
+         BPL       EX1
+         BRA       EXLP                          ;back for more matching
+EXMAT    MOVEQ     #-1,D2                        ;we've got a match so far
+         TST.B     (A1)+                         ;end of table entry?
+         BPL       EXLP                          ;if not, go back for more
+ExGo     LEA       0,A3                          ;execute the appropriate routine
+         MOW       (A2),A3
+         JMP       (A3)
+*
+********************************************************************
+* What follows is the code to execute direct and statement
+* commands. Control is transferred to these points via the command
+* table lookup code of 'DIRECT' and 'EXEC' in the last section.
+* After the COMMand is executed, control is transferred to other
+* sections as follows:
+*
+* For 'L:ST', 'NEW', and 'STOP': go back to the warm start point.
+* For 'RUN': go execute the first stored line if any; else go
+* back to the warm start point.
+* For 'GOTO' and 'GOSUB': go execute the target line.
+* For 'RETURN' and 'NEXT'; go back to saved return line.
+* For all others: if 'CURRNT' is 0, go to warm start; else go
+* execute next command. (This is done in 'FINISH'.)
+*
+********************************************************************
+*
+* "4 NEW *** STOP *** RUN       friends) "" GOTO ***
+*
+* 'NEW<CR,' sets TXTUNF to point to TXTBGN
+*
+* ISTOP<CR>s goes back to WSTART
+*
+* 'RUN<CR>' finds the first stored line, stores its address
+* in CURRNT, and starts executing it. Note that only those
+* commands in TAB? are legal for a stored program.
+*
+* There are 3 more entries in 'RUN':
+* 'RUt'NXL' finds next line, stores it's address and executes it.
+* 'RUNTS1... stores the address of this line and executes it.
+* 'RUNSML' continues the execution on same line.
+*
+* 'GOTO expr<CR>' evaluates the expression, finds the target
+* line, and lumps to 'RUNTSL' to do it.
+*
+NEW      BSR      ENDCHK
+         MOVE.L   TXTBGN,TXTUNF          ;set the end pointer
+
+STOP     BSR      ENDCHK
+         BRA      WSTART
+
+RUN      BSR      ENDCHK
+         MOVE.L   TXTBGN,AC              ;set pointer to beginning
+         MOVE.L   A0,CURRNT
