@@ -52,6 +52,7 @@ add_library(asm68000lib
     asmparser.cpp
     asmparser.h
     visitor.cpp
+    visitor_directive.cpp
     visitor.h
     errors.cpp
     errors.h

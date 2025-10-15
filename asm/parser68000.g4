@@ -23,15 +23,16 @@ labelSection returns [std::string value]
 
 commentLine : COMMENTLINE;
 
+// ============================================
+// Instructions
+//=============================================
 instructionSection
-    : asbcd
+    : abcdSbcd
     | add
     | adda
     | addq
     | addx 
     | andOr
-    | toCCR
-    | toSR
     | aslAsr
     | bcc
     | bit
@@ -47,6 +48,7 @@ instructionSection
     | exg
     | ext
     | illegal
+    | immediate
     | jmp
     | jsr
     | lea
@@ -79,89 +81,82 @@ instructionSection
     | stop
     | swap
     | tas
+    | toCCR
+    | toSR
     | trap
     | trapv
     | tst
     | unlk
-    | immediate
     ;
 
-immediate
-    : immediateInstruction size? immediateData COMMA addressingMode
+
+abcdSbcd
+    : abcdSbcdInstruction dRegister COMMA dRegister                                         #abcdSbcd_dRegister
+    | abcdSbcdInstruction aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #abcdSbcd_indirect
+    ;
+abcdSbcdInstruction returns [uint16_t value]
+    : ABCD { $value = 0b1100; }
+    | SBCD { $value = 0b1000; }
     ;
 
-toCCR
-    : toCCRorSRInstruction immediateData COMMA CCR
+
+add
+    : addSubInstruction size? addressingMode COMMA dRegister #add_to_dRegister
+    | addSubInstruction size? dRegister COMMA addressingMode #add_from_dRegister
+    ;
+addSubInstruction returns [uint16_t value]
+    : ADD { $value = 0b1101; }
+    | SUB { $value = 0b1001; }
     ;
 
-toSR
-    : toCCRorSRInstruction immediateData COMMA SR
+adda
+    : addaSubaInstruction size? addressingMode COMMA aRegister
+    ;
+addaSubaInstruction returns [uint16_t value]
+    : ADDA { $value = 0b1101; }
+    | SUBA { $value = 0b1001; }
     ;
 
-size returns [uint16_t value]
-    : SIZEBYTE { $value = 0; }
-    | SIZEWORD { $value = 1; }
-    | SIZELONG { $value = 2; }
+addq
+    : addqSubqInstruction size? HASH number COMMA addressingMode
+    ;
+addqSubqInstruction returns [uint16_t value]
+    : ADDQ { $value = 0b0; }
+    | SUBQ { $value = 0b1; }
     ;
 
-directiveSection
-    : directive 
-    ; 
 
-directive
-    : DC size  dataList
-    | DCB size?
-    | DS size?  number
-    | END  address
-    | EQU
-    | FAIL
-    | INCLUDE
-    | INCBIN
-    | LIST
-    | NOLIST
-    | MEMORY
-    | OPT
-    | ORG  number
-    | PAGE
-    | REG
-    | SECTION
-    | SET
-    | SIMHALT
+addx
+    : addxSubxInstruction size? dRegister COMMA dRegister                                         #addx_dRegister
+    | addxSubxInstruction size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
+    ;
+addxSubxInstruction returns [uint16_t value]
+    : ADDX { $value = 0b1101; }
+    | SUBX { $value = 0b1001; }
     ;
 
-immediateInstruction  returns [uint16_t value]
-    : ADDI { $value = 0b0110;}
-    | SUBI { $value = 0b0100;}
-    | ANDI { $value = 0b0010;}
-    | EORI { $value = 0b1010;}
-    | ORI  { $value = 0b0000;}
-    | CMPI { $value = 0b1100;}
+andOr
+    : andOrInstruction size? addressingMode COMMA dRegister #andOr_to_dRegister
+    | andOrInstruction size? dRegister COMMA addressingMode #andOr_from_dRegister
+    ;
+andOrInstruction returns [uint16_t value]
+    : AND { $value = 0b1100; }
+    | OR  { $value = 0b1000; }
     ;
 
-toCCRorSRInstruction returns  [uint16_t value]
-    : ANDI { $value = 0b0010;}
-    | EORI { $value = 0b1010;}
-    | ORI  { $value = 0b0000;}
-    ;
 
+aslAsr
+    : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
+    | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
+    | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
+    ;
 shiftInstruction returns [uint16_t value]
     : ASL { $value = 1; }
     | ASR { $value = 0; }
     ;
 
-logicalShiftInstruction returns [uint16_t value]
-    : LSL { $value = 1; }
-    | LSR { $value = 0; }
-    ;
-
-rotateInstruction returns [uint16_t value]
-    : ROL { $value = 1; }
-    | ROR { $value = 0; }
-    ;
-
-rotateXInstruction returns [uint16_t value]
-    : ROXL { $value = 1; }
-    | ROXR { $value = 0; }
+bcc
+    : bccInstruction address
     ;
 bccInstruction returns [uint16_t value]
     : BCC { $value = 0b0100; }
@@ -182,129 +177,15 @@ bccInstruction returns [uint16_t value]
     | BSR { $value = 0b0001; }
     ;
 
-dbccInstruction returns [uint16_t value]
-    : DBCC { $value = 0b0100; }
-    | DBCS { $value = 0b0101; }
-    | DBEQ { $value = 0b0111; }
-    | DBNE { $value = 0b0110; }
-    | DBGE { $value = 0b1100; }
-    | DBGT { $value = 0b1110; }
-    | DBHI { $value = 0b0010; }
-    | DBLE { $value = 0b1111; }
-    | DBLS { $value = 0b0011; }
-    | DBLT { $value = 0b1101; }
-    | DBMI { $value = 0b1011; }
-    | DBPL { $value = 0b1010; }
-    | DBVC { $value = 0b1000; }
-    | DBVS { $value = 0b1001; }
-    | DBRA { $value = 0b0001; }
-    | DBF  { $value = 0b0001; }
-    | DBT  { $value = 0b0000; }
+bit
+    : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
+    | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
     ;
-
-sccInstruction returns [uint16_t value]
-    : SCC { $value = 0b0100; }
-    | SCS { $value = 0b0101; }
-    | SEQ { $value = 0b0111; }
-    | SNE { $value = 0b0110; }
-    | SGE { $value = 0b1100; }
-    | SGT { $value = 0b1110; }
-    | SHI { $value = 0b0010; }
-    | SLE { $value = 0b1111; }
-    | SLS { $value = 0b0011; }
-    | SLT { $value = 0b1101; }
-    | SMI { $value = 0b1011; }
-    | SPL { $value = 0b1010; }
-    | SVC { $value = 0b1000; }
-    | SVS { $value = 0b1001; }
-    | SRA { $value = 0b0001; }
-    | SF  { $value = 0b0001; }
-    | ST  { $value = 0b0000; }
-    ;
-
 bitInstruction returns [uint16_t value]
     : BCHG { $value = 0b001; }
     | BCLR { $value = 0b010; }
     | BSET { $value = 0b011; }
     | BTST { $value = 0b000; }
-    ;
-
-andOrInstruction returns [uint16_t value]
-    : AND { $value = 0b1100; }
-    | OR  { $value = 0b1000; }
-    ;
-
-asbcdInstruction returns [uint16_t value]
-    : ABCD { $value = 0b1100; }
-    | SBCD { $value = 0b1000; }
-    ;
-
-addSubInstruction returns [uint16_t value]
-    : ADD { $value = 0b1101; }
-    | SUB { $value = 0b1001; }
-    ;
-
-addaSubaInstruction returns [uint16_t value]
-    : ADDA { $value = 0b1101; }
-    | SUBA { $value = 0b1001; }
-    ;
-
-addiSubiInstruction returns [uint16_t value]
-    : ADDI { $value = 0b0110; }
-    | SUBI { $value = 0b0100; }
-    ;
-
-addqSubqInstruction returns [uint16_t value]
-    : ADDQ { $value = 0b0; }
-    | SUBQ { $value = 0b1; }
-    ;
-
-addxSubxInstruction returns [uint16_t value]
-    : ADDX { $value = 0b1101; }
-    | SUBX { $value = 0b1001; }
-    ;
-
-asbcd
-    : asbcdInstruction dRegister COMMA dRegister                                         #asbcd_dRegister
-    | asbcdInstruction aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #asbcd_indirect
-    ;
-
-add
-    : addSubInstruction size? addressingMode COMMA dRegister #add_to_dRegister
-    | addSubInstruction size? dRegister COMMA addressingMode #add_from_dRegister
-    ;
-
-adda
-    : addaSubaInstruction size? addressingMode COMMA aRegister
-    ;
-
-addq
-    : addqSubqInstruction size? HASH number COMMA addressingMode
-    ;
-
-addx
-    : addxSubxInstruction size? dRegister COMMA dRegister                                         #addx_dRegister
-    | addxSubxInstruction size? aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement #addx_indirect
-    ;
-
-andOr
-    : andOrInstruction size? addressingMode COMMA dRegister #andOr_to_dRegister
-    | andOrInstruction size? dRegister COMMA addressingMode #andOr_from_dRegister
-    ;
-
-aslAsr
-    : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
-    | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
-    | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
-    ;
-
-bcc
-    : bccInstruction address
-    ;
-
-bit
-    : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
-    | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
     ;
 
 chk
@@ -329,6 +210,25 @@ cmpm
 
 dbcc
     : dbccInstruction dRegister COMMA address
+    ;
+dbccInstruction returns [uint16_t value]
+    : DBCC { $value = 0b0100; }
+    | DBCS { $value = 0b0101; }
+    | DBEQ { $value = 0b0111; }
+    | DBNE { $value = 0b0110; }
+    | DBGE { $value = 0b1100; }
+    | DBGT { $value = 0b1110; }
+    | DBHI { $value = 0b0010; }
+    | DBLE { $value = 0b1111; }
+    | DBLS { $value = 0b0011; }
+    | DBLT { $value = 0b1101; }
+    | DBMI { $value = 0b1011; }
+    | DBPL { $value = 0b1010; }
+    | DBVC { $value = 0b1000; }
+    | DBVS { $value = 0b1001; }
+    | DBRA { $value = 0b0001; }
+    | DBF  { $value = 0b0001; }
+    | DBT  { $value = 0b0000; }
     ;
 
 divs
@@ -355,6 +255,18 @@ illegal
     : ILLEGAL
     ;
 
+immediate
+    : immediateInstruction size? immediateData COMMA addressingMode
+    ;
+immediateInstruction  returns [uint16_t value]
+    : ADDI { $value = 0b0110;}
+    | SUBI { $value = 0b0100;}
+    | ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    | CMPI { $value = 0b1100;}
+    ;
+
 jmp
     : JMP addressingMode
     ;
@@ -375,6 +287,10 @@ lslLsr
     : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
     | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
     | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
+    ;
+logicalShiftInstruction returns [uint16_t value]
+    : LSL { $value = 1; }
+    | LSR { $value = 0; }
     ;
 
 move
@@ -456,11 +372,19 @@ rolRor
     | rotateInstruction size? HASH number COMMA dRegister              #RolRor_immediateData
     | rotateInstruction size? addressingMode                           #RolRor_addressingMode
     ;
+rotateInstruction returns [uint16_t value]
+    : ROL { $value = 1; }
+    | ROR { $value = 0; }
+    ;
 
 roxlRoxr
     : rotateXInstruction size? dRegister COMMA dRegister                #RoxlRoxr_dRegister
     | rotateXInstruction size? HASH number COMMA dRegister              #RoxlRoxr_immediateData
     | rotateXInstruction size? addressingMode                           #RoxlRoxr_addressingMode
+    ;
+rotateXInstruction returns [uint16_t value]
+    : ROXL { $value = 1; }
+    | ROXR { $value = 0; }
     ;
 
 rte 
@@ -478,6 +402,25 @@ rts
 scc
     : sccInstruction addressingMode
     ;
+sccInstruction returns [uint16_t value]
+    : SCC { $value = 0b0100; }
+    | SCS { $value = 0b0101; }
+    | SEQ { $value = 0b0111; }
+    | SNE { $value = 0b0110; }
+    | SGE { $value = 0b1100; }
+    | SGT { $value = 0b1110; }
+    | SHI { $value = 0b0010; }
+    | SLE { $value = 0b1111; }
+    | SLS { $value = 0b0011; }
+    | SLT { $value = 0b1101; }
+    | SMI { $value = 0b1011; }
+    | SPL { $value = 0b1010; }
+    | SVC { $value = 0b1000; }
+    | SVS { $value = 0b1001; }
+    | SRA { $value = 0b0001; }
+    | SF  { $value = 0b0001; }
+    | ST  { $value = 0b0000; }
+    ;
 
 stop
     : STOP immediateData
@@ -489,6 +432,19 @@ swap
 
 tas
     : TAS addressingMode
+    ;
+
+toCCR
+    : toCCRorSRInstruction immediateData COMMA CCR
+    ;
+toCCRorSRInstruction returns  [uint16_t value]
+    : ANDI { $value = 0b0010;}
+    | EORI { $value = 0b1010;}
+    | ORI  { $value = 0b0000;}
+    ;
+
+toSR
+    : toCCRorSRInstruction immediateData COMMA SR
     ;
 
 trap
@@ -507,7 +463,15 @@ unlk
     : UNLK aRegister
     ;
 
-// emptyLine : WS ;
+// ============================================
+// Instructions arguments
+//=============================================
+
+size returns [uint16_t value]
+    : SIZEBYTE { $value = 0; }
+    | SIZEWORD { $value = 1; }
+    | SIZELONG { $value = 2; }
+    ;
 
 number returns [int32_t value]
     : OCTAL         { $value = std::strtol($OCTAL.text.c_str()+1, nullptr, 8);        }
@@ -515,7 +479,6 @@ number returns [int32_t value]
     | HEXADECIMAL   { $value = std::strtol($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
     | CHARACTER     { $value = (int32_t)$CHARACTER.text[1];                           }
     ;
-
 
 register
     : DREG { $DREG.text; }
@@ -558,6 +521,10 @@ argument
     | ID
     ;
 
+address returns [std::any value]
+    : number     { $value = $number.value; }
+    | ID         { $value = $ID.text; }
+    ;
 addressingMode
     : dRegister
     | aRegister
@@ -593,16 +560,43 @@ pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
 pcIndirectIndex : number  OPENPAREN  PC  COMMA  adRegisterSize  CLOSEPAREN ;
 immediateData : HASH number ;
 
+// ============================================
+// Directives
+//=============================================
+directiveSection
+    : directive 
+    ; 
+
+directive
+    : dc
+    | DCB size?
+    | DS size?  number
+    | END  address
+    | EQU
+    | FAIL
+    | INCLUDE
+    | INCBIN
+    | LIST
+    | NOLIST
+    | MEMORY
+    | OPT
+    | ORG  number
+    | PAGE
+    | REG
+    | SECTION
+    | SET
+    | SIMHALT
+    ;
+dc
+    : DC size  dataList
+    ;
+
 dataList
     : dataListElement (COMMA dataListElement)*
     ;
 
-dataListElement
-    : number
-    | STRING
+dataListElement  returns [std::any value]
+    : number { $value = $number.value; }
+    | STRING { $value = $STRING.text; }
     ;
 
-address returns [std::any value]
-    : number     { $value = $number.value; }
-    | ID         { $value = $ID.text; }
-    ;

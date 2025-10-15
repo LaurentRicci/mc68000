@@ -23,6 +23,8 @@ any visitor::generateCode(tree::ParseTree* tree)
 	code.clear();
 	extensionsList.clear();
 	currentAddress = 0;
+	incompleteBinary = false;
+
 	pass = 1;
 	auto result = tree->accept(this);
 
@@ -45,6 +47,7 @@ any visitor::visitProg(parser68000::ProgContext* ctx)
 any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx)
 {
 	size = 1;
+	incompleteBinary = false;
     any result = ctx->children[1]->accept(this);
     return result;
 }
@@ -69,7 +72,7 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 /// ABCD dRegister COMMA dRegister 
 /// SBCD dRegister COMMA dRegister 
 /// </summary>
-any visitor::visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx)
+any visitor::visitAbcdSbcd_dRegister(parser68000::AbcdSbcd_dRegisterContext* ctx)
 {
 	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
     uint16_t dy = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
@@ -83,7 +86,7 @@ any visitor::visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx)
 /// ABCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement
 /// SBCD aRegisterIndirectPreDecrement COMMA aRegisterIndirectPreDecrement
 /// </summary>
-any visitor::visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx) 
+any visitor::visitAbcdSbcd_indirect(parser68000::AbcdSbcd_indirectContext* ctx) 
 {
 	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t ay = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
@@ -100,10 +103,9 @@ any visitor::visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx)
 any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 {
 	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
-	auto sz = ctx->children.size();
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
-	if (sz == 5)
+	if (ctx->children.size() == 5)
 	{
 		size = any_cast<uint16_t>(visit(ctx->children[1]));
 		arg++; // the optional size is included so there is one extra child
@@ -123,7 +125,7 @@ any visitor::visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx)
 any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx)
 {
 	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5)
 	{
@@ -146,6 +148,7 @@ any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx
 any visitor::visitAdda(parser68000::AddaContext* ctx)
 {
 	uint16_t code = any_cast<uint16_t>(visit(ctx->children[0]));
+	size = 1;
 	uint16_t opmode = 0b011;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
@@ -611,7 +614,7 @@ any visitor::visitClr(parser68000::ClrContext* ctx)
 /// </summary>
 any visitor::visitCmp(parser68000::CmpContext* ctx)
 {
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
 	{
@@ -633,7 +636,8 @@ any visitor::visitCmp(parser68000::CmpContext* ctx)
 /// </summary>
 any visitor::visitCmpa(parser68000::CmpaContext* ctx)
 {
-	uint16_t size = 0b011;
+	size = 1;
+	uint16_t opSize = 0b011;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
 	{
@@ -644,17 +648,17 @@ any visitor::visitCmpa(parser68000::CmpaContext* ctx)
 		}
 		else if (size == 1)
 		{
-			size = 0b011; // for CMPA size .W is encoded as 0b011
+			opSize = 0b011; // for CMPA size .W is encoded as 0b011
 		}
 		else if (size == 2)
 		{
-			size = 0b111; // for CMPA size .L is encoded as 0b111
+			opSize = 0b111; // for CMPA size .L is encoded as 0b111
 		}
 		arg++; // the optional size is included so there is one extra child
 	}
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
-	uint16_t opcode = 0b1011'000'000'000'000 | (aReg << 9) | (size << 6) | effectiveAddress;
+	uint16_t opcode = 0b1011'000'000'000'000 | (aReg << 9) | (opSize << 6) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
 
@@ -755,7 +759,7 @@ any visitor::visitDivu(parser68000::DivuContext* ctx)
 /// <returns></returns>
 any visitor::visitEor(parser68000::EorContext* ctx)
 {
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5) // if there is a size specified
 	{

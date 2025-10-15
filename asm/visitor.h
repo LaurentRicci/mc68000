@@ -18,11 +18,11 @@ public:
 private:
     std::vector<uint16_t>& code;                       // the assembly code as a results of the parsing
     std::vector<uint16_t> extensionsList;              // the list of extra words for the addressing mode
-
+	std::vector<uint8_t> dcBytes;                      // the data in the dc section
     std::map<std::string, uint32_t>& labels;           // the labels found in the code label -> index
     int pass = 0;                                      // the current pass (0 = first pass, 1 = second pass)
     uint32_t currentAddress = 0;                       // the current address in the code
-
+	bool incompleteBinary = false;                     // true if the last instruction was a dc.b with an odd number of bytes
     uint16_t size = 1;                                 // the size of the current instruction
 
     mc68000::errors& errorList;                        // the list of errors found during the parsing
@@ -30,11 +30,12 @@ private:
 private:
     std::any visitProg(parser68000::ProgContext* ctx) override;
     std::any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx) override;
+    std::any visitLine_directiveSection(parser68000::Line_directiveSectionContext* ctx) override;
     std::any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
 
     // Instructions
-    virtual std::any visitAsbcd_dRegister(parser68000::Asbcd_dRegisterContext* ctx) override;
-    virtual std::any visitAsbcd_indirect(parser68000::Asbcd_indirectContext* ctx) override;
+    virtual std::any visitAbcdSbcd_dRegister(parser68000::AbcdSbcd_dRegisterContext* ctx) override;
+    virtual std::any visitAbcdSbcd_indirect(parser68000::AbcdSbcd_indirectContext* ctx) override;
 
     virtual std::any visitAdd_to_dRegister(parser68000::Add_to_dRegisterContext* ctx) override;
     virtual std::any visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx) override;
@@ -122,8 +123,16 @@ private:
 	virtual std::any visitTrapv(parser68000::TrapvContext* ctx) override;
 	virtual std::any visitTst(parser68000::TstContext* ctx) override;
 	virtual std::any visitUnlk(parser68000::UnlkContext* ctx) override;
+    // ====================================================================================================
+    // directives
+    // ====================================================================================================
+    virtual std::any visitDc(parser68000::DcContext* ctx) override;
+    virtual std::any visitDataList(parser68000::DataListContext* ctx) override;
+    //virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override;
 
+    // ====================================================================================================
     // Register list
+    // ====================================================================================================
     virtual std::any visitRegisterList(parser68000::RegisterListContext* ctx) override;
     virtual std::any visitRegisterListRegister(parser68000::RegisterListRegisterContext* ctx) override;
     virtual std::any visitRegisterListRange(parser68000::RegisterListRangeContext* ctx) override;
@@ -152,8 +161,8 @@ private:
     std::any visitAdRegister(parser68000::AdRegisterContext* ctx) override;
     std::any visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx) override;
 
+	// enumeration support
     virtual std::any visitSize(parser68000::SizeContext* ctx) override {
-        size = std::any_cast<uint16_t>(ctx->value); //TODO: why this line?
         return ctx->value;
     }
 
@@ -205,7 +214,7 @@ private:
         return ctx->value;
     }
 
-    virtual std::any visitAsbcdInstruction(parser68000::AsbcdInstructionContext* ctx) override {
+    virtual std::any visitAbcdSbcdInstruction(parser68000::AbcdSbcdInstructionContext* ctx) override {
         return ctx->value;
     }
 
@@ -221,10 +230,6 @@ private:
         return ctx->value;
     }
 
-    virtual std::any visitAddiSubiInstruction(parser68000::AddiSubiInstructionContext* ctx) override {
-        return ctx->value;
-    }
-
     virtual std::any visitAddqSubqInstruction(parser68000::AddqSubqInstructionContext* ctx) override {
         return ctx->value;
     }
@@ -232,6 +237,9 @@ private:
     virtual std::any visitAddxSubxInstruction(parser68000::AddxSubxInstructionContext* ctx) override {
         return ctx->value;
     }
+    virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override {
+        return ctx->value;
+	}
 
     // Utilities
     inline uint16_t aRegister(const std::string& s)

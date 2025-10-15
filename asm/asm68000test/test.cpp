@@ -1111,6 +1111,16 @@ BOOST_AUTO_TEST_CASE(eor_long)
 	validate_hasValue<uint16_t>(0b1011'111'110'010'001, opcode);
 }
 
+BOOST_AUTO_TEST_CASE(eor_long_absolute)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("  eor.l d7,$123456\n");
+	validate_hasValue<uint16_t>(0b1011'111'110'111'001, opcode);
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x12, code[1]);
+	BOOST_CHECK_EQUAL(0x3456, code[2]);
+}
 BOOST_AUTO_TEST_CASE(eor_failed)
 {
 	asmparser parser;
