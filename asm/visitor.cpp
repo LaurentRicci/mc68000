@@ -45,8 +45,12 @@ any visitor::visitProg(parser68000::ProgContext* ctx)
 any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx)
 {
 	size = 1;
-    any result = ctx->children[1]->accept(this);
-    return result;
+	any result;
+	for (auto child : ctx->children)
+	{
+		result = visit(child);
+	}
+	return result;
 }
 
 any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
