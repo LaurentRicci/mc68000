@@ -164,7 +164,7 @@ TAB2   DC.B   'NEX',   ('T'+$80)   ;Direct / statement
 TAB4   DC.B   'PEE',   ('K'+$80)   ;Functions
        DC.B   'RN',    ('D'+$80)
        DC.B   'AB',    ('S'+$80)
-       DC.B   'SIZ'    ('E'+$80)
+       DC.B   'SIZ',   ('E'+$80)
        DC.B   0
 TABS   DC.B   'T',     ('O'+$80)   ;'TO" in "FCR"
        DC.B   0
@@ -219,7 +219,7 @@ TAB8_1  DC.W    XP11   ; >=              ;Relational operators
 *
 DIRECT LEA      TAB1,A1
         LEA     TAB1_1,A2
-EXEC    BSR.L   IGNBLK                 ;ignore leading blanks
+EXEC    BSR     IGNBLK                 ;ignore leading blanks
         MOVE.L A0,A3                   ;save the pointer
         CLR.B   D2                     ;clear match flag
 EXLP    MOVE.B  (A0)+,D0             ;get the program character
@@ -232,7 +232,7 @@ EXNGO   MOVE.B D0,D3                   ;Else check for period...
         CMP.B   #'.',D3
         BEQ     EXGO                   ;if so, execute
          AND.B     #$7F,D1                       ;ignore the table's high bit
-         OMP.B     D0,D1                         ;is there a match?
+         CMP.B     D0,D1                         ;is there a match?
          BEQ       EXMAT
          ADDQ.L    #2,A2                         ;if not, try the next entry
          MOVE.L A3,A0                            ;reset the program pointer
@@ -244,7 +244,7 @@ EXMAT    MOVEQ     #-1,D2                        ;we've got a match so far
          TST.B     (A1)+                         ;end of table entry?
          BPL       EXLP                          ;if not, go back for more
 ExGo     LEA       0,A3                          ;execute the appropriate routine
-         MOW       (A2),A3
+         MOVE       (A2),A3
          JMP       (A3)
 *
 ********************************************************************
@@ -291,3 +291,121 @@ STOP     BSR      ENDCHK
 RUN      BSR      ENDCHK
          MOVE.L   TXTBGN,AC              ;set pointer to beginning
          MOVE.L   A0,CURRNT
+RUNNXL  TST.L   CURRNT                 ;executing a program?
+        BEQ     WSTART                 ;if not, we've finished a direct stat.
+        CLR.L   D1                     ;else find the next line number
+        MOVE.L  A0,A1
+        BSR     FNDLNP
+        BCS     WSTART                 ;if we've fallen off the end, stop
+
+RUNTSL  MOVE.L  Al,CURRNT                       ;set CURRNT to point to the line no. 
+        MOVE.L  A1,A0                  ;set the text pointer to
+        ADDQ.L  #2,A0                  ;the start of the line text
+
+RUNSML  BSR     CHKIO                  ;see if a control-C was pressed 
+        LEA     TAB2,A1                ;find command in TAB2
+        LEA     TAB2_1,A2
+        BRA     EXEC                   ;and execute it
+
+GOTO    BSR     EXPR                   ;evaluate the following expression
+        BSR     ENDCHK                 ;must find end of line
+        MOVE.L  D0,D1
+        BSR     FNDLN                  ;find the target line
+        BNE     QHOW                   ;no such line no.
+        BRA     RUNTSL                 ;go do it
+
+*
+********************************************************************
+*
+* *** LIST 0* PRINT ***
+*
+* LIST has two forms:
+* 'LIST<CR>' lists all saved lines
+* 'LIST *<CR>I starts listing at the line II
+* Control-S pauses the listing, control-C stops it.
+*
+* PRINT command is 'PRINT              or 'PRINT ....<CR>'
+* where '....' is a list of expressions, formats, back-arrows,
+* and strings. These Items a separated by commas.
+*
+* A format is a pound sign followed by a number. It controls
+* the number of spaces the value of an expression is going to
+* be printed in. It stays effective for the rest of the print
+* command unless changed by another format. If no format is
+* specified, 11 positions will be used.
+*
+* A string is quoted in a pair of single- or double-quotes.
+*
+* An underline (back-arrow) means generate a <CR> without a <LF>
+*
+* A <CR LF> is generated after the entire list has been printed
+* or if the list is empty. If the list ends with a semicolon,
+* however, no <CR LF> is generated.
+*
+
+LIST    BSR     TSTNUM                 ;see if there's a line no.
+        BSR     ENDCHK                 ;if not, we get a zero
+        BSR     FNDLN                  ;find this or next line
+LS1     BCS     WSTART                 ;warm start if we passed the end
+        BSR     PRTLN                  ;print the line
+        BSR     CHKIO                  ;check for listing halt request
+        BEQ     LS3
+        CMP.B   #CTRLS,D0              ;pause the listing?
+        BNE    LS3
+LS2     BSR    CHKIO           ;if so. wait for another keypress
+        BEQ    LS2
+LS3     BSR    FNDLNP          ;find the next line
+        BRA    LS1
+
+PRINT   MOVE   #11,04          ;D4 - number of print spaces
+        BSR    TSTC            ;if null list and ":"
+        DC.B   ':',PR2-*
+        BSR    CRLF            ;give CR-LF and continue
+        BRA    RUNSML          ;execution on the same line
+PR2     BSR    TSTC            ;if null list and <CR>
+        DC.B   CR,PR0-*
+        BSR    CRLF            ;also give CR-LF and
+        BRA    RUNNXL          ;execute the next line
+PR0     BSR    TSTC            ;else 13 it a format? 
+        DC.B   '#',PR1-*
+        BSR    EXPR            ;yes, evaluate expression
+        MOVE   D0,D4           ;and save it as print width
+        BRA    PR3             ;look for more to print
+PR1     BSR    TSTC            ;Is character expression? (MRL)
+        DC.B   '5',PR4-*
+        BSR    EXPR            ;yep. Evaluate expression (MRL)
+        BSR    GOOUT           ;print low byte IMRL)
+        BRA    PR3             ;look for more. iMRLI
+PR4     BSR    QTSTG           ;is it a string?
+        BRA.S  PR8             ;if not, must be an expression
+PR3     BSR    TSTC            ;If ",", go find next 
+        DC.B   ',',PR6-*
+        BSR    FIN             ;in the list.
+        BRA    PR0
+PR6     BSR    CRLF            ;list ends here
+        BRA    FINISH
+PR8     MOVE   D4,-(SP)        ;save the width value
+        BSR    EXPR            ;evaluate the expression
+        MOVE   (SP)+,D4        ;restore the width
+        MOVE.L D0,01
+        BSR    PRTNUM          ;print its value
+        BRA    PR3             ;more to print?
+
+FINISH  BSR    FIN             ;Check end of command
+        BRA    QWHAT           ;print "What?" if wrong
+
+*
+********************************************************************
+*
+* ** GOSUB *** 4 RETURN **
+*
+* 'GOSUB expr:' or 'GOSUB expr<CR>' is like the 'GOTO' command,
+* except that the current text pointer, stack pointer, etc. are
+* saved so that execution can be continued after the subroutine
+* 'RETURN's. In order that 'GOSUB' can be nested (and even
+* recursive), the save area must be stacked. The stack pointer
+* is saved in 'STKGOS'. The old 'STEWS' is saved on the stack.
+* If we are in the rain routine, 'STKGOS' is zero (this was done
+* in the initialization section of the interpreter), but we still
+* save it as a flag for no further 'RETURN's.
+*
