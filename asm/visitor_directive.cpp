@@ -54,7 +54,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
@@ -75,7 +74,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
@@ -106,7 +104,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
@@ -142,4 +139,34 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		break;
 	}
 	return dcBytes.size();
+}
+
+any visitor::visitExpression(parser68000::ExpressionContext* ctx)
+{
+	int32_t lhs = any_cast<int32_t>(ctx->children[1]->accept(this));
+	int32_t rhs = any_cast<int32_t>(ctx->children[3]->accept(this));
+
+	string op = ctx->children[2]->getText();
+
+	if (op == "+")
+	{
+		return lhs + rhs;
+	}
+	else if (op == "-")
+	{
+		return lhs - rhs;
+	}
+	else
+	{
+		assert(!"Unknown operator");
+	}
+}
+
+any visitor::visitDataListElement(parser68000::DataListElementContext* ctx) 
+{
+	if (!ctx->value.has_value())
+	{
+		return visit(ctx->children[0]);
+	}
+	return ctx->value;
 }

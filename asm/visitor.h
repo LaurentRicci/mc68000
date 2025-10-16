@@ -129,7 +129,8 @@ private:
     virtual std::any visitDc(parser68000::DcContext* ctx) override;
     virtual std::any visitDataList(parser68000::DataListContext* ctx) override;
     //virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override;
-
+	virtual std::any visitExpression(parser68000::ExpressionContext* ctx) override;
+    virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override;
     // ====================================================================================================
     // Register list
     // ====================================================================================================
@@ -237,9 +238,6 @@ private:
     virtual std::any visitAddxSubxInstruction(parser68000::AddxSubxInstructionContext* ctx) override {
         return ctx->value;
     }
-    virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override {
-        return ctx->value;
-	}
 
     // Utilities
     inline uint16_t aRegister(const std::string& s)

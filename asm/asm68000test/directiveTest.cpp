@@ -191,6 +191,14 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(0x0000, code[4]); // 10
 		BOOST_CHECK_EQUAL(0x0081, code[5]); // 129
 	}
-
+	// ====================================================================================================
+	// Expression
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(dcb_expression)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" dc.b (40 + 2)\n");
+		validate_hasValue<uint16_t>(0x2A00, opcode);
+	}
 	BOOST_AUTO_TEST_SUITE_END()
 }
