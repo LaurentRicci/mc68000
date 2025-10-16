@@ -1,5 +1,6 @@
 // from https://github.com/antlr/antlr4/blob/master/runtime/Cpp/demo/Windows/antlr4-cpp-demo/main.cpp
 #include <iostream>
+#include <cstring>
 
 #include "asmparser.h"
 
