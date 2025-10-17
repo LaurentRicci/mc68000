@@ -572,14 +572,14 @@ directive
     | DCB size?
     | DS size?  number
     | END  address
-    | EQU
+    | EQU dataListElement
     | FAIL
     | INCLUDE
     | INCBIN
     | LIST
     | NOLIST
     | MEMORY
-    | OPT
+    | OPT identifiers
     | ORG  number
     | PAGE
     | REG
@@ -595,8 +595,17 @@ dataList
     : dataListElement (COMMA dataListElement)*
     ;
 
-dataListElement  returns [std::any value]
-    : number { $value = $number.value; }
-    | STRING { $value = $STRING.text; }
+dataListElement
+    : number         #dleNumber
+    | STRING         #dleString
+    | expression     #dleExpression
+    | ID             #dleIdentifier
     ;
 
+expression returns [std::any value]
+    : OPENPAREN number PLUS number CLOSEPAREN
+    ;
+
+identifiers
+    : ID (COMMA ID)*
+    ;

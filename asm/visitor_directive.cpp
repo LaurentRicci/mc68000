@@ -64,7 +64,13 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 			}
 			else
 			{
-				uint8_t byte = static_cast<uint8_t>(any_cast<int>(data));
+				int value = any_cast<int>(data);
+				if (value < -128 || value > 255)
+				{
+					addError("Value out of range for dc.b: " + to_string(value), ctx->children[i]);
+					value = 0;
+				}
+				uint8_t byte = static_cast<uint8_t>(value);
 				dcBytes.push_back(byte);
 			}
 		}
@@ -94,7 +100,13 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 			}
 			else
 			{
-				uint16_t number = static_cast<uint16_t>(any_cast<int>(data));
+				int value = any_cast<int>(data);
+				uint16_t number = static_cast<uint16_t>(value);
+				if (value < -32768 || value > 65535)
+				{
+					addError("Value out of range for dc.w: " + to_string(value), ctx->children[i]);
+					number = 0;
+				}
 				code.push_back(number);
 			}
 		}
@@ -139,4 +151,62 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		break;
 	}
 	return dcBytes.size();
+}
+
+any visitor::visitExpression(parser68000::ExpressionContext* ctx)
+{
+	int32_t lhs = any_cast<int32_t>(ctx->children[1]->accept(this));
+	int32_t rhs = any_cast<int32_t>(ctx->children[3]->accept(this));
+
+	string op = ctx->children[2]->getText();
+
+	if (op == "+")
+	{
+		return lhs + rhs;
+	}
+	else if (op == "-")
+	{
+		return lhs - rhs;
+	}
+	else
+	{
+		assert(!"Unknown operator");
+	}
+}
+
+any visitor::visitDleNumber(parser68000::DleNumberContext* ctx)
+{
+	return visit(ctx->children[0]);
+}
+
+any visitor::visitDleString(parser68000::DleStringContext* ctx)
+{
+	return ctx->children[0]->getText();
+}
+
+any visitor::visitDleExpression(parser68000::DleExpressionContext* ctx)
+{
+	return visit(ctx->children[0]);
+}
+
+any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
+{
+	uint32_t target;
+
+	std::string label = ctx->children[0]->getText();
+	auto it = labels.find(label);
+	if (it == labels.end())
+	{
+		// During the 1st pass the label may not be defined yet
+		if (pass != 0)
+		{
+			addError("Label not found: " + label, ctx->children[0]);
+		}
+		target = 0;
+	}
+	else
+	{
+		target = it->second;
+	}
+	return static_cast<int>(target);
 }

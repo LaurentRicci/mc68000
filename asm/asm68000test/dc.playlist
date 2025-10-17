@@ -114,6 +114,48 @@
                         <Property Name="DisplayName" Value="dcb_nop_dcb" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_identifier" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_identifier" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_toolong" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_toolong" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_toolong" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_toolong" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_negative" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>
