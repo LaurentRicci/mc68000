@@ -48,6 +48,7 @@ any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionCo
 {
 	size = 1;
 	incompleteBinary = false;
+	any result;
 	for (auto child : ctx->children)
 	{
 		result = visit(child);

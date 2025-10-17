@@ -54,7 +54,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
@@ -75,7 +74,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
@@ -106,7 +104,6 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 		for (size_t i = 0; i < n; i += 2)
 		{
 			any data = visit(ctx->children[i]);
-			uint32_t target;
 			if (data.type() == typeid(std::string))
 			{
 				string chars = any_cast<string>(data);
