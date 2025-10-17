@@ -377,7 +377,7 @@ PR1     BSR    TSTC            ;Is character expression? (MRL)
         BSR    GOOUT           ;print low byte IMRL)
         BRA    PR3             ;look for more. iMRLI
 PR4     BSR    QTSTG           ;is it a string?
-        BRA.S  PR8             ;if not, must be an expression
+        BRA    PR8             ;if not, must be an expression
 PR3     BSR    TSTC            ;If ",", go find next 
         DC.B   ',',PR6-*
         BSR    FIN             ;in the list.

@@ -595,10 +595,11 @@ dataList
     : dataListElement (COMMA dataListElement)*
     ;
 
-dataListElement  returns [std::any value]
-    : number     { $value = $number.value; }
-    | STRING     { $value = $STRING.text; }
-    | expression { $value = $expression.value; }
+dataListElement
+    : number         #dleNumber
+    | STRING         #dleString
+    | expression     #dleExpression
+    | ID             #dleIdentifier
     ;
 
 expression returns [std::any value]
