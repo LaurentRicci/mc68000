@@ -48,8 +48,11 @@ any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionCo
 {
 	size = 1;
 	incompleteBinary = false;
-    any result = ctx->children[1]->accept(this);
-    return result;
+	for (auto child : ctx->children)
+	{
+		result = visit(child);
+	}
+	return result;
 }
 
 any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)

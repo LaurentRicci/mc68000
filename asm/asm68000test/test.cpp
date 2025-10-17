@@ -52,34 +52,92 @@ BOOST_AUTO_TEST_CASE(address1)
 
 }
 
-BOOST_AUTO_TEST_CASE(label1)
+BOOST_AUTO_TEST_CASE(label_empty)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" move #1,d0\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(0, labels.size());
+}
+
+BOOST_AUTO_TEST_CASE(label1_syntax)
 {
 	asmparser parser;
 	auto error = parser.checkSyntax("label move #1,d0\n");
 	BOOST_CHECK_EQUAL(0, error);
 }
 
-BOOST_AUTO_TEST_CASE(label2)
+BOOST_AUTO_TEST_CASE(label1_exists)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("label move #1,d0\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(1, labels.size());
+	BOOST_CHECK(labels.find("label") != labels.end());
+}
+
+BOOST_AUTO_TEST_CASE(label2_syntax)
 {
 	asmparser parser;
 	auto error = parser.checkSyntax("label: move #1,d0\n");
 	BOOST_CHECK_EQUAL(0, error);
 }
 
-BOOST_AUTO_TEST_CASE(label3)
+BOOST_AUTO_TEST_CASE(label2_exists)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("label: move #1,d0\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(1, labels.size());
+	BOOST_CHECK(labels.find("label") != labels.end());
+}
+
+BOOST_AUTO_TEST_CASE(label3_syntax)
 {
 	asmparser parser;
 	auto error = parser.checkSyntax(" label: move #1,d0\n");
 	BOOST_CHECK_EQUAL(0, error);
 }
 
-BOOST_AUTO_TEST_CASE(label4)
+BOOST_AUTO_TEST_CASE(label3_exists)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" label: move #1,d0\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(1, labels.size());
+	BOOST_CHECK(labels.find("label") != labels.end());
+}
+
+BOOST_AUTO_TEST_CASE(label4_syntax)
 {
 	asmparser parser;
 	auto error = parser.checkSyntax(" label:\n move #1,d0\n");
 	BOOST_CHECK_EQUAL(0, error);
 }
 
+BOOST_AUTO_TEST_CASE(label4_exists)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("label:\n move #1,d0\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(1, labels.size());
+	BOOST_CHECK(labels.find("label") != labels.end());
+}
+
+BOOST_AUTO_TEST_CASE(label_comment)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("label:\n move #1,d0  ; This is a move instruction\n");
+
+	auto labels = parser.getLabels();
+	BOOST_CHECK_EQUAL(1, labels.size());
+	BOOST_CHECK(labels.find("label") != labels.end());
+}
 BOOST_AUTO_TEST_CASE(comment)
 {
 	asmparser parser;
