@@ -409,3 +409,63 @@ FINISH  BSR    FIN             ;Check end of command
 * in the initialization section of the interpreter), but we still
 * save it as a flag for no further 'RETURN's.
 *
+* 'RETURN<CR>' undoes everything that 'GOSUB' did, and thus
+* returns the execution to the command after the most recent
+* 'GOSUB'. If 'STKGOS' is zero, it indicates that we never had
+* a 'GOSUB' and is thus an error.
+*
+GOSUB	BSR     PUSHA           ;save the current 'FOR' parameters  
+        BSR     EXPR            ;get line number
+        MOVE.L  A0,-(SP)        ;save text pointer
+        MOVE.L  DO,D1           
+        BSR     FNDLN           ;find the target line
+        BNE     AHOW            ;if not there, say "How?"
+        MOVE.L  CURRNT,-(SP)    ;found it, save old 'CURRNT'... 
+        MOVE.L  STKGOS,-(SP)    ;and 'STKGOS'
+        CLR.L   LOPVAR          ;load new values
+        MOVE.L  SP,STKGOS       
+        BRA     RUNTSL          
+
+RETURN  BSR     ENDCHK          ;there should be just a <CR>
+        MOVE.L  STKGOS,D1       ;get old stack pointer
+        BEQ     QWHAT           ;if zero, it doesn't exist
+        MOVE.L  D1,SP           ;else restore it
+        MOVE.L  (SP)+,STKGOS    ;and the old 'STKGOS'
+        MOVE.L  (SP)+,CURRNT    ;and the old 'CURRNT'
+        MOVE.L  (SP)+,A0        ;and the old text pointer
+        BSR     POPA            ;and the old 'FOR' parameters
+        BRA     FINISH          ;and we are back home
+  
+*
+********************************************************************
+*
+* *** FOR *** & NEXT ***
+* 'FOR' has two forms:
+* 'FOR var-expl TO exp2 STEP expl' and 'FOR var-expl TO exp2'
+* The second form means the same thing as the first form with a
+* STEP of positive 1. The interpreter will find the variable 'var'
+* and set its value to the current value of 'expl'. It also
+* evaluates 'exp2' and 'expl' and saves all these together with
+* the text pointer, etc. in the 'FOR' save area, which consisits of
+* 'LOPVAR', 'LOPINC', 'LOPLMT', 'LOPLN', and 'LOPPT'. If there is
+* already something in the save area (indicated by a non-zero
+* ILOPVAR'1, then the old save area is saved on the stack before
+* the new values are stored. The interpreter will then dig in the
+* stack and find out if this same variable was used in another
+* currently active 'FOR' loop. If that is the case, then the old
+* 'FOR' loop is deactivated. (i.e. purged from the stack)
+*
+* 'NEXT var' serves as the logical (not necessarily physical) end
+* of the 'FOR' loop. The control variable 'var' is checked with
+* the 'LOPVAR'. If they are not the same, the interpreter digs in
+* the stack to find the right one and purges all those that didn't
+* match. Either way, it then adds the 'STEP' to that variable and
+* checks the result with against the limit value. If it is within
+* the limit, control loops back to the command following the
+* 'FOR'. If it's outside the limit, the save area is purged and
+* execution continues.
+*
+FOR     BSR     PUSHA           ;save the old 'FOR' save area
+        BSR     SETVAL          ;set the control variable
+        MOVE.L  A6,LOPVAR       ;save its address
+        LEA     TAB5,A1         ;use 'EXEC' to test for 'TO'
