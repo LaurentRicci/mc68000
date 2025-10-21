@@ -1865,33 +1865,58 @@ any visitor::visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx)
 }
 
 /// <summary>
-/// Addressing mode for immediate data: #42
+/// Addressing mode for immediate data: #42 Or #ID
 /// </summary>
 any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 {
-	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[1]));
+	any immediate_data = visit(ctx->children[1]);
+
+	int32_t target;
+	if (immediate_data.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(immediate_data);
+		auto it = labels.find(label);
+		if (it == labels.end())
+		{
+			// During the 1st pass the label may not be defined yet
+			if (pass != 0)
+			{
+				addError("Label not found: " + label, ctx->children[0]);
+			}
+			target = 0;
+		}
+		else
+		{
+			target = it->second;
+		}
+	}
+	else
+	{
+		target = any_cast<int32_t>(immediate_data);
+	}
+
 	if (size == 0)
 	{
-		if (immediate_data > 0x7f || immediate_data < -0x80)
+		if (target > 0x7f || target < -0x80)
 		{
-			addError("Immediate data doesn't fit on in one byte: " + std::to_string(immediate_data), ctx->children[1]);
+			addError("Immediate data doesn't fit on in one byte: " + std::to_string(target), ctx->children[1]);
 		}
-		uint16_t data8 = (uint16_t)(immediate_data & 0xff);
+		uint16_t data8 = (uint16_t)(target & 0xff);
 		extensionsList.push_back(data8);
 	}
 	else if (size == 1)
 	{
-		if (immediate_data > 0x7fff || immediate_data < -0x8000)
+		if (target > 0x7fff || target < -0x8000)
 		{
-			addError("Immediate data doesn't fit on in one word: " + std::to_string(immediate_data), ctx->children[1]);
+			addError("Immediate data doesn't fit on in one word: " + std::to_string(target), ctx->children[1]);
 		}
-		uint16_t data16 = (uint16_t)(immediate_data & 0xffff);
+		uint16_t data16 = (uint16_t)(target & 0xffff);
 		extensionsList.push_back(data16);
 	}
 	else
 	{
-		uint16_t dataHigh = (uint16_t)(immediate_data >> 16);
-		uint16_t dataLow = (uint16_t)(immediate_data & 0xffff);
+		uint16_t dataHigh = (uint16_t)(target >> 16);
+		uint16_t dataLow = (uint16_t)(target & 0xffff);
 		extensionsList.push_back(dataHigh);
 		extensionsList.push_back(dataLow);
 	}
