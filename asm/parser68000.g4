@@ -558,7 +558,7 @@ absoluteShort : address SIZEWORD;
 absoluteLong : address SIZELONG;
 pcIndirectDisplacement : number  OPENPAREN  PC  CLOSEPAREN ;
 pcIndirectIndex : number  OPENPAREN  PC  COMMA  adRegisterSize  CLOSEPAREN ;
-immediateData : HASH number ;
+immediateData : HASH address ;
 
 // ============================================
 // Directives
