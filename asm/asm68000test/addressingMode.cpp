@@ -312,5 +312,19 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x0, code[1]);
 		BOOST_CHECK_EQUAL(0x1234, code[2]);
 	}
+
+	BOOST_AUTO_TEST_CASE(address_immediate_label)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" move.l #label, a0\nlabel: nop\n");
+		validate_hasValue<uint16_t>(0b0010'000'001'111'100, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(4, code.size());
+		BOOST_CHECK_EQUAL(0x0, code[1]);
+		BOOST_CHECK_EQUAL(0x6, code[2]);
+		BOOST_CHECK_EQUAL(0x4e71, code[3]);
+	}
+
 	BOOST_AUTO_TEST_SUITE_END()
 }
