@@ -524,7 +524,9 @@ argument
 address returns [std::any value]
     : number     { $value = $number.value; }
     | ID         { $value = $ID.text; }
+    | directiveNames { $value = $directiveNames.text; }
     ;
+    
 addressingMode
     : dRegister
     | aRegister
@@ -587,6 +589,28 @@ directive
     | SET
     | SIMHALT
     ;
+
+directiveNames
+    : DC
+    | DCB
+    | DS
+    | END
+    | EQU
+    | FAIL
+    | INCLUDE
+    | INCBIN
+    | LIST
+    | NOLIST
+    | MEMORY
+    | OPT
+    | ORG
+    | PAGE
+    | REG
+    | SECTION
+    | SET
+    | SIMHALT
+    ;
+
 dc
     : DC size  dataList
     ;
