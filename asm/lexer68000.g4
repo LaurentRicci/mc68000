@@ -186,11 +186,12 @@ USP options { caseInsensitive=true; } : 'usp' ;
 //
 // Identifiers
 //
-ID  : [a-zA-Z_] [a-zA-Z0-9_]* {printf("ID\n"); } ;
+ID  : [a-zA-Z_] [a-zA-Z0-9_]* ;
 
 //
 // Strings
 //
+CHARACTER :'\u0027' . '\u0027';
 STRING  : '\u0027' ~['\r\n]* '\u0027' ;
 
 COMMENT     : ';' ~[\r\n]* ;

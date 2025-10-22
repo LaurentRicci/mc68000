@@ -1,0 +1,168 @@
+<Playlist Version="2.0">
+  <Rule Name="Includes" Match="Any">
+    <Rule Match="All">
+      <Property Name="Solution" />
+      <Rule Match="Any">
+        <Rule Match="All">
+          <Property Name="Project" Value="asm68000test" />
+          <Rule Match="Any">
+            <Rule Match="All">
+              <Property Name="Namespace" Value="" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_dcb" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_dcb" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_mixed" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_mixed" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_multi" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_multi" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_multi" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_multi" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_multi" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_multi" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_stringByte" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_stringByte" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_2string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_2string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_2bytes" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_2bytes" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_byte" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_byte" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_2bytes" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_2bytes" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_byte" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_byte" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_2bytes" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_2bytes" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_byte" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_byte" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_nop_dcb" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_nop_dcb" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_identifier" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_identifier" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_toolong" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_toolong" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_toolong" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_toolong" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_negative" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+          </Rule>
+        </Rule>
+      </Rule>
+    </Rule>
+  </Rule>
+</Playlist>

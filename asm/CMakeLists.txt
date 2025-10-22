@@ -51,9 +51,8 @@ antlr_target(parser parser68000.g4 OUTPUT_DIRECTORY generated DEPENDS ${ANTLR_le
 add_library(asm68000lib
     asmparser.cpp
     asmparser.h
-    listener.cpp
-    listener.h
     visitor.cpp
+    visitor_directive.cpp
     visitor.h
     errors.cpp
     errors.h
