@@ -129,6 +129,27 @@ directive
     | SIMHALT
     ;
 
+directiveNames
+    : DC
+    | DCB
+    | DS
+    | END
+    | EQU
+    | FAIL
+    | INCLUDE
+    | INCBIN
+    | LIST
+    | NOLIST
+    | MEMORY
+    | OPT
+    | ORG
+    | PAGE
+    | REG
+    | SECTION
+    | SET
+    | SIMHALT
+    ;
+
 immediateInstruction  returns [uint16_t value]
     : ADDI { $value = 0b0110;}
     | SUBI { $value = 0b0100;}
@@ -603,4 +624,5 @@ dataListElement
 address returns [std::any value]
     : number     { $value = $number.value; }
     | ID         { $value = $ID.text; }
+    | directiveNames { $value = $directiveNames.text; }
     ;
