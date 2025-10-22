@@ -450,5 +450,16 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x4e71, code[3]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_directive)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" lea LIST, a0\nLIST: nop\n");
+		validate_hasValue<uint16_t>(0b0100'000'111'111'000, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(3, code.size());
+		BOOST_CHECK_EQUAL(0x4, code[1]);
+		BOOST_CHECK_EQUAL(0x4e71, code[2]);
+	}
 	BOOST_AUTO_TEST_SUITE_END()
 }
