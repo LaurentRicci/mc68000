@@ -253,5 +253,20 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 		BOOST_CHECK_EQUAL(0x0200, code[2]); // lbl
 	}
+	// ====================================================================================================
+	// Directive name
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(dcb_directivename)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" nop\nLIST: nop\n dc.b LIST\n");
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(3, code.size());
+		BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
+		BOOST_CHECK_EQUAL(0x0200, code[2]); // lbl
+	}
+
 	BOOST_AUTO_TEST_SUITE_END()
 }

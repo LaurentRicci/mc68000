@@ -624,6 +624,7 @@ dataListElement
     | STRING         #dleString
     | expression     #dleExpression
     | ID             #dleIdentifier
+    | directiveNames #dleIdentifier
     ;
 
 expression returns [std::any value]

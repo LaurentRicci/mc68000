@@ -1,0 +1,471 @@
+*****************************************************************
+*	Tiny BASIC for the Motorola MC68000                         *
+*                                                               *
+*	                                                            *
+*                                                               *
+* Derived from Palo Alto Tiny BASIC as published in the May 1976*
+* issue of Dr. Dobb's Journal. Adapted to the 68000 by:         *
+*       Gordon Brandly                                          *
+*       Apt. C 8710-97th Ave                                    *
+*       Edmonton, Alberta                                       *
+*       Canada T6C 2C1                                          *
+*                                                               *
+*                                                               *
+* This version is for MEX68KECB Educational Computer Board I/0. *
+*                                                               *
+* Copyright (C) 1984 by Gordon Brandly. This program may be	    *
+* freely distributed for personal use only. All commercial      *
+* rights are reserved.                                          *
+*****************************************************************
+
+* Vers. 1.0	1984/7/17	- Original version by Gordon. Brandly
+*       1.1 1984/12/9   - Addition of 'S. print term by Marvin Lipford
+*       1.2 1985/4/9    - Bug fix in multiply routine by Rick Murray
+
+        OPT FRS,BRS ;forward ref.'s c branches default to short
+    
+CR      EQU $0d  ;ASCII equates
+LF      EQU $0A
+TAB     EQU $09
+CTRLC   EQU $03
+CTRLH   EQU $08
+CTRLS   EQU $13
+CTRLX   EQU $18
+
+BUFLEN  EQU 80   ;length of keyboard input butter
+
+    ORG $900    ;first free address using Tutor
+*	
+* Standard jump table. You can change these addresses if you are
+* customizing this interpreter for a different environment.
+*
+START   BRA   CSTART    ; Cold Start entry point
+GOWARM  BRA   WSTART    ; Warm Start entry point
+GOOOT   BRA   OUTC      ; Jump to character-out routine
+COIN    BRA   INC       ; jump to character-in routine
+GOAUXO  BRA   AUXOUT    ; Jump to auxiliary-out routine
+GOAUXI  BRA   AUXIN     ; Jump to auxiliary-in routine
+GOBYE   BRA    BYEBYE   ; Jump to monitor, DOS, etc.
+*	
+* Modifiable system constants:
+TXTBGN DC.L	TXT         ; beginning of program memory
+ENDMEM DC.L	$8000       ; end of available memory
+
+* The main interpreter starts here: 
+*
+CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer 
+        LEA     INITMSG, A6    ;tell who we are
+        BSR     PRMESG
+        MOVE.L  TXTBGN, TXTUNF ;init. end-of-program pointer 
+        MOVE.L  ENDMEM,D0      ;get address of end of memory 
+        SUB.L   #2048,D0       ;reserve 2K for the stack
+        MOVE.L  D0, STKLMT 
+        SUB.L   #108,D0        ;reserve variable area (27 long words) 
+        MOVE.L  D0,VARBGN
+WSTART  CLR.L    D0             ;Initialize internal variables
+        MOVE.L  D0, LOPVAR
+        MOVE.L  D0, STKGOS
+        MOVE.L  D0, CURRNT     ;current line number pointer - 0 
+        MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
+        LEA     ONMSG,A6       ;display "OK"
+        BSR     PRMESG
+ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
+        BSR     GETLN          ;read a line.
+        BSR     TOUPBUF        ;convert to upper case
+        MOVE.L  A0, A4         ;save pointer to end of line 
+        LEA     BUFFER, A0     ;point to the beginning of line
+        BSR     TSTNUM         ;is there a number there? 
+        BSR     IGNBLK         ;skip trailing blanks
+        TST     D1             ;does line no. exist? (or nonzero?) 
+        BEQ     DIRECT         ;If not, its a direct statement
+        CMP.L   ISFEFF,D1      ;see if line no. is <- 16 bits 
+        BCC     QHOW           ;if not, we've overflowed 
+        MOVE.B  D1,-(A0)       ;store the binary line no. 
+        ROR     #8, D1         ;(Kludge to store a word on a 
+        MOVE.B  D1,-(A0)       ;possible byte boundary)
+        ROL     #8,D1 
+        BSR     FNDLN          ;find this line in save area 
+        MOVE.L  A1,A5          ;save possible line pointer 
+        BNE     ST4            ;if not found, insert
+        BSR     ENDNXT         ;find the next line (into A1) 
+        MOVE.L  A5,A2          ;pointer to line to be deleted 
+        MOVE.L  TXTUNF, A3     ;points to top of save area 
+        BSR     MVUP           ;move up to delete
+        MOVE.L  A2, TXTUNF     ;update the end pointer
+ST4     MOVE.L  A4, D0         ;calculate the length of new line
+        SUB.L   A0, D0 
+        CMP.L   03,D0          ;is it just a line no. i CR? 
+        BEQ     ST3            ;if so, it was just a delete 
+        MOVE.L  TXTUNF, A3     ;compute new end
+        MOVE.L  A3,A6 
+        ADD.L   D0,A3 
+        MOVE.L  VARBGN, D0     ;see if there's enough room
+        CMP.L   A3, D0 
+        BLS     QSORRY         ;If not, say so
+        MOVE.L  A3, TXTUNF     ;if so, store new end position 
+        MOVE.L  A6,A1          ;points to old unfilled area 
+        MOVE.L  A5,A2          ;points to beginning of move area 
+        BSR     MVDOWN         ;move things out of the way
+        MOVE.L  A0,A1          ;set up to do the insertion
+        MOVE.L  A5,A2
+        MOVE.L  A4, A3 
+        BSR     MVUP           ;do It
+        BRA     ST3            ;go back and get another line
+*
+*******************************************************************
+* *** Tables *** DIRECT *** EXEC ***
+*
+* This section of the code tests a string against a table. When
+* a match is found, control is transferred to the section of
+* code according to the table.
+*
+* At 'EXEC', A0 should point to the string, A1 should point to
+* the character table, and A2 should point to the execution
+* table. At 'DIRECT', A0 should point to the string, A: and
+* A2 will be set up to point to TABI and TAB1_1, which are
+* the tables of all direct and statement commands.
+*
+* A '.' in the string will terminate the test and the partial
+* match will be considered as a match, e.g. 'P.', 'PR.','PRI.',
+* 'PRIN.', or 'PRINT' will all match 'PRINT'.
+*
+* There are two tables: the character table and the execution
+* table. the character table consists of any number of text items.
+* Each item is a string of characters with the last character's
+* high bit set to one. The execution table holds a 16-bit
+* execution addresses that correspond to each entry in the
+* character table.
+*
+* The end of the character table is a 0 byte which corresponds
+* to the default routine In the execution table, which is
+* executed if none of the other table items are matched.
+*
+* Character-:matching tables: 
+TAB1   DC.B   'LIS',   ('T'+$80)   ;Direct commands
+       DC.B   'LOA',   ('D'+$80)
+       DC.B   'NE',    ('W'+$80)
+       DC.B   'RU',    ('N'+$80)
+       DC.B   'SAV',   ('E'+$80)
+TAB2   DC.B   'NEX',   ('T'+$80)   ;Direct / statement
+       DC.B   'LE',    ('T'+$80)
+       DC.B   'I',     ('F'+$80)
+       DC.B   'GOT',   ('O'+$80)
+       DC.B   'GOSU',  ('B'+$80)
+       DC.B   'RETUR', ('N'+$80)
+       DC.B   'RE',    ('M'+$80)
+       DC.B   'FO',    ('R'+$80)
+       DC.B   'INPU',  ('T'+$80)
+       DC.B   'PRIN',  ('T'+$80)
+       DC.B   'POK',   ('E'+$80)
+       DC.B   'STO',   ('P'+$80)
+       DC.B   'BY',    ('E'+$80)
+       DC.B   'CAL',   ('L'+$80)
+       DC.B   0
+TAB4   DC.B   'PEE',   ('K'+$80)   ;Functions
+       DC.B   'RN',    ('D'+$80)
+       DC.B   'AB',    ('S'+$80)
+       DC.B   'SIZ',   ('E'+$80)
+       DC.B   0
+TABS   DC.B   'T',     ('O'+$80)   ;'TO" in "FCR"
+       DC.B   0
+TAB6   DC.B   'STE',   ('P'+$80)   ;"STEP" in "FOR"
+       DC.B   0
+TAB8    DC.B    '>',('='+$80)          ;Relational operators
+        DC.B    '<',('>'+$80)
+        DC.B    ('>'+$80)
+        DC.B    ('='+$80)
+        DC.B    '<',('='+$80)
+        DC.B    ('<'+$80)
+        DC.B    0
+        DC.B    0      ;<- for aligning on a word boundary
+
+* Execution address tables:
+TAB1_1  DC.W    LIST                   ;Direct commands
+        DC.W    LOAD
+        DC.W    NEW
+        DC.W    RUN
+        DC.W    SAVE
+TAB2_1 DC.W     NEXT                   ;Direct / statement
+        DC.W    LET
+        DC.W    IF
+        DC.W    GOTO
+        DC.W    GOSUB
+        DC.W    RETURN
+        DC.W    REM
+        DC.W    FOR
+        DC.W    INPUT
+        DC.W    PRINT
+        DC.W    POKE
+        DC.W    STOP
+        DC.W    GOBYE
+        DC.W    CALL
+        DC.W    DEFLT
+TAB4_1  DC.W    PEEK                   ;Functions
+        DC.W    RND
+        DC.W    ABS
+        DC.W    SIZE
+        DC.W    XP40
+TAB5_1  DC.W    FR1                    ;"TO" in "FOR"
+        DC.W    QWHAT
+TAB6_1  DC.W    FR2                    ;"STEP" in "FOR" 
+        DC.W    FR3
+TAB8_1  DC.W    XP11   ; >=              ;Relational operators
+        DC.W    XP12   ; <>
+        DC.W    XP13   ; >
+        DC.W    XP15   ; =
+        DC.W    XP14   ; <=
+        DC.W    XP16   ; <
+        DC.W    XP17
+*
+DIRECT LEA      TAB1,A1
+        LEA     TAB1_1,A2
+EXEC    BSR     IGNBLK                 ;ignore leading blanks
+        MOVE.L A0,A3                   ;save the pointer
+        CLR.B   D2                     ;clear match flag
+EXLP    MOVE.B  (A0)+,D0             ;get the program character
+        MOVE.B  (A1),D1                ;get the table character
+        BNE     EXNGO                  ;If end of table,
+        MOVE.L A3,A0                   ;restore the text pointer and...
+        BRA     EXGO                   ;execute the default.
+EXNGO   MOVE.B D0,D3                   ;Else check for period...
+        AND.B   D2,D3                  ;and a match.
+        CMP.B   #'.',D3
+        BEQ     EXGO                   ;if so, execute
+         AND.B     #$7F,D1                       ;ignore the table's high bit
+         CMP.B     D0,D1                         ;is there a match?
+         BEQ       EXMAT
+         ADDQ.L    #2,A2                         ;if not, try the next entry
+         MOVE.L A3,A0                            ;reset the program pointer
+         CLR.B     D2                            ;sorry, no match
+EXI      TST.B     (A1)+                         ;get to the end of the entry
+         BPL       EX1
+         BRA       EXLP                          ;back for more matching
+EXMAT    MOVEQ     #-1,D2                        ;we've got a match so far
+         TST.B     (A1)+                         ;end of table entry?
+         BPL       EXLP                          ;if not, go back for more
+ExGo     LEA       0,A3                          ;execute the appropriate routine
+         MOVE       (A2),A3
+         JMP       (A3)
+*
+********************************************************************
+* What follows is the code to execute direct and statement
+* commands. Control is transferred to these points via the command
+* table lookup code of 'DIRECT' and 'EXEC' in the last section.
+* After the COMMand is executed, control is transferred to other
+* sections as follows:
+*
+* For 'L:ST', 'NEW', and 'STOP': go back to the warm start point.
+* For 'RUN': go execute the first stored line if any; else go
+* back to the warm start point.
+* For 'GOTO' and 'GOSUB': go execute the target line.
+* For 'RETURN' and 'NEXT'; go back to saved return line.
+* For all others: if 'CURRNT' is 0, go to warm start; else go
+* execute next command. (This is done in 'FINISH'.)
+*
+********************************************************************
+*
+* "4 NEW *** STOP *** RUN       friends) "" GOTO ***
+*
+* 'NEW<CR,' sets TXTUNF to point to TXTBGN
+*
+* ISTOP<CR>s goes back to WSTART
+*
+* 'RUN<CR>' finds the first stored line, stores its address
+* in CURRNT, and starts executing it. Note that only those
+* commands in TAB? are legal for a stored program.
+*
+* There are 3 more entries in 'RUN':
+* 'RUt'NXL' finds next line, stores it's address and executes it.
+* 'RUNTS1... stores the address of this line and executes it.
+* 'RUNSML' continues the execution on same line.
+*
+* 'GOTO expr<CR>' evaluates the expression, finds the target
+* line, and lumps to 'RUNTSL' to do it.
+*
+NEW      BSR      ENDCHK
+         MOVE.L   TXTBGN,TXTUNF          ;set the end pointer
+
+STOP     BSR      ENDCHK
+         BRA      WSTART
+
+RUN      BSR      ENDCHK
+         MOVE.L   TXTBGN,AC              ;set pointer to beginning
+         MOVE.L   A0,CURRNT
+RUNNXL  TST.L   CURRNT                 ;executing a program?
+        BEQ     WSTART                 ;if not, we've finished a direct stat.
+        CLR.L   D1                     ;else find the next line number
+        MOVE.L  A0,A1
+        BSR     FNDLNP
+        BCS     WSTART                 ;if we've fallen off the end, stop
+
+RUNTSL  MOVE.L  Al,CURRNT                       ;set CURRNT to point to the line no. 
+        MOVE.L  A1,A0                  ;set the text pointer to
+        ADDQ.L  #2,A0                  ;the start of the line text
+
+RUNSML  BSR     CHKIO                  ;see if a control-C was pressed 
+        LEA     TAB2,A1                ;find command in TAB2
+        LEA     TAB2_1,A2
+        BRA     EXEC                   ;and execute it
+
+GOTO    BSR     EXPR                   ;evaluate the following expression
+        BSR     ENDCHK                 ;must find end of line
+        MOVE.L  D0,D1
+        BSR     FNDLN                  ;find the target line
+        BNE     QHOW                   ;no such line no.
+        BRA     RUNTSL                 ;go do it
+
+*
+********************************************************************
+*
+* *** LIST 0* PRINT ***
+*
+* LIST has two forms:
+* 'LIST<CR>' lists all saved lines
+* 'LIST *<CR>I starts listing at the line II
+* Control-S pauses the listing, control-C stops it.
+*
+* PRINT command is 'PRINT              or 'PRINT ....<CR>'
+* where '....' is a list of expressions, formats, back-arrows,
+* and strings. These Items a separated by commas.
+*
+* A format is a pound sign followed by a number. It controls
+* the number of spaces the value of an expression is going to
+* be printed in. It stays effective for the rest of the print
+* command unless changed by another format. If no format is
+* specified, 11 positions will be used.
+*
+* A string is quoted in a pair of single- or double-quotes.
+*
+* An underline (back-arrow) means generate a <CR> without a <LF>
+*
+* A <CR LF> is generated after the entire list has been printed
+* or if the list is empty. If the list ends with a semicolon,
+* however, no <CR LF> is generated.
+*
+
+LIST    BSR     TSTNUM                 ;see if there's a line no.
+        BSR     ENDCHK                 ;if not, we get a zero
+        BSR     FNDLN                  ;find this or next line
+LS1     BCS     WSTART                 ;warm start if we passed the end
+        BSR     PRTLN                  ;print the line
+        BSR     CHKIO                  ;check for listing halt request
+        BEQ     LS3
+        CMP.B   #CTRLS,D0              ;pause the listing?
+        BNE    LS3
+LS2     BSR    CHKIO           ;if so. wait for another keypress
+        BEQ    LS2
+LS3     BSR    FNDLNP          ;find the next line
+        BRA    LS1
+
+PRINT   MOVE   #11,04          ;D4 - number of print spaces
+        BSR    TSTC            ;if null list and ":"
+        DC.B   ':',PR2-*
+        BSR    CRLF            ;give CR-LF and continue
+        BRA    RUNSML          ;execution on the same line
+PR2     BSR    TSTC            ;if null list and <CR>
+        DC.B   CR,PR0-*
+        BSR    CRLF            ;also give CR-LF and
+        BRA    RUNNXL          ;execute the next line
+PR0     BSR    TSTC            ;else 13 it a format? 
+        DC.B   '#',PR1-*
+        BSR    EXPR            ;yes, evaluate expression
+        MOVE   D0,D4           ;and save it as print width
+        BRA    PR3             ;look for more to print
+PR1     BSR    TSTC            ;Is character expression? (MRL)
+        DC.B   '5',PR4-*
+        BSR    EXPR            ;yep. Evaluate expression (MRL)
+        BSR    GOOUT           ;print low byte IMRL)
+        BRA    PR3             ;look for more. iMRLI
+PR4     BSR    QTSTG           ;is it a string?
+        BRA    PR8             ;if not, must be an expression
+PR3     BSR    TSTC            ;If ",", go find next 
+        DC.B   ',',PR6-*
+        BSR    FIN             ;in the list.
+        BRA    PR0
+PR6     BSR    CRLF            ;list ends here
+        BRA    FINISH
+PR8     MOVE   D4,-(SP)        ;save the width value
+        BSR    EXPR            ;evaluate the expression
+        MOVE   (SP)+,D4        ;restore the width
+        MOVE.L D0,01
+        BSR    PRTNUM          ;print its value
+        BRA    PR3             ;more to print?
+
+FINISH  BSR    FIN             ;Check end of command
+        BRA    QWHAT           ;print "What?" if wrong
+
+*
+********************************************************************
+*
+* ** GOSUB *** 4 RETURN **
+*
+* 'GOSUB expr:' or 'GOSUB expr<CR>' is like the 'GOTO' command,
+* except that the current text pointer, stack pointer, etc. are
+* saved so that execution can be continued after the subroutine
+* 'RETURN's. In order that 'GOSUB' can be nested (and even
+* recursive), the save area must be stacked. The stack pointer
+* is saved in 'STKGOS'. The old 'STEWS' is saved on the stack.
+* If we are in the rain routine, 'STKGOS' is zero (this was done
+* in the initialization section of the interpreter), but we still
+* save it as a flag for no further 'RETURN's.
+*
+* 'RETURN<CR>' undoes everything that 'GOSUB' did, and thus
+* returns the execution to the command after the most recent
+* 'GOSUB'. If 'STKGOS' is zero, it indicates that we never had
+* a 'GOSUB' and is thus an error.
+*
+GOSUB	BSR     PUSHA           ;save the current 'FOR' parameters  
+        BSR     EXPR            ;get line number
+        MOVE.L  A0,-(SP)        ;save text pointer
+        MOVE.L  DO,D1           
+        BSR     FNDLN           ;find the target line
+        BNE     AHOW            ;if not there, say "How?"
+        MOVE.L  CURRNT,-(SP)    ;found it, save old 'CURRNT'... 
+        MOVE.L  STKGOS,-(SP)    ;and 'STKGOS'
+        CLR.L   LOPVAR          ;load new values
+        MOVE.L  SP,STKGOS       
+        BRA     RUNTSL          
+
+RETURN  BSR     ENDCHK          ;there should be just a <CR>
+        MOVE.L  STKGOS,D1       ;get old stack pointer
+        BEQ     QWHAT           ;if zero, it doesn't exist
+        MOVE.L  D1,SP           ;else restore it
+        MOVE.L  (SP)+,STKGOS    ;and the old 'STKGOS'
+        MOVE.L  (SP)+,CURRNT    ;and the old 'CURRNT'
+        MOVE.L  (SP)+,A0        ;and the old text pointer
+        BSR     POPA            ;and the old 'FOR' parameters
+        BRA     FINISH          ;and we are back home
+  
+*
+********************************************************************
+*
+* *** FOR *** & NEXT ***
+* 'FOR' has two forms:
+* 'FOR var-expl TO exp2 STEP expl' and 'FOR var-expl TO exp2'
+* The second form means the same thing as the first form with a
+* STEP of positive 1. The interpreter will find the variable 'var'
+* and set its value to the current value of 'expl'. It also
+* evaluates 'exp2' and 'expl' and saves all these together with
+* the text pointer, etc. in the 'FOR' save area, which consisits of
+* 'LOPVAR', 'LOPINC', 'LOPLMT', 'LOPLN', and 'LOPPT'. If there is
+* already something in the save area (indicated by a non-zero
+* ILOPVAR'1, then the old save area is saved on the stack before
+* the new values are stored. The interpreter will then dig in the
+* stack and find out if this same variable was used in another
+* currently active 'FOR' loop. If that is the case, then the old
+* 'FOR' loop is deactivated. (i.e. purged from the stack)
+*
+* 'NEXT var' serves as the logical (not necessarily physical) end
+* of the 'FOR' loop. The control variable 'var' is checked with
+* the 'LOPVAR'. If they are not the same, the interpreter digs in
+* the stack to find the right one and purges all those that didn't
+* match. Either way, it then adds the 'STEP' to that variable and
+* checks the result with against the limit value. If it is within
+* the limit, control loops back to the command following the
+* 'FOR'. If it's outside the limit, the save area is purged and
+* execution continues.
+*
+FOR     BSR     PUSHA           ;save the old 'FOR' save area
+        BSR     SETVAL          ;set the control variable
+        MOVE.L  A6,LOPVAR       ;save its address
+        LEA     TAB5,A1         ;use 'EXEC' to test for 'TO'
