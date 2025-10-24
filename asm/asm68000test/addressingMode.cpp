@@ -461,5 +461,19 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x4, code[1]);
 		BOOST_CHECK_EQUAL(0x4e71, code[2]);
 	}
+
+	BOOST_AUTO_TEST_CASE(address_keyword)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText("move move move,d0 ; just a move\n lea move, a0\n");
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(4, code.size());
+		BOOST_CHECK_EQUAL(0x3038, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x41f8, code[2]);
+		BOOST_CHECK_EQUAL(0x0000, code[3]);
+	}
+
 	BOOST_AUTO_TEST_SUITE_END()
 }

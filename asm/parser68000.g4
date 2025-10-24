@@ -5,7 +5,7 @@ options
     tokenVocab=lexer68000;
 }
 
-prog : (line EOL)* EOF ;
+prog : (line (EOL | EOL2))* EOF ;
 
 line
     : labelSection? instructionSection COMMENT?  #line_instructionSection
@@ -518,13 +518,12 @@ arguments
 argument
     : addressingMode
     | registerList
-    | ID
+    | ID2
     ;
 
 address returns [std::any value]
     : number     { $value = $number.value; }
-    | ID         { $value = $ID.text; }
-    | directiveNames { $value = $directiveNames.text; }
+    | ID2        { $value = $ID2.text; }
     ;
     
 addressingMode
@@ -590,27 +589,6 @@ directive
     | SIMHALT
     ;
 
-directiveNames
-    : DC
-    | DCB
-    | DS
-    | END
-    | EQU
-    | FAIL
-    | INCLUDE
-    | INCBIN
-    | LIST
-    | NOLIST
-    | MEMORY
-    | OPT
-    | ORG
-    | PAGE
-    | REG
-    | SECTION
-    | SET
-    | SIMHALT
-    ;
-
 dc
     : DC size  dataList
     ;
@@ -623,8 +601,7 @@ dataListElement
     : number         #dleNumber
     | STRING         #dleString
     | expression     #dleExpression
-    | ID             #dleIdentifier
-    | directiveNames #dleIdentifier
+    | ID2             #dleIdentifier
     ;
 
 expression returns [std::any value]
@@ -632,5 +609,5 @@ expression returns [std::any value]
     ;
 
 identifiers
-    : ID (COMMA ID)*
+    : ID2 (COMMA ID2)*
     ;
