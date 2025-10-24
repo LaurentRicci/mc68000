@@ -8,7 +8,7 @@
 class asmparser
 {
 public:
-	bool parseFile(const char* filename);
+	bool parseFile(const char* filename, bool showTree=false);
 	std::any parseText(const char* text);
 	size_t checkSyntax(const char* text);
 	const std::vector<uint16_t>& getCode() const { return code; }
