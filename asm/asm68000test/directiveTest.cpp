@@ -268,5 +268,16 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(0x0200, code[2]); // lbl
 	}
 
+	BOOST_AUTO_TEST_CASE(dcb_labelmissing)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText("here dc.b John\n");
+
+		auto errors = parser.getErrors().get();
+		BOOST_CHECK_EQUAL(1, errors.size());
+		BOOST_CHECK_NE(0, std::get<0>(errors[0].getPosition()));
+		BOOST_CHECK_NE(0, std::get<1>(errors[0].getPosition()));
+	}
+
 	BOOST_AUTO_TEST_SUITE_END()
 }

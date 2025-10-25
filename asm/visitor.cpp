@@ -1997,10 +1997,16 @@ void visitor::addError(const std::string& message, tree::ParseTree* ctx)
 			size_t col = prc->getStart()->getCharPositionInLine();
             errorList.add(message, line, col);
         } 
+		else if (auto* tni = dynamic_cast<antlr4::tree::TerminalNodeImpl*>(ctx))
+		{
+			size_t line = tni->symbol->getLine();
+			size_t col = tni->symbol->getCharPositionInLine();
+			errorList.add(message, line, col);
+		}
 		else
 		{
-            errorList.add(message,0,0);
-        }
+			errorList.add(message, 0, 0);
+		}
     }
 }
 
