@@ -469,3 +469,64 @@ FOR     BSR     PUSHA           ;save the old 'FOR' save area
         BSR     SETVAL          ;set the control variable
         MOVE.L  A6,LOPVAR       ;save its address
         LEA     TAB5,A1         ;use 'EXEC' to test for 'TO'
+        LEA     TAB5_1,A2 
+        BRA     EXEC
+FRI     BSR     EXPR          ;evaluate the limit
+        MOVE.L  D0, LOPLMT    ;save that
+        LEA     TAB6, A1      ;use 'EXEC' to look for the 
+        LEA     TAB6_1,A2     ;word 'STEP'
+        BRA     EXEC
+FR2     BSR     EXPR          ;found it, get the step value
+        BRA     FR4
+FR3     MOVEQ   #1,D0         ;not found, step defaults to 1
+FR4     MOVE.L  D0,LOPINC     ;save that too
+FRS     MOVE.L  CURRNT, LOPLN ;save address of current line number 
+        MOVE.L  A0, LOPPT     ;and text pointer
+        MOVE.L  SP,A6         ;dig into the stack to find 'LOPVAR'
+        BRA     FR7
+FR6     ADDA.L  #20,A6        ;look at next stack frame
+FR7     MOVE.L  (A6),D0       ;is it zero?
+        BEQ     FRS           ;if so, we're done
+        CMP.L   LOPVAR, D0    ;same as current LOPVAR?
+        BNE     FR6           ;nope, look some more
+        MOVE.L  SP,A2         ;Else remove 5 long words from... 
+        MOVE.L  A6, Al        ;Inside the stack.
+        LEA     20, A3
+        ADDA.L  A1, A3
+        BSR     MVDOWN
+        MOVE.L  A3, SP        ;set the SP 5 long words up 
+FR8     BRA     FINISH        ;and continue execution
+
+NEXT    BSR     TSTV          ;get address of variable
+        BCS     QWHAT         ;if no variable, say "What?' 
+        MOVE.L  D0,A1         ;save variable's address
+NX0     MOVE.L  LOPVAR, D0    ;If 'LOPVAR' is zero, we never... 
+        BEQ     QWHAT         ;had a FOR loop, so say "What?" 
+        CMPA.L   D0,A1         ;else we check them
+        BEQ     NX3           ;OK, they agree
+        BSR     POPA          ;nope, let's see the next frame
+        BRA     NX0
+NX3     MOVE.L  (A1),D0       ;get control variable's value 
+        ADD.L   LOPINC,D0     ;add in loop increment
+        BVS     QHOW          ;say "How?" for 32-bit overflow 
+        MOVE.L  D0,(A1)       ;save control variable's new value 
+        MOVE.L  LOPLMT,DI     ;get loop's limit value
+        TST.L   LOPINC
+        BPL     NX1           ;branch if loop increment is positive
+        EXG     D0, D1 
+NX1     CMP.L   D0,D1         ;test against limit
+        BLT     NX2           ;branch if outside limit
+        MOVE.L  LOPLN, CURRNT ;Within limit, go back to the... 
+        MOVE.L  LOPPT, A0     ;saved 'CURRNT' and text pointer.
+        BRA     FINISH
+NX2     BSR     PCPA          ;purge this loop
+        BRA     FINISH
+
+*
+********************************************************************
+*
+* *** REM *** IF *** INPUT *** LET (& DEFLT) ***
+
+* 'REM' can be followed by anything and is ignored by the
+* interpreter.
+*
