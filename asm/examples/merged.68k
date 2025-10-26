@@ -78,7 +78,7 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         BSR     IGNBLK         ;skip trailing blanks
         TST     D1             ;does line no. exist? (or nonzero?) 
         BEQ     DIRECT         ;If not, its a direct statement
-        CMP.L   ISFEFF,D1      ;see if line no. is <- 16 bits 
+        CMP.L   #$FFFF,D1      ;see if line no. is <- 16 bits 
         BCC     QHOW           ;if not, we've overflowed 
         MOVE.B  D1,-(A0)       ;store the binary line no. 
         ROR     #8, D1         ;(Kludge to store a word on a 
@@ -217,35 +217,35 @@ TAB8_1  DC.W    XP11   ; >=              ;Relational operators
         DC.W    XP16   ; <
         DC.W    XP17
 *
-DIRECT LEA      TAB1,A1
+DIRECT  LEA     TAB1,A1
         LEA     TAB1_1,A2
-EXEC    BSR     IGNBLK                 ;ignore leading blanks
-        MOVE.L A0,A3                   ;save the pointer
-        CLR.B   D2                     ;clear match flag
+EXEC    BSR     IGNBLK               ;ignore leading blanks
+        MOVE.L  A0,A3                ;save the pointer
+        CLR.B   D2                   ;clear match flag
 EXLP    MOVE.B  (A0)+,D0             ;get the program character
-        MOVE.B  (A1),D1                ;get the table character
-        BNE     EXNGO                  ;If end of table,
-        MOVE.L A3,A0                   ;restore the text pointer and...
-        BRA     EXGO                   ;execute the default.
-EXNGO   MOVE.B D0,D3                   ;Else check for period...
-        AND.B   D2,D3                  ;and a match.
+        MOVE.B  (A1),D1              ;get the table character
+        BNE     EXNGO                ;If end of table,
+        MOVE.L  A3,A0                ;restore the text pointer and...
+        BRA     EXG0                 ;execute the default.
+EXNGO   MOVE.B  D0,D3                ;Else check for period...
+        AND.B   D2,D3                ;and a match.
         CMP.B   #'.',D3
-        BEQ     EXGO                   ;if so, execute
-         AND.B     #$7F,D1                       ;ignore the table's high bit
-         CMP.B     D0,D1                         ;is there a match?
-         BEQ       EXMAT
-         ADDQ.L    #2,A2                         ;if not, try the next entry
-         MOVE.L A3,A0                            ;reset the program pointer
-         CLR.B     D2                            ;sorry, no match
-EXI      TST.B     (A1)+                         ;get to the end of the entry
-         BPL       EX1
-         BRA       EXLP                          ;back for more matching
-EXMAT    MOVEQ     #-1,D2                        ;we've got a match so far
-         TST.B     (A1)+                         ;end of table entry?
-         BPL       EXLP                          ;if not, go back for more
-ExGo     LEA       0,A3                          ;execute the appropriate routine
-         MOVE       (A2),A3
-         JMP       (A3)
+        BEQ     EXG0                 ;if so, execute
+        AND.B   #$7F,D1              ;ignore the table's high bit
+        CMP.B   D0,D1                ;is there a match?
+        BEQ     EXMAT
+        ADDQ.L  #2,A2                ;if not, try the next entry
+        MOVE.L  A3,A0                ;reset the program pointer
+        CLR.B   D2                   ;sorry, no match
+EX1     TST.B   (A1)+                ;get to the end of the entry
+        BPL     EX1
+        BRA     EXLP                 ;back for more matching
+EXMAT   MOVEQ   #-1,D2               ;we've got a match so far
+        TST.B   (A1)+                ;end of table entry?
+        BPL     EXLP                 ;if not, go back for more
+EXG0    LEA     0,A3                 ;execute the appropriate routine
+        MOVE    (A2),A3
+        JMP     (A3)
 *
 ********************************************************************
 * What follows is the code to execute direct and statement
@@ -282,15 +282,15 @@ ExGo     LEA       0,A3                          ;execute the appropriate routin
 * 'GOTO expr<CR>' evaluates the expression, finds the target
 * line, and lumps to 'RUNTSL' to do it.
 *
-NEW      BSR      ENDCHK
-         MOVE.L   TXTBGN,TXTUNF          ;set the end pointer
+NEW     BSR      ENDCHK
+        MOVE.L   TXTBGN,TXTUNF          ;set the end pointer
 
-STOP     BSR      ENDCHK
-         BRA      WSTART
+STOP    BSR      ENDCHK
+        BRA      WSTART
 
-RUN      BSR      ENDCHK
-         MOVE.L   TXTBGN,AC              ;set pointer to beginning
-         MOVE.L   A0,CURRNT
+RUN     BSR      ENDCHK
+        MOVE.L   TXTBGN,A0              ;set pointer to beginning
+        MOVE.L   A0,CURRNT
 RUNNXL  TST.L   CURRNT                 ;executing a program?
         BEQ     WSTART                 ;if not, we've finished a direct stat.
         CLR.L   D1                     ;else find the next line number
@@ -298,7 +298,7 @@ RUNNXL  TST.L   CURRNT                 ;executing a program?
         BSR     FNDLNP
         BCS     WSTART                 ;if we've fallen off the end, stop
 
-RUNTSL  MOVE.L  Al,CURRNT                       ;set CURRNT to point to the line no. 
+RUNTSL  MOVE.L  A1,CURRNT                       ;set CURRNT to point to the line no. 
         MOVE.L  A1,A0                  ;set the text pointer to
         ADDQ.L  #2,A0                  ;the start of the line text
 
@@ -417,7 +417,7 @@ FINISH  BSR    FIN             ;Check end of command
 GOSUB	BSR     PUSHA           ;save the current 'FOR' parameters  
         BSR     EXPR            ;get line number
         MOVE.L  A0,-(SP)        ;save text pointer
-        MOVE.L  DO,D1           
+        MOVE.L  D0,D1           
         BSR     FNDLN           ;find the target line
         BNE     AHOW            ;if not there, say "How?"
         MOVE.L  CURRNT,-(SP)    ;found it, save old 'CURRNT'... 
@@ -490,7 +490,7 @@ FR7     MOVE.L  (A6),D0       ;is it zero?
         CMP.L   LOPVAR, D0    ;same as current LOPVAR?
         BNE     FR6           ;nope, look some more
         MOVE.L  SP,A2         ;Else remove 5 long words from... 
-        MOVE.L  A6, Al        ;Inside the stack.
+        MOVE.L  A6, A1        ;Inside the stack.
         LEA     20, A3
         ADDA.L  A1, A3
         BSR     MVDOWN
@@ -502,7 +502,7 @@ NEXT    BSR     TSTV          ;get address of variable
         MOVE.L  D0,A1         ;save variable's address
 NX0     MOVE.L  LOPVAR, D0    ;If 'LOPVAR' is zero, we never... 
         BEQ     QWHAT         ;had a FOR loop, so say "What?" 
-        CMPA.L   D0,A1         ;else we check them
+        CMPA.L  D0,A1         ;else we check them
         BEQ     NX3           ;OK, they agree
         BSR     POPA          ;nope, let's see the next frame
         BRA     NX0
@@ -510,7 +510,7 @@ NX3     MOVE.L  (A1),D0       ;get control variable's value
         ADD.L   LOPINC,D0     ;add in loop increment
         BVS     QHOW          ;say "How?" for 32-bit overflow 
         MOVE.L  D0,(A1)       ;save control variable's new value 
-        MOVE.L  LOPLMT,DI     ;get loop's limit value
+        MOVE.L  LOPLMT,D1     ;get loop's limit value
         TST.L   LOPINC
         BPL     NX1           ;branch if loop increment is positive
         EXG     D0, D1 
@@ -530,3 +530,64 @@ NX2     BSR     PCPA          ;purge this loop
 * 'REM' can be followed by anything and is ignored by the
 * interpreter.
 *
+* 'IF' is followed by an expression, as a condition and one or
+* more commands (including other 'IF's) separated by colons.
+* Note that the word 'THEN' is not used. The interpreter evaluates
+* the expression. If it is non-zero, execution continues. If it
+* is zero, the commands that follow are ignored and execution
+* continues on the next line.
+*
+* 'INPUT' is like the 'PRINT' command, and is followed by a list
+* of items. If the item is a string in single or double quotes,
+* or is an underline (back arrow), it has the same effect as in
+* 'PRINT'. If an item is a variable, this variable name is
+* printed out followed by a colon, then the interpreter waits for
+* an expression to be typed in. The variable is then set to the
+* value of this expression. If the variable is proceeded by a
+* string (again in single or double quotes), the string will be
+* displayed followed by a colon. The interpreter the waits for an
+* expression to be entered and sets the variable equal to the
+* expression's value. If the input expression is invalid, the
+* interpreter will print "What?", "How?", or "Sorry" and reprint
+* the prompt and redo the input. The execution will not terminate
+* unless you press control-C. This is handled in 'INPERR'.
+
+* 'LET' is followed by a list of items separated by commas.
+* Each item consists of a variable, an equals sign, and an
+* expression. The interpreter evaluates the expression and sets
+* the variable to that value. The interpreter will also handle
+* 'LET' commands without the word 'LET'. This is done by 'DEFLT'.
+*
+REM    BRA     IF2           ;skip the rest of the line
+
+IF     BSR     EXPR          ;evaluate the expression 
+IF1    TST.L   D0            ;is it zero?
+       BNE     RUNSML        ;if not, continue
+IF2    MOVE.L  A0,A1
+       CLR.L   D1
+       BSR     FNDSKP        ;if so, skip the rest of the line 
+       BCC     RUNTSL        ;and run the next line
+       BRA     WSTART        ;if no next line, do a warm start
+
+INPERR MOVE.L STKINP,SP      ;restore the old stack pointer 
+       MOVE.L  (SP)+,CURRNT  ;and old 'CURRNT'
+       ADDQ.L  #4,SP
+       MOVE.L  (SP)+,A0      ;and old text pointer
+
+INPUT  MOVE.L  A0,-(SP)      ;save in case of error 
+       BSR     QTSTG         ;is next item a string? 
+       BRA     IP2           ;nope
+       BSR     TSTV          ;yes, but is it followed by a variable? 
+       BCS     IP4           ;if not, branch
+       MOVE.L  D0,A2         ;put away the variable's address
+       BRA     IP3           ;if so, input to variable 
+IP2    MOVE.L  A0, -(SP)     ;save for 'PRTSTG'
+       BSR     TSTV          ;must be a variable now 
+       BCS     QWHAT         ;"What?" it isn't?
+       MOVE.L  D0,A2         ;put away the variable's address
+       MOVE.B  (A0),D2       ;get ready for 'PRTSTG'
+       CLR.B   D0
+       MOVE.B  D0,(A0) 
+       MOVE.L  (SP)+,A1 
+       BSR     PRTSTG        ;print string as prompt 
+       MOVE.B  D2, (A0)      ;restore text
