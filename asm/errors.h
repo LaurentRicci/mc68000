@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace mc68000
 {
@@ -15,6 +16,10 @@ namespace mc68000
 		std::string toString() const
 		{
 			return "Line " + std::to_string(line) + ", Column " + std::to_string(column) + ": " + message;
+		}
+		std::tuple<size_t, size_t> getPosition() const
+		{
+			return std::make_tuple(line, column);
 		}
 	private:
 		std::string message;    // Error message
