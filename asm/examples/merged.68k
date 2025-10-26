@@ -591,3 +591,64 @@ IP2    MOVE.L  A0, -(SP)     ;save for 'PRTSTG'
        MOVE.L  (SP)+,A1 
        BSR     PRTSTG        ;print string as prompt 
        MOVE.B  D2, (A0)      ;restore text
+IP3     MOVE.L  A0, -(SP)      ;save in case of error 
+        MOVE.L  CURRNT,-(SP)   ;also save 'CURRNT'
+        MOVE.L  #-1,CURRNT     ;flag that we are in INPUT 
+        MOVE.L SP,STKINP       ;save the stack pointer too 
+        MOVE.L  A2,-(SP)       ;save the variable address 
+        MOVE.B  #':',D0        ;print a colon first
+        BSR     GETLN          ;then get an input line 
+        LEA     BUFFER,A0      ;point to the butter
+        BSR     EXPR           ;evaluate the input
+        MOVE.L  (SP)+,A2       ;restore the variable address 
+        MOVE.L  D0,(A2)        ;save value in variable 
+        MOVE.L  (SP)+,CURRNT   ;restore old 'CURRNT'
+        MOVE.L  (SP)+,A0       ;and the old text pointer 
+IP4     ADDQ.L  #4,SP          ;clean up the stack
+        BSR     TSTC           ;is the next thing a comma?
+        DC.B    ',',IPS-*
+        BRA     INPUT          ;yes, more items
+IPS     BRA     FINISH
+
+DEFLT   CMPI.B  #CR,(A0)       ;empty line is OK 
+        BEQ     LT1            ;else it 13 'LET'
+
+LET     BSR     SETVAL         ;do the assignment
+        BSR     TSTC           ;check for more 'LET' items
+        DC.B    ',',LT1-* 
+        BRA     LET
+LT1     BRA     FINISH         ;until we are finished.
+
+*
+********************************************************************
+*
+* *** LOAD *** & SAVE ***
+*
+* These two commands transfer a program to/from an auxiliary
+* device such as a cassette, another computer, etc. The program
+* is converted to an easily-stored format: each line starts with
+* a colon, the line no. as 4 hex digits, and the rest of the line.
+* At the end, a line starting with an '9' sign is sent. This
+* format can be read back with a minimum of processing time by
+* the 68000.
+*
+LOAD    MOVE.L TXTBGN, A0      ;set pointer to start of proq. area
+        MOVE.B  #CR, D0        ;For a CP/M host, tell it we're ready...
+        BSR     GOAUXO          ;by sending a CR to finish PIP command.
+LOD1    BSR     GOAUXI         ;look for start of line
+        BEQ     LOD1
+        CMP.B   #'@',D0        ;end of program?
+        BEQ     LODEND
+        CMP.B   #';',D0        ;if not, is it start of line?
+        BNE     LOD1           ;if not, wait for it
+        BSR     GBYTE          ;get first byte of line no.
+        MOVE.B  D1,(A0)+       ;store it
+        BSR     GBYTE          ;get 2nd bye of line no.
+        MOVE.B  D1,(A0)+       ;store that, too
+LOD2    BSR     GOAUXI         ;get another text char.
+        BEQ     LOD2
+        MOVE.B  D0,(A0)+      ;Store It
+        CMP.B   #CR, D0        ;Is it the end of the line?
+        BNE     LOD2           ;if not, go back for more
+        BRA     LOD1           ;if so, start a new line
+
