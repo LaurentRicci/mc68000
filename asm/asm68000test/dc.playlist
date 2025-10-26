@@ -156,6 +156,12 @@
                         <Property Name="DisplayName" Value="dcb_negative" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_labelmissing" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_labelmissing" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>
