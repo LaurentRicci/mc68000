@@ -651,4 +651,183 @@ LOD2    BSR     GOAUXI         ;get another text char.
         CMP.B   #CR, D0        ;Is it the end of the line?
         BNE     LOD2           ;if not, go back for more
         BRA     LOD1           ;if so, start a new line
+LODEND MOVE.L A0,TXTUNF      ;set end-of program pointer
+       BRA     WSTART        ;back to direct mode
+
+GBYTE  MOVEQ   #1,D2         ;get two hex characters from auxiliary
+       CLR     D1            ;and store them as a byte in DI
+GBYTE1 BSR     GOAUXI        ;get a char.
+       BEQ     GBYTE1
+       CMP.B   #'A',D0
+       BCS     GBYTE2
+       SUBQ.B  #7,D0         ;if greater than 9, adjust
+GBYTE2 AND.B   #$F,D0        ;strip ASCII
+       LSL.B   #4,D1              ;put nybble into the result
+       OR.B    D0,D1
+       DBRA    D2,GBYTE1     ;get another char.
+       RTS
+
+SAVE   MOVE.L TXTBGN,A0      ;set pointer to start of prog. area
+       MOVE.L TXTUNF,A1      ;set pointer to end of prog. area
+SAVE1  MOVE.B  #CR,D0        ;send out a CR 6 LF (CP/M likes this)
+       BSR     GOAUXO
+       MOVE.B  #LF,D0
+       BSR     GOAUXO
+       CMPA.L  A0,A1         ;are we finished?
+       BLS     SAVEND
+       MOVE.B  #':',D0       ;if not, start a line
+       BSR     GOAUXO
+       MOVE.B  (A0)+,D1      ;send first half of line no.
+       BSR     PBYTE
+       MOVE.B  (A0)+,D1    ;and send 2nd half
+       BSR     PBYTE
+SAVE2  MOVE.B  (A0)+,D0      ;get a text char.
+       CMP.B   #CR,D0        ;is it the end of the line?
+       BEQ     SAVE1         ;if so, send CR 6 LF and start new line
+       BSR     GOAUXO        ;send it out
+       BRA     SAVE2         ;go back for more text
+SAVEND MOVE.B  #'@',D0        ;send end-of-program indicator
+       BSR     GOAUXO
+       MOVE.B  #CR,D0         ;followed by a CR 6 LF
+       BSR     GOAUXO
+       MOVE.B  #LF,D0
+       BSR     GOAUXO
+       MOVE.B  #$1A,D0        ;and a control-2 to end the CP/M file
+       BSR     GOAUXO
+       BRA     WSTART        ;then go do a warm start
+
+PBYTE  MOVEQ   #1,D2         ;send two hex characters from DI's low byte
+PBYTE1 ROL.B   #4,D1         ;get the next nybble
+       MOVE.B  D1,D0
+       AND.B   #$F,D0        ;strip off garbage
+       ADD.B   #'0',D0       ;make it into ASCII
+       CMP.B   #'9',D0
+       BLS     PBYTE2
+       ADDQ.B  #7,D0          ;adjust if greater than 9
+PBYTE2 BSR     GOAUXO        ;send it out
+       DBRA    D2,PBYTE1     ;then send the next nybble
+       RTS
+*
+********************************************************************
+*
+* *** POKE *** & CALL ***
+*
+* 'POKE exprl,expr2' stores the byte from 'expr2' into the memory
+* address specified by 'exprl'.
+*
+* 'CALL expr' jumps to the machine language subroutine whose
+* starting address is specified by 'expr'. The subroutine can use
+* all registers but must leave the stack the way it found it.
+* The subroutine returns to the interpreter by executing an RTS.
+*
+POKE    BSR     EXPR           ;get the memory address
+        BSR     TSTC           ;it must be followed by a comma
+        DC.B    ',',PKER-*
+        MOVE.L  D0,-(SP)       ;save the address
+        BSR     EXPR           ;get the byte to be POKE'd
+        MOVE.L  (SP)+,A1       ;get the address back
+        MOVE.B  D0, (A1)       ;store the byte in memory
+        BRA     FINISH
+PKER    BRA     QWHAT          ;if no comma, say "What?"
+
+CALL    BSR     EXPR           ;get the subroutine's address
+        TST.L   D0             ;make sure we got a valid address
+        BEQ     QHOW           ;if not, say "How?"
+        MOVE.L  A0,-(SP)       ;save the text pointer
+        MOVE.L  D0,A1
+        JSR     (A1)           ;jump to the subroutine
+        MOVE.L  (SP)+,A0       ;restore the text pointer
+        BRA     FINISH
+*
+********************************************************************
+*
+* en EXPR ***
+*
+* 'EXPR' evaluates arithmetical or logical expressions.
+* <EXPR>::=<EXPR2>
+*         <EXPR2><rel.op.><EXPR2>
+* where <rel.op.> is one of the operators in TAB8 and the result
+* of these operations is 1 if true and 0 if false.
+* <EXPR2>::-(# or -)<EXPR0>(+ or -)<EXPR3>(...
+* where () are optional and (... are optional repeats.
+* <EXPR3>::=<EXPR4>( .<* or /><EXPR4> )(...
+* <EXPR4>::=<variable>
+*         <function>
+*         (<EXPR>)
+* <EXPR> is recursive so that the variable '#' can have an <EXPR>
+* as an index, functions can have an <EXPR> as arguments, and
+* <EXPR4> can be an <EXPR> in parenthesis.
+*
+EXPR    BSR     EXPR2
+        MOVE.L  D0,-(SP)       ;save <EXPR2> value
+        LEA     TAB8,A1        ;look up a relational operator
+        LEA     TAB8_1,A2
+        BRA     EXEC           ;go do it
+
+XP11    BSR     XP18           ;is it *>"?
+        BLT     XPRT0          ;no, return 00-0
+        BRA     XPRT1          ;else return Deal
+XP12   BSR    XP18             ;is it "<>"?
+       BEQ    XPRT0            ;no, return D0=O
+       BRA    XPRTI            ;else return D0=1
+
+XP13   BSR    XP18             ;is it ">"?
+       BLE    XPRT0            ;no, return D0=0
+       BRA    XPRT1            ;else return D0=1
+
+XP14   BSR    XP18             ;is it "<='?
+       BGT    XPRT0            ;no, return D0=0
+       BRA    XPRT1            ;else return D0=1
+
+XP15   BSR    XP18             ;is it "="?
+       BNE    XPRT0            ;if not, return D0=0
+       BRA    XPRT1            ;else return D0=1
+XP15RT RTS
+
+XP16   BSR    XP18             ;is it "<"?
+       BGE    XPRT0            ;if not, return D0-0
+       BRA    XPRT1            ;else return D0-1
+XP16RT RTS
+
+XPRT0  CLR.L  D0               ;return D0-0 (false)
+       RTS
+
+XPRT1  MOVEQ  #1,D0            ;return D0-1 (true)
+       RTS
+
+XP17   MOVE.L (SP)+,D0         ;it's not a rel. operator
+       RTS                     ;return D0-<EXPR2>
+
+XP18   MOVE.L (SP)+,00         ;reverse the top two stack items
+       MOVE.L (SP)+,D1
+       MOVE.L D0,-(SP)
+       MOVE.L D1,-(SP)
+       BSR    EXPR2            ;do second <EXPR2>
+       MOVE.L (SP)+,D1
+       CMP.L  D0,D1            ;compare with the first result 
+       RTS                     ;return the result
+
+EXPR2  BSR    TSTC             ;negative sign?
+       DC.B   '-',XP21-*
+       CLR.L  D0               ;yes, fake '0-'
+       BRA    XP26
+XP21   BSR    TSTC             ;positive sign? ignore it
+       DC.B   '+',XP22-*
+XP22   BSR    EXPR3            ;first <EXPR3>
+XP23   BSR    TSTC             ;add?
+       DC.B   '+',XP25-*
+       MOVE.L D0,-(SP)         ;yes, save the value
+       BSR    EXPR3            ;get the second <EXPR3>
+XP24   MOVE.L (SP)+,D1
+       ADD.L  D1,D0            ;add it to the first <EXPR3>
+       BVS    QHOW             ;branch if there's an overflow
+       BRA    XP23             ;else go back for more operations
+XP25   BSR    TSTC             ;subtract?
+       DC.B   '-',XP42-*
+XP26   MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
+       BSR    EXPR3            ;get second <EXPR3>
+       NEG.L  D0               ;change its sign
+       JMP    XP24             ;and do an addition
+
+
 
