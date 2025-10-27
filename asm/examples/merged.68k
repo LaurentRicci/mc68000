@@ -828,6 +828,67 @@ XP26   MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
        BSR    EXPR3            ;get second <EXPR3>
        NEG.L  D0               ;change its sign
        JMP    XP24             ;and do an addition
+EXPR3 BSR    EXPR4        ;get first <EXPR4> 
+XP31  BSR    TSTC         ;multiply?
+      DC.B   ',',XP34-*
+      MOVE.L D0,-(SP)     ;yes, save that first result 
+      BSR    EXPR4        ;get second <EXPR4>
+      MOVE.L (SP)+,D1
+      BSR    MULT32       ;multiply the two
+      BRA    XP31         ;then look for more terms 
+XP34  BSR    TSTC         ;divide?
+      DC.B   '/',XP42-*
+      MOVE.L D0,-(SP)     ;save result of 1st <EXPR4> 
+      BSR    EXPR4        ;get second <EXPR4>
+      MOVE.L (SP)+,D1
+      EXG    D0,D1
+      BSR    DIV32        ;do the division
+      BRA    XP31         ;go back for any more terms
+
+EXPR4 LEA    TAB4,A1      ;find possible function
+      LEA    TAB4_1,A2
+      BRA    EXEC
+XP40  BSR    TSTV         ;nope, not a function 
+      BCS    XP41         nor a variable
+      MOVE.L D0,A1
+      CLR.L  D0
+      MOVE.L (A1),D0      ;if a variable, return its value in D0 
+EXP4RT RTS
+XP41  BSR    7STNUM       ;or is it a number?
+      MOVE.L D1,D0
+      TST    D2           ;(if not, V of digits will be zero) 
+      BNE    EXP4RT       ;if so, return it in D0
+PARN  BSR    TSTC         ;else look for ( EXPR )
+      DC.B   '(',XP43-*
+      BSR    EXPR
+      BSR    TSTC
+      DC.B   ')',XP43-*
+XP42  RTS
+XP43  BRA    QWHAT        ;else say "What?"
+
+*
+* ===== Test for a valid variable name. Returns Carry-I if not 
+*       found, else returns Carry=O and the address of the 
+*       variable in D0.
+
+TSTV  BSR    IGNBLK
+      CLR.L  D0
+      MOVE.B (A0),D0      ;look at the program text
+      SUB.B  #'0',D0
+      BCS    TSTVRT       ;C=1: not a variable
+      BNE    TV1          ;branch if not "s" array
+      ADDQ   #1,AO        ;If it is, it should be
+      BSR    PARR         ;followed by (EXPR) as its index.
+      ADD.L  D0,D0
+      BCS.L  QHOW         ;say "How?" if index is too big
+      ADD.L  D0,D0
+      BCS.L  QHOW
+      MOVE.L D0,-(SP)     ;save the index
+      BSR    SIZE         ;get amount of free memory 
+      MOVE.L (SP)+,D1     ;get back the index
+      CMP.L  D1,D0        ;see if there's enough memory 
+      BSR    QSORRY       ;if not, say "Sorry"
+
 
 
 
