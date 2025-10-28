@@ -849,12 +849,12 @@ EXPR4 LEA    TAB4,A1      ;find possible function
       LEA    TAB4_1,A2
       BRA    EXEC
 XP40  BSR    TSTV         ;nope, not a function 
-      BCS    XP41         nor a variable
+      BCS    XP41         ;nor a variable
       MOVE.L D0,A1
       CLR.L  D0
       MOVE.L (A1),D0      ;if a variable, return its value in D0 
 EXP4RT RTS
-XP41  BSR    7STNUM       ;or is it a number?
+XP41  BSR    TSTNUM       ;or is it a number?
       MOVE.L D1,D0
       TST    D2           ;(if not, V of digits will be zero) 
       BNE    EXP4RT       ;if so, return it in D0
@@ -880,9 +880,9 @@ TSTV  BSR    IGNBLK
       ADDQ   #1,AO        ;If it is, it should be
       BSR    PARR         ;followed by (EXPR) as its index.
       ADD.L  D0,D0
-      BCS.L  QHOW         ;say "How?" if index is too big
+      BCS    QHOW         ;say "How?" if index is too big
       ADD.L  D0,D0
-      BCS.L  QHOW
+      BCS    QHOW
       MOVE.L D0,-(SP)     ;save the index
       BSR    SIZE         ;get amount of free memory 
       MOVE.L (SP)+,D1     ;get back the index
