@@ -239,6 +239,61 @@ namespace directiveTest
 		auto opcode = parser.parseText(" dc.b (40 + 2)\n");
 		validate_hasValue<uint16_t>(0x2A00, opcode);
 	}
+
+	BOOST_AUTO_TEST_CASE(dcb_expression2)
+	{
+		asmparser parser;
+		parser.parseText(" DC.B   'LIS',   ('T'+$80) \n");
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x4C49, code[0]); // LI
+		BOOST_CHECK_EQUAL(0x53D4, code[1]); // S, 'T' + $80
+	}
+
+	BOOST_AUTO_TEST_CASE(dcb_expression3)
+	{
+		asmparser parser;
+		parser.parseText(" DC.B   ':',PR2-*\nPR2 NOP\n");
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x3A01, code[0]); // : PR2-*
+		BOOST_CHECK_EQUAL(0x4E71, code[1]); // NOP
+	}
+
+	BOOST_AUTO_TEST_CASE(dcb_expression_complex)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" dc.b 7 + (40 + 2 - 7)\n");
+		validate_hasValue<uint16_t>(0x2A00, opcode);
+	}
+
+	BOOST_AUTO_TEST_CASE(dcb_expression_string)
+	{
+		asmparser parser;
+		parser.parseText(" dc.b 'a' + 'bb'\n");
+		auto errors = parser.getErrors().get();
+		BOOST_CHECK_EQUAL(1, errors.size());
+	}
+
+	BOOST_AUTO_TEST_CASE(dcb_star)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" dc.b *\n nop\n");
+		validate_hasValue<uint16_t>(0x00, opcode);
+	}
+	BOOST_AUTO_TEST_CASE(dcb_expr_star)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" dc.b lbl - *\n nop\nlbl nop\n");
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(3, code.size());
+		BOOST_CHECK_EQUAL(0x0400, code[0]); // lbl-*
+		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
+		BOOST_CHECK_EQUAL(0x4e71, code[2]); // nop
+	}
 	// ====================================================================================================
 	// Identifier
 	// ====================================================================================================

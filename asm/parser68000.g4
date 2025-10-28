@@ -574,7 +574,7 @@ directive
     | DCB size?
     | DS size?  number
     | END  address
-    | EQU dataListElement
+    | EQU expression
     | FAIL
     | INCLUDE
     | INCBIN
@@ -595,18 +595,23 @@ dc
     ;
 
 dataList
-    : dataListElement (COMMA dataListElement)*
+    : expression (COMMA expression)*
     ;
 
-dataListElement
-    : number         #dleNumber
-    | STRING         #dleString
-    | expression     #dleExpression
-    | ID2             #dleIdentifier
+expression
+    : additiveExpr
     ;
 
-expression returns [std::any value]
-    : OPENPAREN number PLUS number CLOSEPAREN
+additiveExpr
+    : primaryExpr ((PLUS | DASH) primaryExpr)*
+    ;
+
+primaryExpr
+    : number                           #dleNumber
+    | STRING                           #dleString
+    | ID2                              #dleIdentifier
+    | STAR                             #dleStar
+    | OPENPAREN expression CLOSEPAREN  #dleExpression
     ;
 
 identifiers
