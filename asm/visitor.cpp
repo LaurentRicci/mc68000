@@ -478,30 +478,8 @@ any visitor::visitBcc(parser68000::BccContext* ctx)
 {
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 
-	uint32_t target = 0;
+	uint32_t target = getAddressValue(ctx->children[1]);
 	any address = visit(ctx->children[1]);
-	if (address.type() == typeid(std::string))
-	{
-		std::string label = any_cast<std::string>(address);
-		auto it = labels.find(label);
-		if (it == labels.end())
-		{
-			// During the 1st pass the label may not be defined yet
-			if (pass != 0)
-			{
-				addError("Label not found: " + label, ctx->children[0]);
-			}
-			target = 0; // Add a placeholder for the label
-		}
-		else
-		{
-			target = it->second;
-		}
-	}
-	else if (address.type() == typeid(int32_t))
-	{
-		target = any_cast<int32_t>(address);
-	}
 
 	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
 	if (offset > 0x7fff || offset < -0x8000)
@@ -510,18 +488,27 @@ any visitor::visitBcc(parser68000::BccContext* ctx)
 		offset = 0x100; // to force 2 words for the instruction 
 	}
 	uint16_t opcode = 0;
-	if (address.type() == typeid(int32_t) && offset >= -128 && offset <= 127) // offset fits in one byte
+
+	if (address.type() == typeid(string)) // label
 	{
-		uint16_t offset8 = (uint16_t)(offset & 0xff);
-		opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
-	}
-	else
-	{
-		// The offset could potentially fit in one byte but during the 1st pass the exact offset may be unknown
-		// so we need to always reserve two words for the instruction to avoid further address calculation errors. 
+		// During the 1st pass we don't know the actual offset yet so we have to reserve two words for the instruction
 		uint16_t offset16 = (uint16_t)(offset & 0xffff);
 		opcode = 0b0110'0000'0000'0000 | (condition << 8);
 		extensionsList.push_back(offset16); // Add the offset as an extension
+	}
+	else
+	{
+		if (offset >= -128 && offset <= 127) // offset fits in one byte
+		{
+			uint16_t offset8 = (uint16_t)(offset & 0xff);
+			opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
+		}
+		else
+		{
+			uint16_t offset16 = (uint16_t)(offset & 0xffff);
+			opcode = 0b0110'0000'0000'0000 | (condition << 8);
+			extensionsList.push_back(offset16); // Add the offset as an extension
+		}
 	}
 	return finalize_instruction(opcode);
 }
@@ -693,30 +680,7 @@ any visitor::visitDbcc(parser68000::DbccContext* ctx)
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
 
-	uint32_t target = 0;
-	any address = visit(ctx->children[3]);
-	if (address.type() == typeid(std::string))
-	{
-		std::string label = any_cast<std::string>(address);
-		auto it = labels.find(label);
-		if (it == labels.end()) 
-		{
-			// During the 1st pass the label may not be defined yet
-			if (pass != 0)
-			{
-				addError("Label not found: " + label, ctx->children[3]);
-			}
-			target = 0;
-		}
-		else 
-		{
-			target = it->second;
-		}
-	}
-	else if (address.type() == typeid(int32_t)) 
-	{
-		target = any_cast<int32_t>(address);
-	}
+	uint32_t target = getAddressValue(ctx->children[3]);
 	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
 	if (offset > 0x7fff || offset < -0x8000) 
 	{
@@ -1733,14 +1697,9 @@ any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexN
 	return visitARegisterIndirectDisplacement(ctx->children[1], ctx->children[3], ctx->children[5]);
 }
 
-/// <summary>
-/// Helper function to handle absolute addressing modes with different sizes
-/// </summary>
-/// <param name="ctx">The parse tree context</param>
-/// <param name="size">The size of the absolute address (0 = not provided, 1 = word, 2 = long)</param>
-any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
+uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
 {
-	any address = visit(ctx->children[0]);
+	any address = visit(ctx);
 	uint32_t target;
 	if (address.type() == typeid(std::string))
 	{
@@ -1751,7 +1710,7 @@ any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
 			// During the 1st pass the label may not be defined yet
 			if (pass != 0)
 			{
-				addError("Label not found: " + label, ctx->children[0]);
+				addError("Label not found: " + label, ctx);
 			}
 			target = 0;
 		}
@@ -1760,10 +1719,34 @@ any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
 			target = it->second;
 		}
 	}
+	else if (address.type() == typeid(char))
+	{
+		char c = any_cast<char>(address);
+		if (c == '*')
+		{
+			target = this->currentAddress;
+		}
+		else
+		{
+			addError("Syntax error; * expected", ctx);
+			target = 0xabcd;
+		}
+	}
 	else
 	{
 		target = any_cast<int32_t>(address);
 	}
+	return target;
+}
+
+/// <summary>
+/// Helper function to handle absolute addressing modes with different sizes
+/// </summary>
+/// <param name="ctx">The parse tree context</param>
+/// <param name="size">The size of the absolute address (0 = not provided, 1 = word, 2 = long)</param>
+any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
+{
+	uint32_t target = getAddressValue(ctx->children[0]);
 
 	switch (size)
 	{
@@ -1874,29 +1857,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 {
 	any immediate_data = visit(ctx->children[1]);
 
-	int32_t target;
-	if (immediate_data.type() == typeid(std::string))
-	{
-		std::string label = any_cast<std::string>(immediate_data);
-		auto it = labels.find(label);
-		if (it == labels.end())
-		{
-			// During the 1st pass the label may not be defined yet
-			if (pass != 0)
-			{
-				addError("Label not found: " + label, ctx->children[0]);
-			}
-			target = 0;
-		}
-		else
-		{
-			target = it->second;
-		}
-	}
-	else
-	{
-		target = any_cast<int32_t>(immediate_data);
-	}
+	int32_t target = getAddressValue(ctx->children[1]);
 
 	if (size == 0)
 	{

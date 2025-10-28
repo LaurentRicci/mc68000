@@ -6,16 +6,18 @@ namespace addressing_mode
 {
 	BOOST_AUTO_TEST_SUITE(addressing_mode)
 
-	// -------------------------------
-	// Addressing modes tests
-	// -------------------------------
-	BOOST_AUTO_TEST_CASE(address_dReg)
+		// ====================================================================================================
+		// Data register direct addressing mode
+		// ====================================================================================================
+		BOOST_AUTO_TEST_CASE(address_dReg)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add d1, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'000'001, opcode);
 	}
-
+	// ====================================================================================================
+	// Address register direct addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg)
 	{
 		asmparser parser;
@@ -29,7 +31,9 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add sp, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'001'111, opcode);
 	}
-
+	// ====================================================================================================
+	// Address register indirect addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_indirect)
 	{
 		asmparser parser;
@@ -43,7 +47,9 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'010'111, opcode);
 	}
-
+	// ====================================================================================================
+	// Address register indirect with postincrement addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_post)
 	{
 		asmparser parser;
@@ -57,7 +63,9 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (SP)+, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'011'111, opcode);
 	}
-
+	// ====================================================================================================
+	// Address register indirect with predecrement addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_pre)
 	{
 		asmparser parser;
@@ -71,7 +79,9 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add -(SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'100'111, opcode);
 	}
-
+	// ====================================================================================================
+	// Address register indirect with displacement addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_displacement)
 	{
 		asmparser parser;
@@ -126,6 +136,9 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 
+	// ====================================================================================================
+	// Address register indirect with index addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_indexD)
 	{
 		asmparser parser;
@@ -234,7 +247,9 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 
 	}
-
+	// ====================================================================================================
+	// Absolute addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_absoluteW)
 	{
 		asmparser parser;
@@ -309,7 +324,9 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 		BOOST_CHECK_EQUAL(0x5678, code[2]);
 	}
-
+	// ====================================================================================================
+	// PC displacement addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_pc_displacement)
 	{
 		asmparser parser;
@@ -327,7 +344,9 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $8ffff(pc), d0\n");
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
-
+	// ====================================================================================================
+	// PC Indexed addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_pc_indexD)
 	{
 		asmparser parser;
@@ -366,6 +385,9 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 
+	// ====================================================================================================
+	// Immediate addressing mode
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_immediate_short)
 	{
 		asmparser parser;
@@ -450,6 +472,20 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x4e71, code[3]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_immediate_star)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" move #*, a0\n");
+		validate_hasValue<uint16_t>(0b0011'000'001'111'100, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x0, code[1]);
+	}
+
+	// ====================================================================================================
+	// Usage of keyword as address
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_directive)
 	{
 		asmparser parser;
@@ -474,6 +510,18 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x41f8, code[2]);
 		BOOST_CHECK_EQUAL(0x0000, code[3]);
 	}
+	// ====================================================================================================
+	// * keyword as current address name
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(address_star)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText("    move *,d0\n");
 
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x3038, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+	}
 	BOOST_AUTO_TEST_SUITE_END()
 }
