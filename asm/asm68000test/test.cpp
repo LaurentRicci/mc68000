@@ -731,6 +731,13 @@ BOOST_AUTO_TEST_CASE(bcc_label)
 	BOOST_CHECK_EQUAL(0x8, code[1]);
 }
 
+BOOST_AUTO_TEST_CASE(bcc_star)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" bcc *\n");
+	validate_hasValue<uint16_t>(0x64fe, opcode);
+}
+
 BOOST_AUTO_TEST_CASE(bcc_labelUnknown)
 {
 	asmparser parser;
@@ -1119,6 +1126,16 @@ BOOST_AUTO_TEST_CASE(dbcc_all)
 
 }
 
+BOOST_AUTO_TEST_CASE(dbcc_star)
+{
+	asmparser parser;
+	auto opcode = parser.parseText(" nop\n dbcc d0,*\n");
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(3, code.size());
+	BOOST_CHECK_EQUAL(0x4e71, code[0]);
+	BOOST_CHECK_EQUAL(0x54c8, code[1]);
+	BOOST_CHECK_EQUAL(0xfffe, code[2]);
+}
 // ====================================================================================================
 // DIVS
 // ====================================================================================================

@@ -220,5 +220,6 @@ PLUS        : '+' ;
 SLASH       : '/' ;
 OPENPAREN   : '(' ;
 CLOSEPAREN  : ')' ;
+STAR        : '*' ;
 
 

@@ -524,6 +524,7 @@ argument
 address returns [std::any value]
     : number     { $value = $number.value; }
     | ID2        { $value = $ID2.text; }
+    | STAR	     { $value = '*'; }
     ;
     
 addressingMode

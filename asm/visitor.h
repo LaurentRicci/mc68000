@@ -263,4 +263,5 @@ private:
     std::any visitShiftRegister(tree::ParseTree* ctx, uint16_t code);
     std::any visitShiftImmediate(tree::ParseTree* ctx, uint16_t code);
     std::any visitShiftAddressingMode(tree::ParseTree* ctx, uint16_t code);
+	uint32_t getAddressValue(tree::ParseTree* ctx);
 };
