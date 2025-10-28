@@ -21,6 +21,7 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 		{
 			// complete the last word with the 1st byte of the dcBytes
 			code.back() = code.back() | dcBytes[0];
+			currentAddress += 1;
 			start = 1;
 			incompleteBinary = false;
 		}
@@ -31,11 +32,13 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 			if (i + 1 < dcBytes.size())
 			{
 				word = (word << 8) | dcBytes[i + 1];
+				currentAddress += 2;
 			}
 			else
 			{
 				word = (word << 8);
 				incompleteBinary = true;
+				currentAddress += 1;
 			}
 			code.push_back(word);
 		}
@@ -155,23 +158,46 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 
 any visitor::visitExpression(parser68000::ExpressionContext* ctx)
 {
-	int32_t lhs = any_cast<int32_t>(ctx->children[1]->accept(this));
-	int32_t rhs = any_cast<int32_t>(ctx->children[3]->accept(this));
+	return visit(ctx->children[0]);
+}
 
-	string op = ctx->children[2]->getText();
+any visitor::visitAdditiveExpr(parser68000::AdditiveExprContext* ctx) 
+{
+	any lhs = visit(ctx->children[0]);
+	if (lhs.type() == typeid(std::string))
+	{
+		// only one string is allowed in an expression
+		assert(ctx->children.size() == 1);
+		return lhs;
+	}
+	int32_t result = any_cast<int32_t>(lhs);
 
-	if (op == "+")
+	for(int i=1; i<ctx->children.size(); i+=2)
 	{
-		return lhs + rhs;
+		string op = ctx->children[i]->getText();
+		any anyrhs = visit(ctx->children[i + 1]);
+		if (anyrhs.type() == typeid(int32_t))
+		{
+			int32_t rhs = any_cast<int32_t>(anyrhs);
+			if (op == "+")
+			{
+				result += rhs;
+			}
+			else if (op == "-")
+			{
+				result -= rhs;
+			}
+			else
+			{
+				assert(!"Unknown operator");
+			}
+		}
+		else
+		{
+			addError("Invalid expression: only numbers are supported in expression", ctx->children[i + 1]);
+		}
 	}
-	else if (op == "-")
-	{
-		return lhs - rhs;
-	}
-	else
-	{
-		assert(!"Unknown operator");
-	}
+	return result;
 }
 
 any visitor::visitDleNumber(parser68000::DleNumberContext* ctx)
@@ -184,10 +210,6 @@ any visitor::visitDleString(parser68000::DleStringContext* ctx)
 	return ctx->children[0]->getText();
 }
 
-any visitor::visitDleExpression(parser68000::DleExpressionContext* ctx)
-{
-	return visit(ctx->children[0]);
-}
 
 any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 {
@@ -209,4 +231,14 @@ any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 		target = it->second;
 	}
 	return static_cast<int>(target);
+}
+
+any visitor::visitDleStar(parser68000::DleStarContext* ctx)
+{
+	return static_cast<int32_t>(this->currentAddress + dcBytes.size());
+}
+
+any visitor::visitDleExpression(parser68000::DleExpressionContext* ctx)
+{
+	return visit(ctx->children[1]);
 }

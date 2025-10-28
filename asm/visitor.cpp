@@ -47,7 +47,11 @@ any visitor::visitProg(parser68000::ProgContext* ctx)
 any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx)
 {
 	size = 1;
-	incompleteBinary = false;
+	if (incompleteBinary)
+	{
+		currentAddress += 1;
+		incompleteBinary = false;
+	}
 	any result;
 	for (auto child : ctx->children)
 	{

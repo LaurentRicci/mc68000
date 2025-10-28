@@ -128,12 +128,13 @@ private:
     // ====================================================================================================
     virtual std::any visitDc(parser68000::DcContext* ctx) override;
     virtual std::any visitDataList(parser68000::DataListContext* ctx) override;
-    //virtual std::any visitDataListElement(parser68000::DataListElementContext* ctx) override;
 	virtual std::any visitExpression(parser68000::ExpressionContext* ctx) override;
+    virtual std::any visitAdditiveExpr(parser68000::AdditiveExprContext* ctx) override;
     virtual std::any visitDleNumber(parser68000::DleNumberContext* ctx) override;
     virtual std::any visitDleString(parser68000::DleStringContext* ctx) override;
-    virtual std::any visitDleExpression(parser68000::DleExpressionContext* ctx) override;
     virtual std::any visitDleIdentifier(parser68000::DleIdentifierContext* ctx) override;
+    virtual std::any visitDleStar(parser68000::DleStarContext* ctx) override;
+    virtual std::any visitDleExpression(parser68000::DleExpressionContext* ctx) override;
     // ====================================================================================================
     // Register list
     // ====================================================================================================

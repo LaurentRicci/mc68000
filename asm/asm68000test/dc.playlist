@@ -162,6 +162,48 @@
                         <Property Name="DisplayName" Value="dcb_labelmissing" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expr_star" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expr_star" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_star" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_star" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression_complex" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression_complex" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression_string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression_string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression2" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression2" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_expression3" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_expression3" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcb_directivename" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcb_directivename" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>
