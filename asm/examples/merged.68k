@@ -1500,15 +1500,62 @@ OUTC     BTST    #1,$10040         ;is port 1 ready for a character?
 *
 * =====  Input a character from the console into register D0 (or
 *          return Zero status if there's no character available).
+*
+INC     BTST      #0,$10040           ;is character ready?
+        BEQ       INCRET              ;if not, return Zero status 
+        MOVE.B    $10042,D0           ;else get the character 
+        AND.B     #$7F,D0           ;zero out the high bit
+INCRET  RTS
 
+*
+* ===== Output character to the host (Port 2) from register DO 
+*        (Preserves all registers.)
+*
+AUXOUT  BTST      #1,$10041           ;is port 2 ready for a character?
+        BEQ       AUXOUT              ;if not, wait for it
+        MOVE.B    D0,$10043           ;out it goes.
+        RTS
 
+*
+* ===== Input a character from  the host into register DO (or 
+*        return Zero status if   there's no character available).
+*
+AUXIN   BTST      #0,$10041           ;is character ready?
+        BEQ       AXIRET              ;if not, return Zero status 
+        MOVE.B    $10043,D0              ;else get the character 
+        AND.B     #$7F,D0             ;zero out the high bit
+AXIRET  RTS
 
+*
+* ===== Return to the resident monitor, operating system, etc.
+*
+BYEBYE  MOVE.B    #228,D7                  ;return to Tutor
+        TRAP      #14
 
-
-
-
-
-
-
-
-
+INITMSG DC.B      CR,LF,'Gordo"s MC68000 Tiny BASIC, v1.2',CR,LF,LF,0 
+OKMSG   DC.B      CR,LF,'OK',CR,LF,0
+HOWMSG  DC.B      'How?',CR,LF,0
+NHTMSG  DC.B      'What?',CR,LF,0
+SRYMSG  DC.B      'Sorry.'
+CLMSG   DC.B      CR,LF,0
+        DC.B      0                  ; <- for aligning on a word boundary
+LSTROM  EQU       *                  ;end of possible ROM area
+*
+* Internal variables follow: 
+*
+RANPNT DC.L       START               ;random number pointer 
+CURRNT DS.L       1                   ;Current line pointer
+STKGOS DS.L       1                   ;Saves stack pointer in 'GOSUB' 
+STKINP DS.L       1                    ;Saves stack pointer during 'INPUT' 
+LOPVAR DS.L       1                   ;'FOR' loop save area
+LOPINC DS.L       1                   ;increment
+LOPLMT DS.L       1                   ;limit
+LOPLN  DS.L     1                   ;line number
+LOPPT  DS.L     1                   ;text pointer
+TXTUNF DS.L       1                    ;points to unfilled text area 
+VARBGN DS.L       1                   ;points to variable area
+STKLMT DS.L       1                   ;holds lower limit for stack growth 
+BUFFER DS.B       BUFLEN              ;Keyboard input buffer
+TXT    EQU      *                   ;Beginning of program area
+       END 
+       
