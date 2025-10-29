@@ -1,58 +1,61 @@
-• ••• MVUP ••• MVDOWN ••• POPA ••• PUSHA •••
-
-• 'MVUP' moves a block up from where Al points to where A2 points
-• until Al-A3
-
-• 'MVDOWN' moves a block down from where At points to where A3
-• points until A1wA2
-
-• 'POPA' restores the 'FOR' Loop variable save area from the stack
-
-• 'PUSHA' stacks for 'FOR' loop variable save area onto the stack
-
-MVUP     CMP.L      ;A1,A3              see the above description 
-         BEQ        ;MVRET
-         MOVE.13    (A1)•,(A2)"
-         BRA        ;MVUP
+*
+********************************************************************
+*
+* *** MVUP *** MVDOWN *** POPA *** PUSHA ***
+*
+* 'MVUP' moves a block up from where Al points to where A2 points
+* until Al-A3
+*
+* 'MVDOWN' moves a block down from where At points to where A3
+* points until A1wA2
+*
+* 'POPA' restores the 'FOR' Loop variable save area from the stack
+*
+* 'PUSHA' stacks for 'FOR' loop variable save area onto the stack
+*
+MVUP     CMPA.L     A1,A3              ;see the above description 
+         BEQ        MVRET
+         MOVE.B     (A1)+,(A2)+
+         BRA        MVUP
 MVRET    RTS
 
-MVDOWN   CMP.L      ;A1,A2              see the above description
-         BEQ        ;MVRET
-         MOVE.B     -IA1),-(A3)
-         BRA        ;MVDOWN
+MVDOWN   CMPA.L      A1,A2              ;see the above description
+         BEQ        MVRET
+         MOVE.B     -(A1),-(A3)
+         BRA        MVDOWN
 
-POPA     MOVE.L     (SP)•,A6           ;A6 • return address
-         MOVE.L     (SP)6.,LOPVAR      ;restore LOPVAR, but zero means no more
-         BEO        ;PP1
-         MOVE.L     (SP)•,LOPINC       ;if not zero, restore the rest
-         MOVE.L     (SP)•,LOPLMT
-         MOVE.L     (SP)•,LOPLN
-         MOVE.L     (SP)•,LOPPT
-PP1      ;JMP        (A6)               return
+POPA     MOVE.L     (SP)+,A6           ;A6 = return address
+         MOVE.L     (SP)+,LOPVAR       ;restore LOPVAR, but zero means no more
+         BEQ        PP1
+         MOVE.L     (SP)+,LOPINC       ;if not zero, restore the rest
+         MOVE.L     (SP)+,LOPLMT
+         MOVE.L     (SP)+,LOPLN
+         MOVE.L     (SP)+,LOPPT
+PP1      JMP        (A6)               ;return
 
-PUSKA    MOVE.L STKLMT,D1              ;Are we running out of stack room?
-         SUB.L      ;SP,D1
-         BCC        ;()SORRY            if so, say we're sorry
-         MOVE.L     (SP)4,A6           ;else get the return address 
-         MOVE.L     DOPVAR,D1          ;save loop variables
-         REQ        ;PUI                if LOPVAR is zero, that's all 
+PUSKA    MOVE.L     STKLMT,D1          ;Are we running out of stack room?
+         SUB.L      SP,D1
+         BCC        QSORRY             ;if so, say we're sorry
+         MOVE.L     (SP)+,A6           ;else get the return address 
+         MOVE.L     LOPVAR,D1          ;save loop variables
+         BEQ        PU1                ;if LOPVAR is zero, that's all 
          MOVE.L     LOPPT,-(SP)        ;else save all the others
-         MOVE. I.   UOPLN,-(SP)
+         MOVE.L     LOPLN,-(SP)
          MOVE.L     LOPLMT,-(SP)
          MOVE.L     LOPINC,-(SP)
-PU1      ;MOVE.L     D1,-(SP)
-         JMP        ;(A6)               return
+PU1      MOVE.L     D1,-(SP)
+         JMP        (A6)               ;return
 
+*
+********************************************************************
+*
+* *** PRTSTG '6* QTSTG       ;PRTNUM *** PRTLN
+*
+* 'PRTSTG' prints a string pointed to by Al. It stops printing
+* and returns to the caller when either a CR Is printed or when
+* the next byte is the same as what was passed in DO by the
+* caller.
+*
+* 'OTSTG' looks for an underline (back-arrow on some systems),
+* single-quote, or double-quote. If none of these are found, returns
 
-
-
-• ••• PRTSTG '6* QTSTG       ;PRTNUM ••• PRTLN
-
-• 'PRTSTG' prints a string pointed to by Al. It stops printing
-• and returns to the caller when either a CR Is printed or when
-• the next byte is the same as what was passed in DO by the
-• caller.
-
-• 'OTSTG' looks for an underline (back-arrow on some systems),
-• single-quote, or double-quote. If none of these are found, returns
-
