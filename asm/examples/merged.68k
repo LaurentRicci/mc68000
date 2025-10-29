@@ -948,6 +948,68 @@ DIV32 TST.L D1          ;check for divide-by-zero
 DIV1  TST.L D1          ;take absolute value of D1
       BPL   DIV2
       NEG.L D1
+DIV2   MOVEQ   #31,D3          ;iteration count for 32 bits
+       MOVE.L  D0,D1
+       CLR.L   D0
+DIV3   ADD.L   D1,D1           ;(This algorithm was translated from
+       ADDX.L  D0,D0           ;the divide routine in Ron Cain's
+       BEQ     DIV4            ;Small-C run time library.)
+       CMP.L   D2,D0
+       BMI     DIV4
+       ADDQ.L  #1,D1
+       SUB.L   D2,D0
+DIV4   DBRA    D3,DIV3
+       EXG     D0,D1           ;put rem. 6 quot. in proper registers
+       TST.L   D4              ;were the signs the same?
+       BPL     DIVRT
+       NEG.L   D0              ;if not, results are negative
+       NEG.L   D1
+DIVRT  RTS
+
+*
+* =====The PEEK function returns the byte stored at the address
+*      contained in the following expression.
+*
+PEEK   BSR     PARN            ;get the memory address
+       MOVE.L  D0,A1
+       CLR.L   D0              ;upper 3 bytes will be zero
+       MOVE.B  (A1),D0         ;get the addressed byte
+       RTS                     ;and return it
+
+*
+* ===== The RND function returns a random number from 1 to
+*       the value of the following expression in *D0.
+*
+RND    BSR     PARN            ;get the upper limit
+       TST.L   D0              ;it must be positive and non-zero
+       BEQ     QHOW
+       BMI     QHOW
+       MOVE.L  D0,D1
+       MOVE.L  RANPNT,A1        ;get memory as a random number
+       CMPA.L  #LSTROM,A1
+       BCS     RA1
+       LEA     START,A1        ;wrap around if end of program
+RA1    MOVE.L  (A1)+,D0        ;get the slightly random number
+       BCLR    #31,D0          ;make sure it's positive
+       MOVE.L  A1,RANPNT       ;(even I can do better than this!)
+       BSR     DIV32           ;RND(n)..410D(number,n)+1
+       MOVE.L  D1,D0           ;MOD is the remainder of the div.
+       ADDQ.L  #1,D0
+       RTS
+
+*
+* ===== The ABS function returns an absolute value in *D0.
+*
+ABS    BSR     PARN            ;get the following expr.'s value
+       TST.L   D0
+       BPL     ABSRT
+       NEG.L   D0              ;if negative, complement it
+       BMI     QHOW            ;if still negative, it was too big
+ABSRT  RTS
+
+*
+* ===== The SIZE function returns the size of free memory in *D0.
+*
 
 
 
