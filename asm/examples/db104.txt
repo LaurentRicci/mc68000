@@ -1,64 +1,63 @@
-         BRA      ;MVPS'
-DOQUO1 CMP.B      ;DO,D1             make sure we're ending proper quote
-         BNE      ;TOUPB1            if not, ignore it
-         CLR.B    Dl                ;else clear quote flag
-         BRA      ;TOUPBI
+         BRA      TOUPB1
+DOQUO1 CMP.B      D0,D1             ;make sure we're ending proper quote
+         BNE      TOUPB1            ;if not, ignore it
+         CLR.B    D1                ;else clear quote flag
+         BRA      TOUPBI
 
-•
-•        ;Convert the character in DO to upper case
-•
-TOUPPER CMP.B     ea',D0            ;is it < 'a'?
-         BCS      ;TOUPRET
-         CMP.B    l'z',D0           ;or > 'z'?
-         SKI      ;TOUPRET
-         SUB.B    032,D0            ;if not, make it upper case
+*
+* ===== Convert the character in D0 to upper case
+*
+TOUPPER CMP.B     #'a',D0            ;is it < 'a'?
+         BCS      TOUPRET
+         CMP.B    #'z',D0           ;or > 'z'?
+         BHI      TOUPRET
+         SUB.B    #32,D0            ;if not, make it upper case
 TOUPRET RTS
 
-•
-• 'CHKIO' checks the input. If there's no input, it will return
-• to the caller with the 2 flag set. If there is input, the 2
-• flag is cleared and the input byte is in DO. However, if a
-• control-C is read, 'CHKIO' will warm-start BASIC and will not
-• return to the caller.
-•
-CHKIO    BSR.L    COIN              ;get input if possible
-         BEQ      ;CHKRET            if Zero, no input
-         CMP.B    OCTRLC,DO         ;is it control-C?
-         BNE      ;CHKRET            if not
-         BRA.L    MSTART            ;if so, do a warm start
+*
+* 'CHKIO' checks the input. If there's no input, it will return
+* to the caller with the 2 flag set. If there is input, the 2
+* flag is cleared and the input byte is in D0. However, if a
+* control-C is read, 'CHKIO' will warm-start BASIC and will not
+* return to the caller.
+*
+CHKIO    BSR      GOIN              ;get input if possible
+         BEQ      CHKRET            ;if Zero, no input
+         CMP.B    #CTRLC,D0         ;is it control-C?
+         BNE      CHKRET            ;if not
+         BRA      MSTART            ;if so, do a warm start
 CHKRET RTS
 
-•
-• Display a CR-LF sequence
-•
-CRLF     LEA      ;CLMSG,A6
+*
+* ===== Display a CR-LF sequence
+*
+CRLF     LEA      CLMSG,A6
 
-•
-• Display a zero-ended string pointed to by register A6
-•
-PRMESG MOVE.B     (,116)+,D0        ;get the char.
-         SEC      ;PRMRET            if it's zero, we're done
-         BSR      ;GOOUT             else display it
-         BRA      ;PRMESG
+*
+* ===== Display a zero-ended string pointed to by register A6
+*
+PRMESG MOVE.B     (A6)+,D0        ;get the char.
+         BEQ      PRMRET            ;if it's zero, we're done
+         BSR      GOOUT             ;else display it
+         BRA      PRMESG
 PRMRET RTS
 
 
+******************************************************
+* The following routines are the only ones that need *
+* to be changed for a different I/O environment.     *
+******************************************************
 
-• The following routines are the only ones that need •
-• to be changed for a different I/O environment.     •
-
-
-
-•
-• Output character to the console (Port 1) from register DO
-•        ;(Preserves all registers.)
-•
-OUTC     BTST     11,610040         ;is port 1 ready for a character?
-         BEID     OUTC              ;if not, wait for it
-         MOVE.B D0,$10042           ;out it gots.
+*
+* ===== Output character to the console (Port 1) from register D0
+*        (Preserves all registers.)
+*
+OUTC     BTST    #1,$10040         ;is port 1 ready for a character?
+         BEQ     OUTC              ;if not, wait for it
+         MOVE.B  D0,$10042           ;out it gots.
          RTS
 
-•
-•        ;Input a character from the console into register DO (or
-•        ;return Zero status if there's no character available).
-
+*
+* =====  Input a character from the console into register D0 (or
+*          return Zero status if there's no character available).
+
