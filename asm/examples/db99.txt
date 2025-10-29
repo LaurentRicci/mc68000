@@ -1,62 +1,63 @@
         BEQ    GL3            ;if so
-        CMP.B  4CTRIX,D0      ;delete the whole line?
+        CMP.B  #CTRIX,D0      ;delete the whole line?
         BEQ    GL4            ;if so
-        CMP.B  ICR, DO        ;accept a CR
+        CMP.B  #CR, D0        ;accept a CR
         BEQ    GL2
-        CMP.B  4",DO          ;if other control char., discard it
+        CMP.B  #' ',D0          ;if other control char., discard it
         BCS    GL1
-GL2     MOVE.B D0,(A0)4       ;save the char.
+GL2     MOVE.B D0,(A0)+       ;save the char.
         BSR    GOOUT          ;echo the char back out
         CMP.B  ICR,D0         ;if it's a CR, end the line
         BEQ    GL7
-        CMP.L  4(BUFFER*BUFLEN-1),A0 any more room?
+*****        CMP.L  #(BUFFER+BUFLEN-1),A0 ;any more room?
+        CMPA.L  #BUFFER,A0     ;TODO fixi it
         BCS    GL1            ;yes: get some more, else delete last char.
-GL3     MOVE.B IICTRLN,D0     delete a char. if possible
+GL3     MOVE.B #CTRLH,D0      ;delete a char. if possible
         BSR    GOOUT
-        MOVE.B 4",DO
+        MOVE.B #' ',D0
         BSR    GOOUT
-        CMP.L  IBUFFER,AO     any char.'s left?
+        CMPA.L  #BUFFER,A0    ;any char.'s left?
         BLS    GL1            ;if not
-        MOVE.B ACTRLN,D0      ;if so, finish the BS-space-BS sequence
+        MOVE.B #CTRLH,D0      ;if so, finish the BS-space-BS sequence
         BSR    GOOUT
-        SUBQ.L 41,A0          ;decrement the text pointer
+        SUBQ.L #1,A0          ;decrement the text pointer
         BRA    GL1            ;back for more
-GL4     MOVE.L AO,D1          ;delete the whole line
-        SUB.L  IBUFFER,D1     figure out how many backspaces we need
+GL4     MOVE.L A0,D1          ;delete the whole line
+        SUB.L  #BUFFER,D1     ;figure out how many backspaces we need
         BEQ    GL6            ;if none needed, branch
         SUBQ   #1,D1          ;adjust for DBRA
 GL5     MOVE.B ICTRLH,D0      ;and display BS-space-BS sequences
-        BSR    GOOVT
-        MOVE.B
         BSR    GOOUT
-        MOVE.B 4CTRLH,D0
+        MOVE.B #' ',D0
+        BSR    GOOUT
+        MOVE.B #CTRLH,D0
         BSR    GOOUT
         DBRA   D1,GL5
 GL6     LEA    BUFFER,A0      ;reinitialize the text pointer
         BRA    GL1            ;and go back for more
-GL7     MOVE.B /LIMO          ;echo a LF for the CR
+GL7     MOVE.B #LF,D0          ;echo a LF for the CR
         BSR    GOOUT
         RTS
 
-FNDLN   CMP.L  4SFFFF,D1      ;line no. must be < 65535
-        BCC    ()NOW
+FNDLN   CMP.L  #$FFFF,D1      ;line no. must be < 65535
+        BCC    QHOW
         MOVE.L TXTBGN,A1      ;init. the text save pointer
 
-FNDLNP MOVE.L TXTUNF,A2       ;check if we passed the end
-        SUBQ.L .1,A2
-        CMP    A1,A2
+FNDLNP  MOVE.L TXTUNF,A2       ;check if we passed the end
+        SUBQ.L #1,A2
+        CMPA   A1,A2
         BCS    FNDRET         ;if so, return with 2-0 4 C=1
-        MOVE.B (A1)*,02       ;if not, get a line no.
-        LSL    48,D2
+        MOVE.B (A1)+,D2       ;if not, get a line no.
+        LSL    #8,D2
         MOVE.B (A1),D2
         SUBQ.L #1,A1
         CMP    D1,D2          ;is this the line we want?
         BCS    FNDNXT         ;no, not there yet
 FNDRET RTS                    ;return the cond. codes
 
-FNDNXT ADDQ.L 12,A1           ;find the next line
+FNDNXT ADDQ.L #2,A1           ;find the next line
 
-FNDSKP CMP.B   4CR,(A11+      ;try to find a CR
+FNDSKP CMPI.B   #CR,(A1)+      ;try to find a CR
         BNE    FNDSKP         ;keep looking
         BRA    FNDLNP         ;check if end of text
-
+
