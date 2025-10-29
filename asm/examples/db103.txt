@@ -1,62 +1,62 @@
-       JMP    (Al)          ;the call and continue.
+       JMP    (A1)          ;the call and continue.
 
+*
+* ===== See if the text pointed to by AO is a number. If so, 
+*        return the number in D1 and the number of digits in D2, 
+*        else return zero in D1 and D2.
 
-•      ;See if the text pointed to by AO is a number. If so, 
-       return the number in D1 and the number of digits in D2, 
-       else return zero in DI and D2.
-
-TSTNUM CLR.L  DI            ;initialize return parameters
+TSTNUM CLR.L  D1            ;initialize return parameters
        CLR    D2
        BSR    IGNBLK        ;skip over blanks
-TN1    CMP.B  PO', (A0)     is it less than zero?
+TN1    CMPI.B  #'0', (A0)   ;is it less than zero?
        BCS    TSNMRET       ;if so, that's all
-       CMP.11 f'9',(A0)     is it greater than nine?
+       CMPI.B  #'9',(A0)    ;is it greater than nine?
        BHI    TSNMRET       ;if so, return
-       CMP.L  1214748364,Di see if there's room for new digit 
+       CMP.L  #214748364,D1 ;see if there's room for new digit 
        BCC    QHOW          ;if not, we've overflowd
-       M3VE.L D1, D0        ;quickly multiply result by 10
+       MOVE.L D1, D0        ;quickly multiply result by 10
        ADD.L  D1,D1 
        ADD.L  D1,D1 
-       ADD.L  DO, D1 
+       ADD.L  D0, D1 
        ADD.L  D1,D1
        MOVE.B (A0)+,D0      ;add in the new digit
-       ADD.L  NSF, DO 
-       ADD.L  DO, D1 
-       ADD()  111,D2        ;increment the no. of digits
+       AND.L  #$F, D0 
+       ADD.L  D0, D1 
+       ADDQ  #1,D2        ;increment the no. of digits
        BRA    TN1
 TSNMRET RTS
 
-2
-       Skip over blanks in the text pointed to by AO.
-
-IGNBLK CMP.B  f",(A0)       ;see if it's a space
+*
+* ===== Skip over blanks in the text pointed to by AO.
+*
+IGNBLK CMPI.B  #' ',(A0)       ;see if it's a space
        BNE    IGBRET        ;if so, swallow it 
-IGB1   ADDQ.L 01,A0         ;increment the text pointer
+IGB1   ADDQ.L #1,A0         ;increment the text pointer
        BRA    IGNBLK 
 IGBRET RTS 
 
+*
+* ===== Convert the line of text in the input buffer to upper 
+*        case (except for stuff between quotes).
 
-• earn Convert the line of text in the input buffer to upper 
-       case (except for stuff between quotes).
-
-TOUPBUF LEA   BUFFER,A0     set up text pointer
-       CLR.B  DI            ;clear quote flag
+TOUPBUF LEA   BUFFER,A0     ;set up text pointer
+       CLR.B  D1            ;clear quote flag
 TOUPB1 MOVE.B (A0)+,D0      ;get the next text char.
-       CMP.B  fCR,D0        ;is it end of line?
+       CMP.B  #CR,D0        ;is it end of line?
        BEQ    TOUPBRT       ;if so, return
-       CMP.B  t''',D0       ;a double quote?
+       CMP.B  #'"',D0       ;a double quote?
        BEQ    DOQUO
-       CMP.B  t" ",D0       ;or a single quote?
+       CMP.B  #''',D0       ;or a single quote?
        BEQ    DOQUO
-       TST.B  DI            ;inside quotes?
-       BNE    TOUPBI        ;if so, do the next one
+       TST.B  D1            ;inside quotes?
+       BNE    TOUPB1        ;if so, do the next one
        BSR    TOUPPER       ;convert to upper case
        MOVE.B D0,-(A0)      ;store it
-       ADDQ.L fl,AO
-       BRA    TOUPBI        ;and go back for more
+       ADDQ.L #1,A0
+       BRA    TOUPB1        ;and go back for more
 TOUPBRT RTS
 
 DOQUO  TST.B  D1            ;are we inside quotes?
-       BNE    DOQUOI 
-       MOVE.B DO,D1         ;if not, toggle inside-quotes flag
-
+       BNE    DOQUO1 
+       MOVE.B D0,D1         ;if not, toggle inside-quotes flag
+

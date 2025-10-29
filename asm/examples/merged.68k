@@ -1316,6 +1316,130 @@ PN1     DIVU   #10, D1         ;get the next digit
         AND.L  #$FFFF,D1      ;strip the remainder 
         BRA    TOASCII         ;skip the overflow stuff
 PNOV    MOVE   D1,D0           ;prepare for long word division
+       CLR.W  D1           ;zero out low word
+       SWAP   D1           ;high word into low
+       DIVU   #10,D1       ;divide high word
+       MOVE   D1,D2        ;save quotient
+       MOVE   D0,D1        ;low word into low
+       DIVU   #10,D1       ;divide low word
+       MOVE.L D1,D0        ;D0 = remainder
+       SWAP   D1           ;R/Q becomes Q/R
+       MOVE   D2,D1        ;D1 is low/high
+       SWAP   D1           ;Dl is finally high/low
+TOASCII SWAP  D0           ;get remainder
+       MOVE.B D0,-(SP)     ;stack it as a digit
+       SWAP   D0
+       SUBQ   #1,D4        ;decrement width count
+       TST.L  D1           ;if quotient is zero, we're done
+       BNE    PN1
+       SUBQ   #1,D4        ;adjust padding count for DBRA
+       BMI    PN4          ;skip padding if not needed
+PN3    MOVE.B #' ',D0      ;display the required leading spaces
+       BSR    GOOUT
+       DBRA   D4,PN3
+PN4    TST.L  D3           ;is number negative?
+       BPL    PN5
+       MOVE.B #'-',D0      ;if so, display the sign
+       BSR    GOOUT
+PN5    MOVE.B (SP)+,D0     ;now unatack the digits and display
+       BMI    PNRET        ;until the flag code is reached
+       ADD.B  #'0',D0      ;make into ASCII
+       BSR    GOOUT
+       BRA    PN5
+PNRET  MOVE   (SP)+,D4     ;restore width value
+       RTS
+
+PRTLN  CLR.L  D1
+       MOVE.B (A1)+,D1     ;get the binary line number 
+       LSL    #8,D1
+       MOVE.B (A1)+,D1
+       MOVEQ  #5,D4        ;display a S digit line no. 
+       BSR    PRTNUM
+       MOVE.B #' ',D0      ;followed by a blank
+       BSR    GOOUT
+       CLR    D0           ;stop char. is a zero
+       BRA    PRTSTG       ;display the rest of the line
+
+*
+* ===== Test text byte following the call to this subroutine. If it
+*        equals the byte pointed to by AO, return to the code following
+*        the call. If they are not equal, branch to the point
+*        indicated by the offset byte following the text byte. 
+*
+TSTC   BSR    IGNBLK       ;ignore leading blanks
+       MOVE.L (SP)+,A1     ;get the return address
+       MOVE.B (A1)+,D1     ;get the byte to compare
+       CMP.B  (A0),D1      ;is it = to what AO points to?
+       BEQ    TC1          ;if so
+       CLR.L  D1           ;If not, add the second
+       MOVE.B (A1),D1      ;byte following the call to
+       ADD.L  D1,A1        ;the return address.
+       JMP    (A1)         ;jump to the routine
+TC1    ADDQ.L #1,A0        ;if equal, bump text pointer
+       ADDQ.L #1,A1        ;Skip the 2 bytes following
+       JMP    (A1)          ;the call and continue.
+
+*
+* ===== See if the text pointed to by AO is a number. If so, 
+*        return the number in D1 and the number of digits in D2, 
+*        else return zero in D1 and D2.
+
+TSTNUM CLR.L  D1            ;initialize return parameters
+       CLR    D2
+       BSR    IGNBLK        ;skip over blanks
+TN1    CMPI.B  #'0', (A0)   ;is it less than zero?
+       BCS    TSNMRET       ;if so, that's all
+       CMPI.B  #'9',(A0)    ;is it greater than nine?
+       BHI    TSNMRET       ;if so, return
+       CMP.L  #214748364,D1 ;see if there's room for new digit 
+       BCC    QHOW          ;if not, we've overflowd
+       MOVE.L D1, D0        ;quickly multiply result by 10
+       ADD.L  D1,D1 
+       ADD.L  D1,D1 
+       ADD.L  D0, D1 
+       ADD.L  D1,D1
+       MOVE.B (A0)+,D0      ;add in the new digit
+       AND.L  #$F, D0 
+       ADD.L  D0, D1 
+       ADDQ  #1,D2        ;increment the no. of digits
+       BRA    TN1
+TSNMRET RTS
+
+*
+* ===== Skip over blanks in the text pointed to by AO.
+*
+IGNBLK CMPI.B  #' ',(A0)       ;see if it's a space
+       BNE    IGBRET        ;if so, swallow it 
+IGB1   ADDQ.L #1,A0         ;increment the text pointer
+       BRA    IGNBLK 
+IGBRET RTS 
+
+*
+* ===== Convert the line of text in the input buffer to upper 
+*        case (except for stuff between quotes).
+
+TOUPBUF LEA   BUFFER,A0     ;set up text pointer
+       CLR.B  D1            ;clear quote flag
+TOUPB1 MOVE.B (A0)+,D0      ;get the next text char.
+       CMP.B  #CR,D0        ;is it end of line?
+       BEQ    TOUPBRT       ;if so, return
+       CMP.B  #'"',D0       ;a double quote?
+       BEQ    DOQUO
+       CMP.B  #''',D0       ;or a single quote?
+       BEQ    DOQUO
+       TST.B  D1            ;inside quotes?
+       BNE    TOUPB1        ;if so, do the next one
+       BSR    TOUPPER       ;convert to upper case
+       MOVE.B D0,-(A0)      ;store it
+       ADDQ.L #1,A0
+       BRA    TOUPB1        ;and go back for more
+TOUPBRT RTS
+
+DOQUO  TST.B  D1            ;are we inside quotes?
+       BNE    DOQUO1 
+       MOVE.B D0,D1         ;if not, toggle inside-quotes flag
+
+
 
 
 

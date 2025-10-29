@@ -1,62 +1,62 @@
-       CLR.W  DI           ;zero out low word
-       SWAP   DI           ;high word into low
-       DIVU   010,01       ;divide high word
+       CLR.W  D1           ;zero out low word
+       SWAP   D1           ;high word into low
+       DIVU   #10,D1       ;divide high word
        MOVE   D1,D2        ;save quotient
-       MOVE   00,01        ;low word into low
-       DIVU   flO,D1       ;divide low word
-       MOVE.L 01,00        ;DO ■ remainder
-       SWAP   DI           ;R/Q becomes Q/R
-       MOVE   D2,D1        ;DI is low/high
-       SWAP   DI           ;Dl is finally high/low
-TOASCII SWAP  DO           ;get remainder
-       MOVE.B D0,-(SP)     stack it as a digit
-       SWAP   DO
-       BUBO   111,D4       ;decrement width count
+       MOVE   D0,D1        ;low word into low
+       DIVU   #10,D1       ;divide low word
+       MOVE.L D1,D0        ;D0 = remainder
+       SWAP   D1           ;R/Q becomes Q/R
+       MOVE   D2,D1        ;D1 is low/high
+       SWAP   D1           ;Dl is finally high/low
+TOASCII SWAP  D0           ;get remainder
+       MOVE.B D0,-(SP)     ;stack it as a digit
+       SWAP   D0
+       SUBQ   #1,D4        ;decrement width count
        TST.L  D1           ;if quotient is zero, we're done
        BNE    PN1
-       SUDO   fl,D4        ;adjust padding count for DBRA
+       SUBQ   #1,D4        ;adjust padding count for DBRA
        BMI    PN4          ;skip padding if not needed
-PN3    MOVE.B 0",D0        ;display the required leading spaces
+PN3    MOVE.B #' ',D0      ;display the required leading spaces
        BSR    GOOUT
        DBRA   D4,PN3
 PN4    TST.L  D3           ;is number negative?
        BPL    PN5
-       MOVE.B 01-500       ;if so, display the sign
+       MOVE.B #'-',D0      ;if so, display the sign
        BSR    GOOUT
-PN5    MOVE.B (SP)+,00     now unatack the digits and display
+PN5    MOVE.B (SP)+,D0     ;now unatack the digits and display
        BMI    PNRET        ;until the flag code is reached
-       ADD.B  0.0',00      ;make into ASCII
+       ADD.B  #'0',D0      ;make into ASCII
        BSR    GOOUT
        BRA    PN5
-PNRET  MOVE   ISP)+,04     restore width value
+PNRET  MOVE   (SP)+,D4     ;restore width value
        RTS
 
-PRTLN  CLR.L  DI
-       MOVE.B (A1)+,D1     get the binary line number 
-       LSL    118,01
-       MOVE.B (A1)+,01
-       MOVE() 15,D4        ;display a S digit line no. 
+PRTLN  CLR.L  D1
+       MOVE.B (A1)+,D1     ;get the binary line number 
+       LSL    #8,D1
+       MOVE.B (A1)+,D1
+       MOVEQ  #5,D4        ;display a S digit line no. 
        BSR    PRTNUM
-       MOVE.B f",DO        ;followed by a blank
+       MOVE.B #' ',D0      ;followed by a blank
        BSR    GOOUT
-       CLR    DO           ;stop char. is a zero
+       CLR    D0           ;stop char. is a zero
        BRA    PRTSTG       ;display the rest of the line
 
-•
-• Test text byte following the call to this subroutine. If it
-•      ;equals the byte pointed to by AO, return to the code following
-•      ;the call. If they are not equal, branch to the point
-•      ;indicated by the offset byte following the text byte. 
-•
-TSTC   BSR    1GNBLK       ;ignore leading blanks
-       MOVE.L (SP)+,A1     get the return address
-       MOVE.B (A1)+,D1     get the byte to compare
-       CMP.B  (A0),D1      ;is it ■ to what AO points to?
-       8E0    TC1          ;if so
-       CLR.L  DI           ;If not, add the second
+*
+* ===== Test text byte following the call to this subroutine. If it
+*        equals the byte pointed to by AO, return to the code following
+*        the call. If they are not equal, branch to the point
+*        indicated by the offset byte following the text byte. 
+*
+TSTC   BSR    IGNBLK       ;ignore leading blanks
+       MOVE.L (SP)+,A1     ;get the return address
+       MOVE.B (A1)+,D1     ;get the byte to compare
+       CMP.B  (A0),D1      ;is it = to what AO points to?
+       BEQ    TC1          ;if so
+       CLR.L  D1           ;If not, add the second
        MOVE.B (A1),D1      ;byte following the call to
-       ADD.L  01,A1        ;the return address.
-       JMP    IA1)         ;jump to the routine
-TC1    ADDQ.L *LAO         ;if equal, bump text pointer
-       ADDQ.L 11,A1        ;Skip the 2 bytes following
-
+       ADD.L  D1,A1        ;the return address.
+       JMP    (A1)         ;jump to the routine
+TC1    ADDQ.L #1,A0        ;if equal, bump text pointer
+       ADDQ.L #1,A1        ;Skip the 2 bytes following
+
