@@ -1010,6 +1010,68 @@ ABSRT  RTS
 *
 * ===== The SIZE function returns the size of free memory in *D0.
 *
+*
+SIZE   MOVE.L VARBGN,D0      ;get the number of free bytes...
+       SUB.L  TXTUNF,D0      ;between 'TXTUNF' and 'VARBGN'
+       RTS                   ;return the number in DO
+
+*
+********************************************************************
+*
+* *** SETVAL *** FIN *** ENDCHK *** ERROR (& friends) ***
+*
+* 'SETVAL' expects a variable, followed by an equal sign and then
+* an expression. It evaluates the expression and sets the variable
+* to that value.
+*
+* 'FIN' checks the end of a command. If it ended with ":",
+* execution continues. If it ended with a CR, it finds the
+* the next line and continues from there.
+*
+* 'ENDCHK' checks if a command is ended with a CR. This is
+* required in certain commands, such as GOTO, RETURN, STOP, etc.
+*
+* 'ERROR' prints the string pointed to by AO. It then prints the
+* line pointed to by CURRNT with a "?" inserted at where the
+* old text pointer (should be on top of the stack) points to.
+* Execution of Tiny BASIC is stopped and a warm start is done.
+* If CURRNT is zero (indicating a direct command), the direct
+* command is not printed. If CURRNT is -1 (indicating
+* 'INPUT' command in progress), the input line is not printed
+* and execution is not terminated but continues at 'INPERR'.
+*
+* Related to 'ERROR' are the following:
+* 'QWHAT' saves text pointer on stack and gets "What?" message.
+* 'AWHAT' just gets the "What?" message and jumps to 'ERROR'.
+* 'QSORRY' and 'ASORRY' do the same kind of thing.
+* 'QHOW' and 'AHOW' also do this for "How?".
+*
+SETVAL BSR    TSTV           ;variable name?
+       BCS    QWHAT          ;if not, say "What?"
+       MOVE.L D0,-(SP)       ;save the variable's address
+       BSR    TSTC           ;get past the "■" sign
+       DC.B   '=',SV1-*
+       BSR    EXPR           ;evaluate the expression
+       MOVE.L (SP)+,A6
+       MOVE.L D0,(A6)        ;and save its value in the variable
+       RTS
+SV1    BRA    QWHAT          ;if no "-" sign
+
+FIN    BSR    TSTC           ;*** FIN "0
+       DC.B   ':',FI1-*
+       ADDQ.L #4,SP         ;if ":", discard return address
+       BRA    RUNSML         ;continue on the same line
+FI1    BSR   TSTC           ;not ":", is it a CR?
+       DC.B   CR,FI2-*
+       ADDQ.L #4,SP          ;yes, purge return address
+       BRA    RUNNXL         ;execute the next line
+FI2    RTS                   ;else return to the caller
+
+ENDCHK BSR    IGNBLK
+       CMPI.B  #CR,(A0)       ;does it end with a CR?
+       BNE    QWHAT          ;if not, say "WHAT?"
+       RTS
+
 
 
 
