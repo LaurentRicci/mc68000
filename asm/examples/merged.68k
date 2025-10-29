@@ -888,6 +888,67 @@ TSTV  BSR    IGNBLK
       MOVE.L (SP)+,D1     ;get back the index
       CMP.L  D1,D0        ;see if there's enough memory 
       BSR    QSORRY       ;if not, say "Sorry"
+      MOVE.L VARBGN,D0  ;put address of array element...
+      SUB.L D1,D0       ;into D0
+      RTS
+TV1   CMP.B #27,D0      ;if not e, is it A through 2?
+      EORI  #1,CCR
+      BCS   TSTVRT      ;if not, set Carry and return
+      ADDQ  #1,A0       ;else bump the text pointer
+      ADD   D0,D0        ;compute the variable's address
+      ADD   D0,D0
+      MOVE.L VARBGN,D1
+      ADD   D1,D0       ;and return it in D0 with Carry*O
+TSTVRT RTS
+
+*
+* Multiplies the 32 bit values in D0 and D1, returning
+*     the 32 bit result in D0.
+*
+MULT32 MOVE.L D1,D4
+      EOR.L D0,D4       ;see if the signs are the same
+      TST.L D0          ;take absolute value of D0
+      BPL   MLT1
+      NEG.L D0
+MLT1  TST.L D1          ;take absolute value of D1
+      BPL   MLT2
+      NEG.L D1
+MLT2  CMP.L #$FFFF,D1   ;is second argument <- 16 bits?
+      BLS   MLT3        ;OK, let it through
+      EXG   D0,D1       ;else swap the two arguments
+      CMP.L #$FFFF,D1   ;and check 2nd argument again
+      BHI   QHOW        ;one of them MUST be 16 bits
+MLT3  MOVE  D0,D2       ;prepare for 32 bit X 16 bit multiply
+      MULU  D1,D2       ;multiply low word
+      SWAP  D0
+      MULU  D1,D0       ;multiply high word
+      SWAP  D0
+*** Rick Murray's bug correction follows:
+      TST   D0          ;if lower word not 0, then overflow
+      BNE   QHOW        ;if overflow, say "How?"
+      ADD.L D2,D0       ;D0 now holds the product
+      BMI   QHOW        ;if sign bit set, it's an overflow
+      TST.L D4          ;were the signs the same?
+      BPL   MLTRET
+      NEG.L D0          ;if not, make the result negative
+MLTRET RTS
+
+*
+* ===== Divide the 32 bit value in D0 by the 32 bit value in D1.
+*        Returns the 32 bit quotient in D0, remainder in D1. 
+*
+DIV32 TST.L D1          ;check for divide-by-zero
+      BEQ   QHOW       ;if so, say "How?"
+      MOVE.L 01,D2 
+      MOVE.L D1,D4
+      EOR.L D0,D4       ;see if the signs are the same
+      TST.L D0          ;take absolute value of D0
+      BPL   DIV1
+      NEG.L D0
+DIV1  TST.L D1          ;take absolute value of D1
+      BPL   DIV2
+      NEG.L D1
+
 
 
 
