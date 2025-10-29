@@ -37,7 +37,7 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 	auto errs = errorsList.get();
 	if (!errs.empty())
 	{
-		std::cout << "Errors found during parsing:" << std::endl;
+		std::cout << errs.size() << " errors found during parsing:" << std::endl;
 		for (const auto& error : errs)
 		{
 			std::cout << error.toString() << std::endl;

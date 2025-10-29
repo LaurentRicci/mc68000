@@ -1071,6 +1071,68 @@ ENDCHK BSR    IGNBLK
        CMPI.B  #CR,(A0)       ;does it end with a CR?
        BNE    QWHAT          ;if not, say "WHAT?"
        RTS
+       
+QWHAT   MOVE.L   A0,-(SP)
+AWHAT   LEA      WHTMSG,A6
+ERROR   BSR      PRMESG           ;display the error message
+        MOVE.L   (SP)+,A0         ;restore the text pointer
+        MOVE.L   CURRNT,D0        ;get the current line number
+        BEQ       WSTART          ;if zero, do a warm start
+        CMP.L    #-1,D0           ;is the line no. pointer * -1?
+        BEQ      INPERR           ;if so, redo Input
+        MOVE.B   (A0),-(SP)        ;save the char. pointed to
+        CLR.B    (A0)             ;put a zero where the error is
+        MOVE.L   CURRNT,A1        ;point to start of current line
+        BSR      PRTLN            ;display the line in error up to the 0
+        MOVE.B   (SP)+, (A0)      ;restore the character
+        MOVE.B   #'?',D0          ;display a "?"
+        BSR      GOOUT
+        CLR      D0
+        SUBQ.L   #1,A1            ;point back to the error char.
+        BSR      PRTSTG           ;display the rest of the line
+        BRA      WSTART           ;and do a warm start
+QSORRY MOVE.L    A0,-(SP)
+ASORRY LEA       SRYMSG,A6
+        BRA      ERROR
+QHOW    MOVE.L   A0,-(SP)         ;Error: "How?"
+AHOW    LEA      HOWMSG,A6
+        BRA      ERROR
+*
+********************************************************************
+*
+* on GETLN *** FNDLN (4 friends) ***
+*
+* 'GETLN' reads in input line into 'BUFFER'. It first prompts with
+* the character in D0 (given by the caller), then it fills the
+* buffer and echos. It ignores LF's but still echos
+* them back. Control-H is used to delete the last character
+* entered (if there is one), and control-K is used to delete the
+* whole line and start over again. CR signals the end of a line,
+* and causes 'GETLN' to return.
+*
+* 'FNDLN' finds a line with a given line no. lin Dl) in the
+* text save area. Al is used as the text pointer. If the line
+* is found, Al will point to the beginning of that line
+* (i.e. the high byte of the line no.), and flags are NC G Z.
+* If that line is not there and a line with a higher line no.
+* is found, Al points there and flags are NC d NZ. If we reached
+* the end of the text save area and cannot find the line, flags
+* are C 6 NZ.
+* 'FNDLN' will initialize Al to the beginning of the text save
+* area to start the search. Some other entries of this routine
+* will not initialize Al and do the search.
+* 'FNDLNP' will start with Al and search for the line no.
+* 'FNDNXT' will bump Al by 2, find a CR and then start search.
+* 'FNDSKP' uses Al to find a CR, and then starts the search.
+*
+GETLN   BSR      GOOUT            ;display the prompt
+        MOVE.B   #' ',D0          ;and a space
+        BSR      GOOUT
+        LEA      BUFFER,A0        ;A0 is the buffer pointer
+GL1     BSR      CHKIO            ;check keyboard
+        BEQ      GL1              ;wait for a char. to come in
+        CMP.B    #CTRLH,D0        ;delete last character?
+
 
 
 
