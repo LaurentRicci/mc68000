@@ -1,20 +1,20 @@
-• to the caller. If underline, outputs a CR without a LF. If single
-• or double quote, prints the quoted string and demands a matching
-• end quote. After the printing, the next 2 bytes of the caller are
-• skipped over (usually a short branch instruction).
-•
-• 'PRTNUM' prints the 32 bit number in DI, leading blanks are added if
-• needed to pad the number of spaces to the number in D4.
-• However, if the number of digits is larger than the no. in
-• D4, all digits are printed anyway. Negative sign is also
-• printed and counted in, positive sign is not.
-•
-• 'PRTLN' prints the saved text line pointed to by Al
-• with line no. and all.
-•
+* to the caller. If underline, outputs a CR without a LF. If single
+* or double quote, prints the quoted string and demands a matching
+* end quote. After the printing, the next 2 bytes of the caller are
+* skipped over (usually a short branch instruction).
+*
+* 'PRTNUM' prints the 32 bit number in DI, leading blanks are added if
+* needed to pad the number of spaces to the number in D4.
+* However, if the number of digits is larger than the no. in
+* D4, all digits are printed anyway. Negative sign is also
+* printed and counted in, positive sign is not.
+*
+* 'PRTLN' prints the saved text line pointed to by Al
+* with line no. and all.
+*
 PRTSTG MOVE.B D0,D1            ;save the stop character
 PSI     MOVE.B (A1)+,D0        ;get a text character
-        CMP.B  DO,D1           ;same as stop character?
+        CMP.B  D0,D1           ;same as stop character?
         BEQ    PRTRET          ;if so, return
         BSR    GOOUT           ;display the char.
         CMP.B  NCR,D0          ;is it a C.R.?
@@ -23,40 +23,40 @@ PSI     MOVE.B (A1)+,D0        ;get a text character
         BSR    GOOUT
 PRTRET RTS                     ;then return
 
-QTSTG   BSR.L  TSTC            ;••• OTSTG •••
-        DC.B   "',01T3-* 
-        MOVE.8 O'"',D0         ;it is a"
-QT1     MOVE.L AO,A1 
+QTSTG   BSR    TSTC            ;*** OTSTG ***
+        DC.B   '"',QT3-* 
+        MOVE.B #'"',D0         ;it is a"
+QT1     MOVE.L A0,A1 
         BSR    PRTSTG          ;print until another
-        MOVE.L A1,AO 
+        MOVE.L A1,A0 
         MOVE.L (SP)+,A1        ;pop return address 
         CMP.B  OLF,D0          ;was last one a CR? 
-        BEG    RUNNXL          ;if so, run next line
+        BEQ    RUNNXL          ;if so, run next line
 QT2     ADDQ.L #2,A1           ;skip 2 bytes on return 
-        JMP    (Al)            ;return
-QT3     BSR.L  TSTC            ;is it a single quote?
-        DC.B   "",QT4-*
-        MOVE.B 11"",00         ;if 30, do same as above
+        JMP    (A1)            ;return
+QT3     BSR    TSTC            ;is it a single quote?
+        DC.B   ''',QT4-* 
+        MOVE.B #''',D0         ;if so, do same as above
         BRA    QT1
-QT4     BSR.L  TSTC            ;is it an underline?
-        DC.B 
-        MOVE.B OCR,D0          ;if so, output a CR without LF 
-        BSR.L  GOOUT 
+QT4     BSR    TSTC            ;is it an underline?
+        DC.B  '_', QT5-*
+        MOVE.B #CR,D0          ;if so, output a CR without LF 
+        BSR    GOOUT 
         MOVE.L (SP)+,A1        ;pop return address
         BRA    QT2
 QT5     RTS                    ;none of the above
 
 PRTNUM MOVE.L  D1,D3           ;save the number for later
         MOVE   D4,-(SP)        ;save the width value
-        MOVE.B #$FF,-(Sp)      ;flag for end of digit string 
-        TST.L  DI              ;is it negative?
+        MOVE.B #$FF,-(SP)      ;flag for end of digit string 
+        TST.L  D1              ;is it negative?
         BPL    PN1             ;if not
-        NEG.L  DI              ;else make it positive 
-        SUBQ   01,04           ;one less for width count
+        NEG.L  D1              ;else make it positive 
+        SUBQ   #1,D4           ;one less for width count
 PN1     DIVU   #10, D1         ;get the next digit 
         BVS    PNOV            ;overflow flag set?
         MOVE.L D1, D0          ;if not, save remainder 
-        AND.L  liSFEFF,D1      ;strip the remainder 
+        AND.L  #$FFFF,D1      ;strip the remainder 
         BRA    TOASCII         ;skip the overflow stuff
 PNOV    MOVE   D1,D0           ;prepare for long word division
-
+
