@@ -4,6 +4,7 @@
 #include "errors.h"
 
 using namespace antlr4;
+using namespace std;
 
 class visitor : public parser68000BaseVisitor
 {
@@ -18,12 +19,16 @@ public:
 private:
     std::vector<uint16_t>& code;                       // the assembly code as a results of the parsing
     std::vector<uint16_t> extensionsList;              // the list of extra words for the addressing mode
-	std::vector<uint8_t> dcBytes;                      // the data in the dc section
-    std::map<std::string, uint32_t>& labels;           // the labels found in the code label -> index
     int pass = 0;                                      // the current pass (0 = first pass, 1 = second pass)
     uint32_t currentAddress = 0;                       // the current address in the code
-	bool incompleteBinary = false;                     // true if the last instruction was a dc.b with an odd number of bytes
     uint16_t size = 1;                                 // the size of the current instruction
+
+    std::map<std::string, uint32_t>& labels;           // the labels found in the code label -> index
+    map<string, any> symbols;                          // the symbol table (from the EQU directive)
+
+	std::vector<uint8_t> dcBytes;                      // the data in the dc section
+	bool incompleteBinary = false;                     // true if the last instruction was a dc.b with an odd number of bytes
+    parser68000::LabelSectionContext* labelCtx;        // the current label section
 
     mc68000::errors& errorList;                        // the list of errors found during the parsing
 
@@ -127,6 +132,7 @@ private:
     // directives
     // ====================================================================================================
     virtual std::any visitDc(parser68000::DcContext* ctx) override;
+    virtual std::any visitEqu(parser68000::EquContext* ctx) override;
     virtual std::any visitDataList(parser68000::DataListContext* ctx) override;
 	virtual std::any visitExpression(parser68000::ExpressionContext* ctx) override;
     virtual std::any visitAdditiveExpr(parser68000::AdditiveExprContext* ctx) override;
@@ -143,7 +149,9 @@ private:
     virtual std::any visitRegisterListRange(parser68000::RegisterListRangeContext* ctx) override;
     virtual std::any visitRegisterRange(parser68000::RegisterRangeContext* ctx) override;
 
+    // ====================================================================================================
     // Addressing modes
+    // ====================================================================================================
     std::any visitDRegister(parser68000::DRegisterContext* context) override;
     std::any visitARegister(parser68000::ARegisterContext* context) override;
     std::any visitARegisterIndirect(parser68000::ARegisterIndirectContext* context) override;
@@ -166,7 +174,9 @@ private:
     std::any visitAdRegister(parser68000::AdRegisterContext* ctx) override;
     std::any visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx) override;
 
-	// enumeration support
+    // ====================================================================================================
+    // enumeration support
+    // ====================================================================================================
     virtual std::any visitSize(parser68000::SizeContext* ctx) override {
         return ctx->value;
     }
@@ -243,7 +253,9 @@ private:
         return ctx->value;
     }
 
+    // ====================================================================================================
     // Utilities
+    // ====================================================================================================
     inline uint16_t aRegister(const std::string& s)
     {
         if (s == "p" || s == "P")

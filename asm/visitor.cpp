@@ -64,7 +64,11 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 {
 	if (pass == 0 && !ctx->value.empty())
 	{
-		if (labels.find(ctx->value) == labels.end())
+		if (symbols.find(ctx->value) != symbols.end())
+		{
+			addPass0Error("Label name conflicts with symbol: " + ctx->value, ctx);
+		}
+		else if (labels.find(ctx->value) == labels.end())
 		{
 			labels[ctx->value] = currentAddress;
 		}
@@ -1183,12 +1187,13 @@ any visitor::visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx)
 }
 
 /// <summary>
-/// MOVEQ HASH number COMMA dRegister
+/// MOVEQ HASH address COMMA dRegister
 /// </summary>
 any visitor::visitMoveq(parser68000::MoveqContext* ctx)
 {
 	size = 2;
-	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[2]));
+	int32_t immediate_data = getAddressValue(ctx->address());
+
 	if (immediate_data < -128 || immediate_data > 127)
 	{
 		addError("Immediate data for MOVEQ must be between -128 and 127", ctx->children[1]);
@@ -1708,19 +1713,37 @@ uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
 	if (address.type() == typeid(std::string))
 	{
 		std::string label = any_cast<std::string>(address);
-		auto it = labels.find(label);
-		if (it == labels.end())
+		// search first for a symbol
+		auto it = symbols.find(label);
+		if (it != symbols.end())
 		{
-			// During the 1st pass the label may not be defined yet
-			if (pass != 0)
+			if (it->second.type() != typeid(int32_t))
 			{
-				addError("Label not found: " + label, ctx);
+				addError("Argument is not an number: " + label, ctx);
+				target = 0;
 			}
-			target = 0;
+			else
+			{
+				target = static_cast<uint32_t>(any_cast<int32_t>(it->second));
+			}
 		}
 		else
 		{
-			target = it->second;
+			// then search for a label
+			auto it = labels.find(label);
+			if (it == labels.end())
+			{
+				// During the 1st pass the label may not be defined yet
+				if (pass != 0)
+				{
+					addError("Label not found: " + label, ctx);
+				}
+				target = 0;
+			}
+			else
+			{
+				target = it->second;
+			}
 		}
 	}
 	else if (address.type() == typeid(char))

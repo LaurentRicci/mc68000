@@ -1769,6 +1769,17 @@ BOOST_AUTO_TEST_CASE(moveq_outOfRange)
 	auto opcode = parser.parseText("  moveq #1234, d6\n");
 	BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 }
+BOOST_AUTO_TEST_CASE(moveq_label)
+{
+	asmparser parser;
+	parser.parseText("here: nop\n  moveq #here, d6\n");
+
+	BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(2, code.size());
+	BOOST_CHECK_EQUAL(0x7c00, code[1]);
+
+}
 // ====================================================================================================
 // MULS
 // ====================================================================================================

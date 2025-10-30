@@ -31,10 +31,13 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 		auto s = tree->toStringTree(&parser);
 		std::cout << "Parse Tree: " << s << std::endl;
 	}
+	visitor v(code, labels, labelsLocation, errorsList);
+	auto result = v.generateCode(tree);
+
 	auto errs = errorsList.get();
 	if (!errs.empty())
 	{
-		std::cout << "Errors found during parsing:" << std::endl;
+		std::cout << errs.size() << " errors found during parsing:" << std::endl;
 		for (const auto& error : errs)
 		{
 			std::cout << error.toString() << std::endl;
