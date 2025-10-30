@@ -6,14 +6,17 @@ using namespace mc68000;
 any visitor::visitLine_directiveSection(parser68000::Line_directiveSectionContext* ctx)
 {
 	size = 1;
-	any result = ctx->children[1]->accept(this);
+	labelCtx = ctx->labelSection();
+	any result = visit(ctx->directiveSection());
 	return result;
 }
 
 any visitor::visitDc(parser68000::DcContext* ctx)
 {
-	size = any_cast<uint16_t>(visit(ctx->children[1]));
-	visit(ctx->children[2]);
+	visitLabelSection(labelCtx);
+
+	size = any_cast<uint16_t>(visit(ctx->size()));
+	visit(ctx->dataList());
 	if (size == 0)
 	{
 		size_t start = 0;
@@ -46,6 +49,33 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 		return *code.rbegin();
 	}
 	return *code.rbegin();
+}
+any visitor::visitEqu(parser68000::EquContext* ctx)
+{
+	if (labelCtx->value.empty())
+	{
+		addError("Missing label in EQU directive", ctx);
+	}
+	else
+	{
+		any value = visit(ctx->expression());
+		if (pass == 0)
+		{
+			if (labels.find(labelCtx->value) != labels.end())
+			{
+				addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
+			}
+			else if (symbols.find(labelCtx->value) == symbols.end())
+			{
+				symbols[labelCtx->value] = value;
+			}
+			else
+			{
+				addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
+			}
+		}
+	}
+	return any();
 }
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)
@@ -213,9 +243,17 @@ any visitor::visitDleString(parser68000::DleStringContext* ctx)
 
 any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 {
-	uint32_t target;
+	std::string label = ctx->ID2()->getText();
 
-	std::string label = ctx->children[0]->getText();
+	// First check if the identifier is a symbol
+	auto symbol = symbols.find(label);
+	if (symbol != symbols.end())
+	{
+		return symbol->second;
+	}
+
+	// then search for a label
+	uint32_t target;
 	auto it = labels.find(label);
 	if (it == labels.end())
 	{

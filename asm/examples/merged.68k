@@ -41,11 +41,11 @@ BUFLEN  EQU 80   ;length of keyboard input butter
 *
 START   BRA   CSTART    ; Cold Start entry point
 GOWARM  BRA   WSTART    ; Warm Start entry point
-GOOOT   BRA   OUTC      ; Jump to character-out routine
-COIN    BRA   INC       ; jump to character-in routine
+GOOUT   BRA   OUTC      ; Jump to character-out routine
+GOIN    BRA   INC       ; jump to character-in routine
 GOAUXO  BRA   AUXOUT    ; Jump to auxiliary-out routine
 GOAUXI  BRA   AUXIN     ; Jump to auxiliary-in routine
-GOBYE   BRA    BYEBYE   ; Jump to monitor, DOS, etc.
+GOBYE   BRA   BYEBYE    ; Jump to monitor, DOS, etc.
 *	
 * Modifiable system constants:
 TXTBGN DC.L	TXT         ; beginning of program memory
@@ -166,7 +166,7 @@ TAB4   DC.B   'PEE',   ('K'+$80)   ;Functions
        DC.B   'AB',    ('S'+$80)
        DC.B   'SIZ',   ('E'+$80)
        DC.B   0
-TABS   DC.B   'T',     ('O'+$80)   ;'TO" in "FCR"
+TAB5   DC.B   'T',     ('O'+$80)   ;'TO" in "FCR"
        DC.B   0
 TAB6   DC.B   'STE',   ('P'+$80)   ;"STEP" in "FOR"
        DC.B   0
@@ -471,7 +471,7 @@ FOR     BSR     PUSHA           ;save the old 'FOR' save area
         LEA     TAB5,A1         ;use 'EXEC' to test for 'TO'
         LEA     TAB5_1,A2 
         BRA     EXEC
-FRI     BSR     EXPR          ;evaluate the limit
+FR1     BSR     EXPR          ;evaluate the limit
         MOVE.L  D0, LOPLMT    ;save that
         LEA     TAB6, A1      ;use 'EXEC' to look for the 
         LEA     TAB6_1,A2     ;word 'STEP'
@@ -519,7 +519,7 @@ NX1     CMP.L   D0,D1         ;test against limit
         MOVE.L  LOPLN, CURRNT ;Within limit, go back to the... 
         MOVE.L  LOPPT, A0     ;saved 'CURRNT' and text pointer.
         BRA     FINISH
-NX2     BSR     PCPA          ;purge this loop
+NX2     BSR     POPA          ;purge this loop
         BRA     FINISH
 
 *
@@ -769,7 +769,7 @@ XP11    BSR     XP18           ;is it *>"?
         BRA     XPRT1          ;else return Deal
 XP12   BSR    XP18             ;is it "<>"?
        BEQ    XPRT0            ;no, return D0=O
-       BRA    XPRTI            ;else return D0=1
+       BRA    XPRT1            ;else return D0=1
 
 XP13   BSR    XP18             ;is it ">"?
        BLE    XPRT0            ;no, return D0=0
@@ -877,8 +877,8 @@ TSTV  BSR    IGNBLK
       SUB.B  #'0',D0
       BCS    TSTVRT       ;C=1: not a variable
       BNE    TV1          ;branch if not "s" array
-      ADDQ   #1,AO        ;If it is, it should be
-      BSR    PARR         ;followed by (EXPR) as its index.
+      ADDQ   #1,A0        ;If it is, it should be
+      BSR    PARN         ;followed by (EXPR) as its index.
       ADD.L  D0,D0
       BCS    QHOW         ;say "How?" if index is too big
       ADD.L  D0,D0
@@ -1100,7 +1100,7 @@ AHOW    LEA      HOWMSG,A6
 *
 ********************************************************************
 *
-* on GETLN *** FNDLN (4 friends) ***
+* *** GETLN *** FNDLN (4 friends) ***
 *
 * 'GETLN' reads in input line into 'BUFFER'. It first prompts with
 * the character in D0 (given by the caller), then it fills the
@@ -1133,7 +1133,7 @@ GL1     BSR      CHKIO            ;check keyboard
         BEQ      GL1              ;wait for a char. to come in
         CMP.B    #CTRLH,D0        ;delete last character?
         BEQ    GL3            ;if so
-        CMP.B  #CTRIX,D0      ;delete the whole line?
+        CMP.B  #CTRLX,D0      ;delete the whole line?
         BEQ    GL4            ;if so
         CMP.B  #CR, D0        ;accept a CR
         BEQ    GL2
@@ -1141,7 +1141,7 @@ GL1     BSR      CHKIO            ;check keyboard
         BCS    GL1
 GL2     MOVE.B D0,(A0)+       ;save the char.
         BSR    GOOUT          ;echo the char back out
-        CMP.B  ICR,D0         ;if it's a CR, end the line
+        CMP.B  #CR,D0         ;if it's a CR, end the line
         BEQ    GL7
 *****        CMP.L  #(BUFFER+BUFLEN-1),A0 ;any more room?
         CMPA.L  #BUFFER,A0     ;TODO fixi it
@@ -1160,7 +1160,7 @@ GL4     MOVE.L A0,D1          ;delete the whole line
         SUB.L  #BUFFER,D1     ;figure out how many backspaces we need
         BEQ    GL6            ;if none needed, branch
         SUBQ   #1,D1          ;adjust for DBRA
-GL5     MOVE.B ICTRLH,D0      ;and display BS-space-BS sequences
+GL5     MOVE.B #CTRLH,D0      ;and display BS-space-BS sequences
         BSR    GOOUT
         MOVE.B #' ',D0
         BSR    GOOUT
@@ -1246,14 +1246,14 @@ PU1      MOVE.L     D1,-(SP)
 *
 ********************************************************************
 *
-* *** PRTSTG '6* QTSTG       ;PRTNUM *** PRTLN
+* *** PRTSTG *** QTSTG *** PRTNUM *** PRTLN
 *
 * 'PRTSTG' prints a string pointed to by Al. It stops printing
 * and returns to the caller when either a CR Is printed or when
 * the next byte is the same as what was passed in DO by the
 * caller.
 *
-* 'OTSTG' looks for an underline (back-arrow on some systems),
+* 'QTSTG' looks for an underline (back-arrow on some systems),
 * single-quote, or double-quote. If none of these are found, returns
 * to the caller. If underline, outputs a CR without a LF. If single
 * or double quote, prints the quoted string and demands a matching
@@ -1274,9 +1274,9 @@ PSI     MOVE.B (A1)+,D0        ;get a text character
         CMP.B  D0,D1           ;same as stop character?
         BEQ    PRTRET          ;if so, return
         BSR    GOOUT           ;display the char.
-        CMP.B  NCR,D0          ;is it a C.R.?
+        CMP.B  #CR,D0          ;is it a C.R.?
         BNE    PSI             ;no, go back for more
-        MOVE.B MLF,D0          ;yes, add a L.F.
+        MOVE.B #LF,D0          ;yes, add a L.F.
         BSR    GOOUT
 PRTRET RTS                     ;then return
 
@@ -1287,7 +1287,7 @@ QT1     MOVE.L A0,A1
         BSR    PRTSTG          ;print until another
         MOVE.L A1,A0 
         MOVE.L (SP)+,A1        ;pop return address 
-        CMP.B  OLF,D0          ;was last one a CR? 
+        CMP.B  #LF,D0          ;was last one a CR? 
         BEQ    RUNNXL          ;if so, run next line
 QT2     ADDQ.L #2,A1           ;skip 2 bytes on return 
         JMP    (A1)            ;return
@@ -1442,7 +1442,7 @@ DOQUO  TST.B  D1            ;are we inside quotes?
 DOQUO1 CMP.B      D0,D1             ;make sure we're ending proper quote
          BNE      TOUPB1            ;if not, ignore it
          CLR.B    D1                ;else clear quote flag
-         BRA      TOUPBI
+         BRA      TOUPB1
 
 *
 * ===== Convert the character in D0 to upper case

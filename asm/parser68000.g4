@@ -8,10 +8,10 @@ options
 prog : (line (EOL | EOL2))* EOF ;
 
 line
-    : labelSection? instructionSection COMMENT?  #line_instructionSection
-    | labelSection? directiveSection COMMENT?    #line_directiveSection
-    | labelSection                               #line_labelSection
-    | commentLine                                #line_commentLine
+    : labelSection instructionSection COMMENT?  #line_instructionSection
+    | labelSection directiveSection COMMENT?    #line_directiveSection
+    | labelSection                              #line_labelSection
+    | commentLine                               #line_commentLine
     ;
 
 labelSection returns [std::string value]
@@ -328,7 +328,7 @@ movep
     ;
 
 moveq
-    : MOVEQ HASH number COMMA dRegister
+    : MOVEQ HASH address COMMA dRegister
     ;
 
 muls
@@ -574,7 +574,7 @@ directive
     | DCB size?
     | DS size?  number
     | END  address
-    | EQU expression
+    | equ
     | FAIL
     | INCLUDE
     | INCBIN
@@ -590,10 +590,12 @@ directive
     | SIMHALT
     ;
 
-dc
-    : DC size  dataList
-    ;
+dc  : DC size  dataList ;
+equ : EQU expression ;
 
+// ============================================
+// Directivess arguments
+//=============================================
 dataList
     : expression (COMMA expression)*
     ;

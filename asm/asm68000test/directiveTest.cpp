@@ -6,6 +6,34 @@ namespace directiveTest
 {
 	BOOST_AUTO_TEST_SUITE(directiveTest)
 
+	// ====================================================================================================
+	// DIRECTIVE TESTS
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(dc_hasLabel)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText("lbl dc.b 10\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 1);
+	}
+		
+	BOOST_AUTO_TEST_CASE(dc_labelUsable)
+	{
+		asmparser parser;
+		parser.parseText(" nop\nLBL dc.b 42,42\n lea LBL,a0\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 1);
+		auto code = validate_codeSize(parser, 4);
+		BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+		BOOST_CHECK_EQUAL(0x2a2a, code[1]); // 42,42
+		BOOST_CHECK_EQUAL(0x41f8, code[2]); // lea instruction
+		BOOST_CHECK_EQUAL(0x0002, code[3]); // LBL address
+	}
+	// ====================================================================================================
+	// DC.B
+	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcb_byte)
 	{
 		asmparser parser;
@@ -229,6 +257,77 @@ namespace directiveTest
 
 		BOOST_CHECK_EQUAL(0x0000, code[4]); // 10
 		BOOST_CHECK_EQUAL(0x0081, code[5]); // 129
+	}
+	// ====================================================================================================
+	// EQU
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(equ_instruction)
+	{
+		asmparser parser;
+		parser.parseText("X EQU 42\n moveq #X,d0\n");
+
+		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(0x702A, code[0]);
+	}
+
+	BOOST_AUTO_TEST_CASE(equ_directive)
+	{
+		asmparser parser;
+		parser.parseText("X EQU 42\n dc.b X,X\n");
+
+		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(0x2A2A, code[0]);
+	}
+
+	BOOST_AUTO_TEST_CASE(equ_mixed)
+	{
+		asmparser parser;
+		parser.parseText("CR EQU $0d \nCODE CMPI.B #CR,(A0) \n DC.B CR\n");
+
+		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(3, code.size());
+		BOOST_CHECK_EQUAL(0x0c10, code[0]);
+		BOOST_CHECK_EQUAL(0x000d, code[1]);
+		BOOST_CHECK_EQUAL(0x0d00, code[2]);
+	}
+	BOOST_AUTO_TEST_CASE(equ_expression)
+	{
+		asmparser parser;
+		parser.parseText("X EQU 'x' \nY EQU 'y' \n DC.B X,Y\n");
+
+		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(1, code.size());
+		BOOST_CHECK_EQUAL(0x7879, code[0]);
+	}
+
+	BOOST_AUTO_TEST_CASE(equ_numeric_expression)
+	{
+		asmparser parser;
+		parser.parseText("X EQU 42 \nY EQU 43 \n DC.B X+Y\n");
+
+		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(1, code.size());
+		BOOST_CHECK_EQUAL(0x5500, code[0]);
+	}
+
+	BOOST_AUTO_TEST_CASE(equ_symbol_label)
+	{
+		asmparser parser;
+		parser.parseText("X EQU 42 \nX nop\n");
+
+		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+	}
+	BOOST_AUTO_TEST_CASE(equ_label_symbol)
+	{
+		asmparser parser;
+		parser.parseText("X nop \nX EQU 42 \n");
+
+		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 	// ====================================================================================================
 	// Expression
