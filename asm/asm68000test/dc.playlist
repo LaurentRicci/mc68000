@@ -204,6 +204,78 @@
                         <Property Name="DisplayName" Value="dcb_directivename" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/directive1" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="directive1" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/direct_label" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="direct_label" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_simple" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_simple" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_mixed" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_mixed" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_directive" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_directive" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_instruction" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_instruction" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_expression" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_expression" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_label_symbol" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_label_symbol" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_symbol_label" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_symbol_label" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_numeric_expression" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_numeric_expression" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dc_labelUsable" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dc_labelUsable" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dc_hasLabel" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dc_hasLabel" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

@@ -11,3 +11,20 @@ void validate_hasValue(T expected, std::any result)
 
 	BOOST_CHECK_EQUAL(expected, actual);
 }
+
+inline void validate_noErrors(const asmparser& parser)
+{
+	BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+}
+
+inline void validate_labelsCount(const asmparser& parser, size_t expectedCount)
+{
+	BOOST_CHECK_EQUAL(expectedCount, parser.getLabels().size());
+}
+
+inline const std::vector<uint16_t>& validate_codeSize(const asmparser& parser, size_t expectedSize)
+{
+	const std::vector<uint16_t>& code = parser.getCode();
+	BOOST_CHECK_EQUAL(expectedSize, code.size());
+	return code;
+}
