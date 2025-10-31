@@ -133,6 +133,7 @@ private:
     // ====================================================================================================
     virtual std::any visitDc(parser68000::DcContext* ctx) override;
     virtual std::any visitEqu(parser68000::EquContext* ctx) override;
+    virtual std::any visitDs(parser68000::DsContext* ctx) override;
     virtual std::any visitDataList(parser68000::DataListContext* ctx) override;
 	virtual std::any visitExpression(parser68000::ExpressionContext* ctx) override;
     virtual std::any visitAdditiveExpr(parser68000::AdditiveExprContext* ctx) override;
@@ -272,9 +273,10 @@ private:
     bool isValidAddressingMode(unsigned short ea, unsigned short acceptable);
     std::any visitDiv(tree::ParseTree* ctx, bool isSigned);
     std::any visitMul(tree::ParseTree* ctx, bool isSigned);
-    std::any visitAbsoluteSize(tree::ParseTree* ctx, int size);
+    std::any visitAbsoluteSize(parser68000::AddressContext* ctx, int size);
     std::any visitShiftRegister(tree::ParseTree* ctx, uint16_t code);
     std::any visitShiftImmediate(tree::ParseTree* ctx, uint16_t code);
     std::any visitShiftAddressingMode(tree::ParseTree* ctx, uint16_t code);
-	uint32_t getAddressValue(tree::ParseTree* ctx);
+	uint32_t getAddressValue(parser68000::AddressContext* ctx);
+    int32_t getIntegerValue(parser68000::AddressContext* ctx);
 };

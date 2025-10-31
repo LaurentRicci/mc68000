@@ -17,6 +17,11 @@ inline void validate_noErrors(const asmparser& parser)
 	BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
 }
 
+inline void validate_errorsCount(const asmparser& parser, size_t expectedCount)
+{
+	BOOST_CHECK_EQUAL(expectedCount, parser.getErrors().get().size());
+}
+
 inline void validate_labelsCount(const asmparser& parser, size_t expectedCount)
 {
 	BOOST_CHECK_EQUAL(expectedCount, parser.getLabels().size());
