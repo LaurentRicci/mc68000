@@ -280,7 +280,7 @@ lea
     ;
 
 link
-    : LINK aRegister COMMA immediateData
+    : LINK aRegister COMMA HASH address
     ;
 
 lslLsr
@@ -572,7 +572,7 @@ directiveSection
 directive
     : dc
     | DCB size?
-    | DS size?  number
+    | ds
     | END  address
     | equ
     | FAIL
@@ -592,6 +592,7 @@ directive
 
 dc  : DC size  dataList ;
 equ : EQU expression ;
+ds  : DS size? address ;
 
 // ============================================
 // Directivess arguments

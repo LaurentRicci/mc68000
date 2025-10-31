@@ -67,7 +67,7 @@ WSTART  CLR.L    D0             ;Initialize internal variables
         MOVE.L  D0, STKGOS
         MOVE.L  D0, CURRNT     ;current line number pointer - 0 
         MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
-        LEA     ONMSG,A6       ;display "OK"
+        LEA     OKMSG,A6       ;display "OK"
         BSR     PRMESG
 ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
         BSR     GETLN          ;read a line.
@@ -87,7 +87,7 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         BSR     FNDLN          ;find this line in save area 
         MOVE.L  A1,A5          ;save possible line pointer 
         BNE     ST4            ;if not found, insert
-        BSR     ENDNXT         ;find the next line (into A1) 
+        BSR     FNDNXT         ;find the next line (into A1) 
         MOVE.L  A5,A2          ;pointer to line to be deleted 
         MOVE.L  TXTUNF, A3     ;points to top of save area 
         BSR     MVUP           ;move up to delete
@@ -1230,7 +1230,7 @@ POPA     MOVE.L     (SP)+,A6           ;A6 = return address
          MOVE.L     (SP)+,LOPPT
 PP1      JMP        (A6)               ;return
 
-PUSKA    MOVE.L     STKLMT,D1          ;Are we running out of stack room?
+PUSHA   MOVE.L     STKLMT,D1          ;Are we running out of stack room?
          SUB.L      SP,D1
          BCC        QSORRY             ;if so, say we're sorry
          MOVE.L     (SP)+,A6           ;else get the return address 
@@ -1535,7 +1535,7 @@ BYEBYE  MOVE.B    #228,D7                  ;return to Tutor
 INITMSG DC.B      CR,LF,'Gordo"s MC68000 Tiny BASIC, v1.2',CR,LF,LF,0 
 OKMSG   DC.B      CR,LF,'OK',CR,LF,0
 HOWMSG  DC.B      'How?',CR,LF,0
-NHTMSG  DC.B      'What?',CR,LF,0
+WHTMSG  DC.B      'What?',CR,LF,0
 SRYMSG  DC.B      'Sorry.'
 CLMSG   DC.B      CR,LF,0
         DC.B      0                  ; <- for aligning on a word boundary

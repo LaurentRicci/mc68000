@@ -486,7 +486,7 @@ any visitor::visitBcc(parser68000::BccContext* ctx)
 {
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 
-	uint32_t target = getAddressValue(ctx->children[1]);
+	uint32_t target = getAddressValue(ctx->address());
 	any address = visit(ctx->children[1]);
 
 	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
@@ -688,7 +688,7 @@ any visitor::visitDbcc(parser68000::DbccContext* ctx)
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
 
-	uint32_t target = getAddressValue(ctx->children[3]);
+	uint32_t target = getAddressValue(ctx->address());
 	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
 	if (offset > 0x7fff || offset < -0x8000) 
 	{
@@ -879,7 +879,14 @@ any visitor::visitLink(parser68000::LinkContext* ctx)
 {
 	size = 1;
 	uint16_t aReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
-	any _ = visit(ctx->children[3]);
+	int32_t displacement = getIntegerValue(ctx->address());
+	if (displacement > 0x7fff || displacement < -0x8000)
+	{
+		addError("Displacement doesn't fit on in one word: " + std::to_string(displacement), ctx->address());
+	}
+	uint16_t data16 = (uint16_t)(displacement & 0xffff);
+	extensionsList.push_back(data16);
+
 	uint16_t opcode = 0b0100'1110'0101'0'000 | aReg;
 	return finalize_instruction(opcode);
 }
@@ -1192,7 +1199,7 @@ any visitor::visitMovep_fromMemory(parser68000::Movep_fromMemoryContext* ctx)
 any visitor::visitMoveq(parser68000::MoveqContext* ctx)
 {
 	size = 2;
-	int32_t immediate_data = getAddressValue(ctx->address());
+	int32_t immediate_data = getIntegerValue(ctx->address());
 
 	if (immediate_data < -128 || immediate_data > 127)
 	{
@@ -1706,7 +1713,7 @@ any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexN
 	return visitARegisterIndirectDisplacement(ctx->children[1], ctx->children[3], ctx->children[5]);
 }
 
-uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
+uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 {
 	any address = visit(ctx);
 	uint32_t target;
@@ -1724,7 +1731,13 @@ uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
 			}
 			else
 			{
-				target = static_cast<uint32_t>(any_cast<int32_t>(it->second));
+				int32_t value = any_cast<int32_t>(it->second);
+				if (value < 0)
+				{
+					addError("Address cannot be negative: " + label, ctx);
+					value = 0;
+				}
+				target = static_cast<uint32_t>(value);
 			}
 		}
 		else
@@ -1761,6 +1774,79 @@ uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
 	}
 	else
 	{
+		int32_t value = any_cast<int32_t>(address);
+		if (value < 0)
+		{
+			addError("Address cannot be negative: " + std::to_string(value), ctx);
+			value = 0;
+		}
+		target = static_cast<uint32_t>(value);
+	}
+	return target;
+}
+int32_t visitor::getIntegerValue(parser68000::AddressContext* ctx)
+{
+	any address = visit(ctx);
+	int32_t target;
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		// search first for a symbol
+		auto it = symbols.find(label);
+		if (it != symbols.end())
+		{
+			if (it->second.type() != typeid(int32_t))
+			{
+				addError("Argument is not an number: " + label, ctx);
+				target = 0;
+			}
+			else
+			{
+				target = any_cast<int32_t>(it->second);
+			}
+		}
+		else
+		{
+			// then search for a label
+			auto it = labels.find(label);
+			if (it == labels.end())
+			{
+				// During the 1st pass the label may not be defined yet
+				if (pass != 0)
+				{
+					addError("Label not found: " + label, ctx);
+				}
+				target = 0;
+			}
+			else
+			{
+				if (it->second > INT32_MAX)
+				{
+					addError("Label value too large for integer: " + label, ctx);
+					target = INT32_MAX;
+				}
+				else
+				{
+					target = static_cast<int32_t>(it->second);
+				}
+			}
+		}
+	}
+	else if (address.type() == typeid(char))
+	{
+		char c = any_cast<char>(address);
+		if (c == '*')
+		{
+			target = this->currentAddress;
+		}
+		else
+		{
+			addError("Syntax error; * expected", ctx);
+			target = 0x5555;
+		}
+	}
+	else
+	{
 		target = any_cast<int32_t>(address);
 	}
 	return target;
@@ -1771,9 +1857,9 @@ uint32_t visitor::getAddressValue(tree::ParseTree* ctx)
 /// </summary>
 /// <param name="ctx">The parse tree context</param>
 /// <param name="size">The size of the absolute address (0 = not provided, 1 = word, 2 = long)</param>
-any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
+any visitor::visitAbsoluteSize(parser68000::AddressContext* ctx, int size)
 {
-	uint32_t target = getAddressValue(ctx->children[0]);
+	uint32_t target = getAddressValue(ctx);
 
 	switch (size)
 	{
@@ -1827,14 +1913,14 @@ any visitor::visitAbsoluteSize(tree::ParseTree* ctx, int size)
 /// </summary>
 any visitor::visitAbsolute(parser68000::AbsoluteContext* ctx)
 {
-	return visitAbsoluteSize(ctx, 0);
+	return visitAbsoluteSize(ctx->address(), 0);
 }
 /// <summary>
 /// Addressing mode for absolute long: 42.W
 /// </summary>
 any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 {
-	return visitAbsoluteSize(ctx, 1);
+	return visitAbsoluteSize(ctx->address(), 1);
 }
 
 /// <summary>
@@ -1842,7 +1928,7 @@ any visitor::visitAbsoluteShort(parser68000::AbsoluteShortContext* ctx)
 /// </summary>
 any visitor::visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx)
 {
-	return visitAbsoluteSize(ctx, 2);
+	return visitAbsoluteSize(ctx->address(), 2);
 }
 
 /// <summary>
@@ -1884,7 +1970,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 {
 	any immediate_data = visit(ctx->children[1]);
 
-	int32_t target = getAddressValue(ctx->children[1]);
+	int32_t target = getAddressValue(ctx->address());
 
 	if (size == 0)
 	{

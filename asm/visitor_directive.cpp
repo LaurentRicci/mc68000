@@ -77,6 +77,55 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
 	}
 	return any();
 }
+any visitor::visitDs(parser68000::DsContext* ctx)
+{
+	if (ctx->size())
+	{
+		size = any_cast<uint16_t>(visit(ctx->size()));
+	}
+	uint32_t count = getAddressValue(ctx->address());
+	if (count <= 0)
+	{
+		addError("Storage size should be a positive integer:" + count, ctx->address());
+		count = 1;
+	}
+	uint32_t bytesNeeded = count * (1 << size);
+
+	if (incompleteBinary)
+	{
+		if (size == 0)
+		{
+			// byte storage starts at current location
+			visitLabelSection(labelCtx);
+
+			// use one byte to complete the last word
+			currentAddress += 1;
+			bytesNeeded -= 1;
+		}
+		else
+		{
+			// storage must start on a word boundary
+			currentAddress += 1;
+			visitLabelSection(labelCtx);
+		}
+		incompleteBinary = false;
+	}
+	else
+	{
+		// already on a word boundary
+		visitLabelSection(labelCtx);
+	}
+	for (uint32_t i = 0; i < bytesNeeded; i += 2)
+	{
+		code.push_back(0);
+	}
+	if ((bytesNeeded) % 2 != 0)
+	{
+		incompleteBinary = true;
+	}
+	currentAddress += bytesNeeded;
+	return *code.rbegin();
+}
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)
 {

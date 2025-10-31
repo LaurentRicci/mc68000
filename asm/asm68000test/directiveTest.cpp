@@ -330,6 +330,133 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 	// ====================================================================================================
+	// DS
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(dsb)
+	{
+		asmparser parser;
+		parser.parseText(" nop\nfrom ds.b 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 6);
+		BOOST_CHECK_EQUAL(0x4e71, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x41f8, code[2]);
+		BOOST_CHECK_EQUAL(0x0002, code[3]);
+		BOOST_CHECK_EQUAL(0x43f8, code[4]);
+		BOOST_CHECK_EQUAL(0x0004, code[5]);
+	}
+
+	BOOST_AUTO_TEST_CASE(dsb_symbol_count)
+	{
+		asmparser parser;
+		parser.parseText("count EQU 2\n nop\nfrom ds.b count\nto lea from,a0\n lea to,a1\n");
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 6);
+		BOOST_CHECK_EQUAL(0x4e71, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x41f8, code[2]);
+		BOOST_CHECK_EQUAL(0x0002, code[3]);
+		BOOST_CHECK_EQUAL(0x43f8, code[4]);
+		BOOST_CHECK_EQUAL(0x0004, code[5]);
+	}
+
+	BOOST_AUTO_TEST_CASE(dsb_align)
+	{
+		asmparser parser;
+		parser.parseText(" dc.b '?'\nfrom ds.b 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 6);
+		BOOST_CHECK_EQUAL(0x3f00, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x41f8, code[2]);
+		BOOST_CHECK_EQUAL(0x0001, code[3]);
+		BOOST_CHECK_EQUAL(0x43f8, code[4]);
+		BOOST_CHECK_EQUAL(0x0004, code[5]);
+	}
+	BOOST_AUTO_TEST_CASE(dsw)
+	{
+		asmparser parser;
+		parser.parseText(" nop\nfrom ds.w 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 7);
+		BOOST_CHECK_EQUAL(0x4e71, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x0000, code[2]);
+		BOOST_CHECK_EQUAL(0x41f8, code[3]);
+		BOOST_CHECK_EQUAL(0x0002, code[4]);
+		BOOST_CHECK_EQUAL(0x43f8, code[5]);
+		BOOST_CHECK_EQUAL(0x0006, code[6]);
+	}
+	BOOST_AUTO_TEST_CASE(dsw_align)
+	{
+		asmparser parser;
+		parser.parseText(" dc.b '?'\nfrom ds.w 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 7);
+		BOOST_CHECK_EQUAL(0x3f00, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x0000, code[2]);
+		BOOST_CHECK_EQUAL(0x41f8, code[3]);
+		BOOST_CHECK_EQUAL(0x0002, code[4]);
+		BOOST_CHECK_EQUAL(0x43f8, code[5]);
+		BOOST_CHECK_EQUAL(0x0006, code[6]);
+	}
+
+	BOOST_AUTO_TEST_CASE(dsl)
+	{
+		asmparser parser;
+		parser.parseText(" nop\nfrom ds.l 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 9);
+		BOOST_CHECK_EQUAL(0x4e71, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x0000, code[2]);
+		BOOST_CHECK_EQUAL(0x0000, code[3]);
+		BOOST_CHECK_EQUAL(0x0000, code[4]);
+		BOOST_CHECK_EQUAL(0x41f8, code[5]);
+		BOOST_CHECK_EQUAL(0x0002, code[6]);
+		BOOST_CHECK_EQUAL(0x43f8, code[7]);
+		BOOST_CHECK_EQUAL(0x000a, code[8]);
+	}
+
+	BOOST_AUTO_TEST_CASE(dsl_align)
+	{
+		asmparser parser;
+		parser.parseText(" dc.b '?'\nfrom ds.l 2\nto lea from,a0\n lea to,a1\n");
+
+		validate_noErrors(parser);
+		validate_labelsCount(parser, 2);
+		auto code = validate_codeSize(parser, 9);
+		BOOST_CHECK_EQUAL(0x3f00, code[0]);
+		BOOST_CHECK_EQUAL(0x0000, code[1]);
+		BOOST_CHECK_EQUAL(0x0000, code[2]);
+		BOOST_CHECK_EQUAL(0x0000, code[3]);
+		BOOST_CHECK_EQUAL(0x0000, code[4]);
+		BOOST_CHECK_EQUAL(0x41f8, code[5]);
+		BOOST_CHECK_EQUAL(0x0002, code[6]);
+		BOOST_CHECK_EQUAL(0x43f8, code[7]);
+		BOOST_CHECK_EQUAL(0x000a, code[8]);
+	}
+
+	BOOST_AUTO_TEST_CASE(ds_negative_count)
+	{
+		asmparser parser;
+		parser.parseText("  ds -20\n");
+		validate_errorsCount(parser, 2);
+	}
+
+	// ====================================================================================================
 	// Expression
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcb_expression)
