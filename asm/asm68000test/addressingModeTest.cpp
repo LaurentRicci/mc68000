@@ -483,6 +483,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x0, code[1]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_immediate_negative)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" move.l #-1, (a0)\n");
+		validate_hasValue<uint16_t>(0b0010'000'010'111'100, opcode);
+
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 3);
+		BOOST_CHECK_EQUAL(0xffff, code[1]);
+		BOOST_CHECK_EQUAL(0xffff, code[2]);
+	}
 	// ====================================================================================================
 	// Usage of keyword as address
 	// ====================================================================================================
