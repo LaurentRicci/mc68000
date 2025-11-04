@@ -410,6 +410,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x41, code[1]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_immediate_quote)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add.b #'''', d0\n");
+
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 2);
+		BOOST_CHECK_EQUAL(0b1101'000'000'111'100, code[0]);
+		BOOST_CHECK_EQUAL(0x0027, code[1]);
+	}
+
 	BOOST_AUTO_TEST_CASE(address_immediate_short_error)
 	{
 		asmparser parser;
@@ -493,6 +504,23 @@ namespace addressing_mode
 		auto code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0xffff, code[1]);
 		BOOST_CHECK_EQUAL(0xffff, code[2]);
+	}
+
+	BOOST_AUTO_TEST_CASE(address_immediate_unsigned)
+	{
+		asmparser parser;
+		parser.parseText(" MOVE.B    #$FF,-(SP) \n move.b #-1,-(sp)\n move.b #255,-(sp)\n move.b #-128,-(sp)\n");
+
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 8);
+		BOOST_CHECK_EQUAL(0x1F3C, code[0]);
+		BOOST_CHECK_EQUAL(0x00ff, code[1]);
+		BOOST_CHECK_EQUAL(0x1F3C, code[2]);
+		BOOST_CHECK_EQUAL(0x00ff, code[3]);
+		BOOST_CHECK_EQUAL(0x1F3C, code[4]);
+		BOOST_CHECK_EQUAL(0x00ff, code[5]);
+		BOOST_CHECK_EQUAL(0x1F3C, code[6]);
+		BOOST_CHECK_EQUAL(0x0080, code[7]);
 	}
 	// ====================================================================================================
 	// Usage of keyword as address

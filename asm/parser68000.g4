@@ -5,7 +5,7 @@ options
     tokenVocab=lexer68000;
 }
 
-prog : (line (EOL | EOL2))* EOF ;
+prog : (line (EOL | EOL2))* (SPACES)? EOF ;
 
 line
     : labelSection instructionSection COMMENT?  #line_instructionSection
