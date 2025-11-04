@@ -276,6 +276,54 @@
                         <Property Name="DisplayName" Value="dc_hasLabel" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsl" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsl" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsw" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsw" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsb" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsb" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsb_align" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsb_align" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsl_align" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsl_align" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsw_align" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsw_align" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/ds_negative_count" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="ds_negative_count" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dsb_symbol_count" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dsb_symbol_count" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

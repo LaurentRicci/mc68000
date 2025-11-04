@@ -352,6 +352,15 @@ BOOST_AUTO_TEST_CASE(addq_invalid)
 	BOOST_CHECK_EQUAL(3, parser.getErrors().get().size());
 }
 
+BOOST_AUTO_TEST_CASE(addq_symbol)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("X EQU 3\n addq #X,d0\n");
+
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0x5640, code[0]);
+}
 // ====================================================================================================
 // ADDX
 // ====================================================================================================
@@ -621,6 +630,22 @@ BOOST_AUTO_TEST_CASE(asl_immediate_w)
 	validate_hasValue<uint16_t>(0xe140, opcode);
 }
 
+BOOST_AUTO_TEST_CASE(asl_symbol)
+{
+	asmparser parser;
+	parser.parseText("X EQU 8\n  asl.w #X,d0\n");
+
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0xe140, code[0]);
+}
+BOOST_AUTO_TEST_CASE(asl_symbol_negative)
+{
+	asmparser parser;
+	parser.parseText("X EQU -8\n  asl.w #X,d0\n");
+
+	validate_errorsCount(parser, 1);
+}
 BOOST_AUTO_TEST_CASE(asl_immediate_error)
 {
 	asmparser parser;
@@ -794,6 +819,23 @@ BOOST_AUTO_TEST_CASE(bchg_Imm_dReg)
 	const std::vector<uint16_t>& code = parser.getCode();
 	BOOST_CHECK_EQUAL(2, code.size());
 	BOOST_CHECK_EQUAL(27, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_symbol)
+{
+	asmparser parser;
+	parser.parseText("X EQU 27\n  bchg #X,d4\n");
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 2);
+	BOOST_CHECK_EQUAL(0b0000'1000'01'000'100, code[0]);
+	BOOST_CHECK_EQUAL(27, code[1]);
+}
+
+BOOST_AUTO_TEST_CASE(bchg_symbol_negative)
+{
+	asmparser parser;
+	parser.parseText("X EQU -27\n  bchg #X,d4\n");
+	validate_errorsCount(parser, 1);
 }
 
 BOOST_AUTO_TEST_CASE(bchg_Imm_ea)
@@ -1461,6 +1503,22 @@ BOOST_AUTO_TEST_CASE(lsl_immediate_b)
 	auto opcode = parser.parseText("  lsl.b #1,d0\n");
 	validate_hasValue<uint16_t>(0b1110'001'1'00'0'01'000, opcode);
 }
+BOOST_AUTO_TEST_CASE(lsl_symbol)
+{
+	asmparser parser;
+	parser.parseText("X EQU 1\n  lsl.b #X,d0\n");
+
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0b1110'001'1'00'0'01'000, code[0]);
+}
+BOOST_AUTO_TEST_CASE(lsl_symbol_negative)
+{
+	asmparser parser;
+	parser.parseText("X EQU -1\n  lsl.b #X,d0\n");
+
+	validate_errorsCount(parser, 1);
+}
 BOOST_AUTO_TEST_CASE(lsr_immediate_b)
 {
 	asmparser parser;
@@ -2092,6 +2150,23 @@ BOOST_AUTO_TEST_CASE(rol_immediate_b)
 	auto opcode = parser.parseText("  rol.b #1,d0\n");
 	validate_hasValue<uint16_t>(0b1110'001'1'00'0'11'000, opcode);
 }
+
+BOOST_AUTO_TEST_CASE(rol_symbol)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("X EQU 1\n  rol.b #X,d0\n");
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0b1110'001'1'00'0'11'000, code[0]);
+}
+
+BOOST_AUTO_TEST_CASE(rol_symbol_negative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("X EQU -1\n  rol.b #X,d0\n");
+	validate_errorsCount(parser, 1);
+}
+
 BOOST_AUTO_TEST_CASE(ror_immediate_b)
 {
 	asmparser parser;
@@ -2168,6 +2243,24 @@ BOOST_AUTO_TEST_CASE(roxl_immediate_b)
 	asmparser parser;
 	auto opcode = parser.parseText("  roxl.b #1,d0\n");
 	validate_hasValue<uint16_t>(0b1110'001'1'00'0'10'000, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(roxl_symbol)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("X EQU 1\n  roxl.b #X,d0\n");
+
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0b1110'001'1'00'0'10'000, code[0]);
+}
+
+BOOST_AUTO_TEST_CASE(roxl_symbol_negative)
+{
+	asmparser parser;
+	auto opcode = parser.parseText("X EQU -1\n  roxl.b #X,d0\n");
+
+	validate_errorsCount(parser, 1);
 }
 BOOST_AUTO_TEST_CASE(roxr_immediate_b)
 {
@@ -2534,6 +2627,22 @@ BOOST_AUTO_TEST_CASE(trap)
     asmparser parser;
     auto opcode = parser.parseText("  trap #5\n");
     validate_hasValue<uint16_t>(0b0100'1110'0100'0101, opcode);
+}
+
+BOOST_AUTO_TEST_CASE(trap_symbol)
+{
+	asmparser parser;
+	parser.parseText("X EQU 5\n  trap #X\n");
+	validate_noErrors(parser);
+	auto code = validate_codeSize(parser, 1);
+	BOOST_CHECK_EQUAL(0b0100'1110'0100'0101, code[0]);
+}
+
+BOOST_AUTO_TEST_CASE(trap_symbol_negative)
+{
+	asmparser parser;
+	parser.parseText("X EQU -5\n  trap #X\n");
+	validate_errorsCount(parser, 1);
 }
 
 BOOST_AUTO_TEST_CASE(trap_failed)

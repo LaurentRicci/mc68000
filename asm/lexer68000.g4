@@ -203,8 +203,13 @@ ID2  : [a-zA-Z_] [a-zA-Z0-9_]* ;
 //
 // Strings
 //
-CHARACTER :'\u0027' . '\u0027';
-STRING  : '\u0027' ~['\r\n]* '\u0027' ;
+CHARACTER
+    : '\'' ( ~['\r\n] | '\'\'' ) '\''
+    ;
+
+STRING
+    : '\'' ( ~['\r\n] | '\'\'' )* '\''
+    ;
 
 COMMENT     : ';' ~[\r\n]* -> mode(NORMAL);
 
