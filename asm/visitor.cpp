@@ -1973,9 +1973,11 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 
 	int32_t target = getIntegerValue(ctx->address());
 
+	// If the value is positive we should consider it unsigned and check against the max positive value
+	// If the value is negative we should consider it signed and check against the min negative value
 	if (size == 0)
 	{
-		if (target > 0x7f || target < -0x80)
+		if (target > 0xff || target < -0x80)
 		{
 			addError("Immediate data doesn't fit on in one byte: " + std::to_string(target), ctx->children[1]);
 		}
@@ -1984,7 +1986,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 	}
 	else if (size == 1)
 	{
-		if (target > 0x7fff || target < -0x8000)
+		if (target > 0xffff || target < -0x8000)
 		{
 			addError("Immediate data doesn't fit on in one word: " + std::to_string(target), ctx->children[1]);
 		}

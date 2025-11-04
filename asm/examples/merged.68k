@@ -767,235 +767,235 @@ EXPR    BSR     EXPR2
 XP11    BSR     XP18           ;is it *>"?
         BLT     XPRT0          ;no, return 00-0
         BRA     XPRT1          ;else return Deal
-XP12   BSR    XP18             ;is it "<>"?
-       BEQ    XPRT0            ;no, return D0=O
-       BRA    XPRT1            ;else return D0=1
+XP12    BSR    XP18             ;is it "<>"?
+        BEQ    XPRT0            ;no, return D0=O
+        BRA    XPRT1            ;else return D0=1
 
-XP13   BSR    XP18             ;is it ">"?
-       BLE    XPRT0            ;no, return D0=0
-       BRA    XPRT1            ;else return D0=1
+XP13    BSR    XP18             ;is it ">"?
+        BLE    XPRT0            ;no, return D0=0
+        BRA    XPRT1            ;else return D0=1
 
-XP14   BSR    XP18             ;is it "<='?
-       BGT    XPRT0            ;no, return D0=0
-       BRA    XPRT1            ;else return D0=1
+XP14    BSR    XP18             ;is it "<='?
+        BGT    XPRT0            ;no, return D0=0
+        BRA    XPRT1            ;else return D0=1
 
-XP15   BSR    XP18             ;is it "="?
-       BNE    XPRT0            ;if not, return D0=0
-       BRA    XPRT1            ;else return D0=1
-XP15RT RTS
+XP15    BSR    XP18             ;is it "="?
+        BNE    XPRT0            ;if not, return D0=0
+        BRA    XPRT1            ;else return D0=1
+XP15RT  RTS
 
-XP16   BSR    XP18             ;is it "<"?
-       BGE    XPRT0            ;if not, return D0-0
-       BRA    XPRT1            ;else return D0-1
-XP16RT RTS
+XP16    BSR    XP18             ;is it "<"?
+        BGE    XPRT0            ;if not, return D0-0
+        BRA    XPRT1            ;else return D0-1
+XP16RT  RTS
 
-XPRT0  CLR.L  D0               ;return D0-0 (false)
-       RTS
+XPRT0   CLR.L  D0               ;return D0-0 (false)
+        RTS
 
-XPRT1  MOVEQ  #1,D0            ;return D0-1 (true)
-       RTS
+XPRT1   MOVEQ  #1,D0            ;return D0-1 (true)
+        RTS
 
-XP17   MOVE.L (SP)+,D0         ;it's not a rel. operator
-       RTS                     ;return D0-<EXPR2>
+XP17    MOVE.L (SP)+,D0         ;it's not a rel. operator
+        RTS                     ;return D0-<EXPR2>
 
-XP18   MOVE.L (SP)+,00         ;reverse the top two stack items
-       MOVE.L (SP)+,D1
-       MOVE.L D0,-(SP)
-       MOVE.L D1,-(SP)
-       BSR    EXPR2            ;do second <EXPR2>
-       MOVE.L (SP)+,D1
-       CMP.L  D0,D1            ;compare with the first result 
-       RTS                     ;return the result
+XP18    MOVE.L (SP)+,00         ;reverse the top two stack items
+        MOVE.L (SP)+,D1
+        MOVE.L D0,-(SP)
+        MOVE.L D1,-(SP)
+        BSR    EXPR2            ;do second <EXPR2>
+        MOVE.L (SP)+,D1
+        CMP.L  D0,D1            ;compare with the first result 
+        RTS                     ;return the result
 
-EXPR2  BSR    TSTC             ;negative sign?
-       DC.B   '-',XP21-*
-       CLR.L  D0               ;yes, fake '0-'
-       BRA    XP26
-XP21   BSR    TSTC             ;positive sign? ignore it
-       DC.B   '+',XP22-*
-XP22   BSR    EXPR3            ;first <EXPR3>
-XP23   BSR    TSTC             ;add?
-       DC.B   '+',XP25-*
-       MOVE.L D0,-(SP)         ;yes, save the value
-       BSR    EXPR3            ;get the second <EXPR3>
-XP24   MOVE.L (SP)+,D1
-       ADD.L  D1,D0            ;add it to the first <EXPR3>
-       BVS    QHOW             ;branch if there's an overflow
-       BRA    XP23             ;else go back for more operations
-XP25   BSR    TSTC             ;subtract?
-       DC.B   '-',XP42-*
-XP26   MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
-       BSR    EXPR3            ;get second <EXPR3>
-       NEG.L  D0               ;change its sign
-       JMP    XP24             ;and do an addition
-EXPR3 BSR    EXPR4        ;get first <EXPR4> 
-XP31  BSR    TSTC         ;multiply?
-      DC.B   ',',XP34-*
-      MOVE.L D0,-(SP)     ;yes, save that first result 
-      BSR    EXPR4        ;get second <EXPR4>
-      MOVE.L (SP)+,D1
-      BSR    MULT32       ;multiply the two
-      BRA    XP31         ;then look for more terms 
-XP34  BSR    TSTC         ;divide?
-      DC.B   '/',XP42-*
-      MOVE.L D0,-(SP)     ;save result of 1st <EXPR4> 
-      BSR    EXPR4        ;get second <EXPR4>
-      MOVE.L (SP)+,D1
-      EXG    D0,D1
-      BSR    DIV32        ;do the division
-      BRA    XP31         ;go back for any more terms
+EXPR2   BSR    TSTC             ;negative sign?
+        DC.B   '-',XP21-*
+        CLR.L  D0               ;yes, fake '0-'
+        BRA    XP26
+XP21    BSR    TSTC             ;positive sign? ignore it
+        DC.B   '+',XP22-*
+XP22    BSR    EXPR3            ;first <EXPR3>
+XP23    BSR    TSTC             ;add?
+        DC.B   '+',XP25-*
+        MOVE.L D0,-(SP)         ;yes, save the value
+        BSR    EXPR3            ;get the second <EXPR3>
+XP24    MOVE.L (SP)+,D1
+        ADD.L  D1,D0            ;add it to the first <EXPR3>
+        BVS    QHOW             ;branch if there's an overflow
+        BRA    XP23             ;else go back for more operations
+XP25    BSR    TSTC             ;subtract?
+        DC.B   '-',XP42-*
+XP26    MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
+        BSR    EXPR3            ;get second <EXPR3>
+        NEG.L  D0               ;change its sign
+        JMP    XP24             ;and do an addition
+EXPR3   BSR    EXPR4        ;get first <EXPR4> 
+XP31    BSR    TSTC         ;multiply?
+        DC.B   ',',XP34-*
+        MOVE.L D0,-(SP)     ;yes, save that first result 
+        BSR    EXPR4        ;get second <EXPR4>
+        MOVE.L (SP)+,D1
+        BSR    MULT32       ;multiply the two
+        BRA    XP31         ;then look for more terms 
+XP34    BSR    TSTC         ;divide?
+        DC.B   '/',XP42-*
+        MOVE.L D0,-(SP)     ;save result of 1st <EXPR4> 
+        BSR    EXPR4        ;get second <EXPR4>
+        MOVE.L (SP)+,D1
+        EXG    D0,D1
+        BSR    DIV32        ;do the division
+        BRA    XP31         ;go back for any more terms
 
-EXPR4 LEA    TAB4,A1      ;find possible function
-      LEA    TAB4_1,A2
-      BRA    EXEC
-XP40  BSR    TSTV         ;nope, not a function 
-      BCS    XP41         ;nor a variable
-      MOVE.L D0,A1
-      CLR.L  D0
-      MOVE.L (A1),D0      ;if a variable, return its value in D0 
-EXP4RT RTS
-XP41  BSR    TSTNUM       ;or is it a number?
-      MOVE.L D1,D0
-      TST    D2           ;(if not, V of digits will be zero) 
-      BNE    EXP4RT       ;if so, return it in D0
-PARN  BSR    TSTC         ;else look for ( EXPR )
-      DC.B   '(',XP43-*
-      BSR    EXPR
-      BSR    TSTC
-      DC.B   ')',XP43-*
-XP42  RTS
-XP43  BRA    QWHAT        ;else say "What?"
+EXPR4   LEA    TAB4,A1      ;find possible function
+        LEA    TAB4_1,A2
+        BRA    EXEC
+XP40    BSR    TSTV         ;nope, not a function 
+        BCS    XP41         ;nor a variable
+        MOVE.L D0,A1
+        CLR.L  D0
+        MOVE.L (A1),D0      ;if a variable, return its value in D0 
+EXP4RT  RTS
+XP41    BSR    TSTNUM       ;or is it a number?
+        MOVE.L D1,D0
+        TST    D2           ;(if not, V of digits will be zero) 
+        BNE    EXP4RT       ;if so, return it in D0
+PARN    BSR    TSTC         ;else look for ( EXPR )
+        DC.B   '(',XP43-*
+        BSR    EXPR
+        BSR    TSTC
+        DC.B   ')',XP43-*
+XP42    RTS
+XP43    BRA    QWHAT        ;else say "What?"
 
 *
 * ===== Test for a valid variable name. Returns Carry-I if not 
 *       found, else returns Carry=O and the address of the 
 *       variable in D0.
 
-TSTV  BSR    IGNBLK
-      CLR.L  D0
-      MOVE.B (A0),D0      ;look at the program text
-      SUB.B  #'0',D0
-      BCS    TSTVRT       ;C=1: not a variable
-      BNE    TV1          ;branch if not "s" array
-      ADDQ   #1,A0        ;If it is, it should be
-      BSR    PARN         ;followed by (EXPR) as its index.
-      ADD.L  D0,D0
-      BCS    QHOW         ;say "How?" if index is too big
-      ADD.L  D0,D0
-      BCS    QHOW
-      MOVE.L D0,-(SP)     ;save the index
-      BSR    SIZE         ;get amount of free memory 
-      MOVE.L (SP)+,D1     ;get back the index
-      CMP.L  D1,D0        ;see if there's enough memory 
-      BSR    QSORRY       ;if not, say "Sorry"
-      MOVE.L VARBGN,D0  ;put address of array element...
-      SUB.L D1,D0       ;into D0
-      RTS
-TV1   CMP.B #27,D0      ;if not e, is it A through 2?
-      EORI  #1,CCR
-      BCS   TSTVRT      ;if not, set Carry and return
-      ADDQ  #1,A0       ;else bump the text pointer
-      ADD   D0,D0        ;compute the variable's address
-      ADD   D0,D0
-      MOVE.L VARBGN,D1
-      ADD   D1,D0       ;and return it in D0 with Carry*O
-TSTVRT RTS
+TSTV    BSR    IGNBLK
+        CLR.L  D0
+        MOVE.B (A0),D0      ;look at the program text
+        SUB.B  #'0',D0
+        BCS    TSTVRT       ;C=1: not a variable
+        BNE    TV1          ;branch if not "s" array
+        ADDQ   #1,A0        ;If it is, it should be
+        BSR    PARN         ;followed by (EXPR) as its index.
+        ADD.L  D0,D0
+        BCS    QHOW         ;say "How?" if index is too big
+        ADD.L  D0,D0
+        BCS    QHOW
+        MOVE.L D0,-(SP)     ;save the index
+        BSR    SIZE         ;get amount of free memory 
+        MOVE.L (SP)+,D1     ;get back the index
+        CMP.L  D1,D0        ;see if there's enough memory 
+        BSR    QSORRY       ;if not, say "Sorry"
+        MOVE.L VARBGN,D0  ;put address of array element...
+        SUB.L D1,D0       ;into D0
+        RTS
+TV1     CMP.B #27,D0      ;if not e, is it A through 2?
+        EORI  #1,CCR
+        BCS   TSTVRT      ;if not, set Carry and return
+        ADDQ  #1,A0       ;else bump the text pointer
+        ADD   D0,D0        ;compute the variable's address
+        ADD   D0,D0
+        MOVE.L VARBGN,D1
+        ADD   D1,D0       ;and return it in D0 with Carry*O
+TSTVRT  RTS
 
 *
 * Multiplies the 32 bit values in D0 and D1, returning
 *     the 32 bit result in D0.
 *
-MULT32 MOVE.L D1,D4
-      EOR.L D0,D4       ;see if the signs are the same
-      TST.L D0          ;take absolute value of D0
-      BPL   MLT1
-      NEG.L D0
-MLT1  TST.L D1          ;take absolute value of D1
-      BPL   MLT2
-      NEG.L D1
-MLT2  CMP.L #$FFFF,D1   ;is second argument <- 16 bits?
-      BLS   MLT3        ;OK, let it through
-      EXG   D0,D1       ;else swap the two arguments
-      CMP.L #$FFFF,D1   ;and check 2nd argument again
-      BHI   QHOW        ;one of them MUST be 16 bits
-MLT3  MOVE  D0,D2       ;prepare for 32 bit X 16 bit multiply
-      MULU  D1,D2       ;multiply low word
-      SWAP  D0
-      MULU  D1,D0       ;multiply high word
-      SWAP  D0
+MULT32  MOVE.L D1,D4
+        EOR.L D0,D4       ;see if the signs are the same
+        TST.L D0          ;take absolute value of D0
+        BPL   MLT1
+        NEG.L D0
+MLT1    TST.L D1          ;take absolute value of D1
+        BPL   MLT2
+        NEG.L D1
+MLT2    CMP.L #$FFFF,D1   ;is second argument <- 16 bits?
+        BLS   MLT3        ;OK, let it through
+        EXG   D0,D1       ;else swap the two arguments
+        CMP.L #$FFFF,D1   ;and check 2nd argument again
+        BHI   QHOW        ;one of them MUST be 16 bits
+MLT3    MOVE  D0,D2       ;prepare for 32 bit X 16 bit multiply
+        MULU  D1,D2       ;multiply low word
+        SWAP  D0
+        MULU  D1,D0       ;multiply high word
+        SWAP  D0
 *** Rick Murray's bug correction follows:
-      TST   D0          ;if lower word not 0, then overflow
-      BNE   QHOW        ;if overflow, say "How?"
-      ADD.L D2,D0       ;D0 now holds the product
-      BMI   QHOW        ;if sign bit set, it's an overflow
-      TST.L D4          ;were the signs the same?
-      BPL   MLTRET
-      NEG.L D0          ;if not, make the result negative
-MLTRET RTS
+        TST   D0          ;if lower word not 0, then overflow
+        BNE   QHOW        ;if overflow, say "How?"
+        ADD.L D2,D0       ;D0 now holds the product
+        BMI   QHOW        ;if sign bit set, it's an overflow
+        TST.L D4          ;were the signs the same?
+        BPL   MLTRET
+        NEG.L D0          ;if not, make the result negative
+MLTRET  RTS
 
 *
 * ===== Divide the 32 bit value in D0 by the 32 bit value in D1.
 *        Returns the 32 bit quotient in D0, remainder in D1. 
 *
-DIV32 TST.L D1          ;check for divide-by-zero
-      BEQ   QHOW       ;if so, say "How?"
-      MOVE.L 01,D2 
-      MOVE.L D1,D4
-      EOR.L D0,D4       ;see if the signs are the same
-      TST.L D0          ;take absolute value of D0
-      BPL   DIV1
-      NEG.L D0
-DIV1  TST.L D1          ;take absolute value of D1
-      BPL   DIV2
-      NEG.L D1
-DIV2   MOVEQ   #31,D3          ;iteration count for 32 bits
-       MOVE.L  D0,D1
-       CLR.L   D0
-DIV3   ADD.L   D1,D1           ;(This algorithm was translated from
-       ADDX.L  D0,D0           ;the divide routine in Ron Cain's
-       BEQ     DIV4            ;Small-C run time library.)
-       CMP.L   D2,D0
-       BMI     DIV4
-       ADDQ.L  #1,D1
-       SUB.L   D2,D0
-DIV4   DBRA    D3,DIV3
-       EXG     D0,D1           ;put rem. 6 quot. in proper registers
-       TST.L   D4              ;were the signs the same?
-       BPL     DIVRT
-       NEG.L   D0              ;if not, results are negative
-       NEG.L   D1
-DIVRT  RTS
+DIV32   TST.L D1          ;check for divide-by-zero
+        BEQ   QHOW       ;if so, say "How?"
+        MOVE.L 01,D2 
+        MOVE.L D1,D4
+        EOR.L D0,D4       ;see if the signs are the same
+        TST.L D0          ;take absolute value of D0
+        BPL   DIV1
+        NEG.L D0
+DIV1    TST.L D1          ;take absolute value of D1
+        BPL   DIV2
+        NEG.L D1
+DIV2    MOVEQ   #31,D3          ;iteration count for 32 bits
+        MOVE.L  D0,D1
+        CLR.L   D0
+DIV3    ADD.L   D1,D1           ;(This algorithm was translated from
+        ADDX.L  D0,D0           ;the divide routine in Ron Cain's
+        BEQ     DIV4            ;Small-C run time library.)
+        CMP.L   D2,D0
+        BMI     DIV4
+        ADDQ.L  #1,D1
+        SUB.L   D2,D0
+DIV4    DBRA    D3,DIV3
+        EXG     D0,D1           ;put rem. 6 quot. in proper registers
+        TST.L   D4              ;were the signs the same?
+        BPL     DIVRT
+        NEG.L   D0              ;if not, results are negative
+        NEG.L   D1
+DIVRT   RTS
 
 *
 * =====The PEEK function returns the byte stored at the address
 *      contained in the following expression.
 *
-PEEK   BSR     PARN            ;get the memory address
-       MOVE.L  D0,A1
-       CLR.L   D0              ;upper 3 bytes will be zero
-       MOVE.B  (A1),D0         ;get the addressed byte
-       RTS                     ;and return it
+PEEK    BSR     PARN            ;get the memory address
+        MOVE.L  D0,A1
+        CLR.L   D0              ;upper 3 bytes will be zero
+        MOVE.B  (A1),D0         ;get the addressed byte
+        RTS                     ;and return it
 
 *
 * ===== The RND function returns a random number from 1 to
 *       the value of the following expression in *D0.
 *
-RND    BSR     PARN            ;get the upper limit
-       TST.L   D0              ;it must be positive and non-zero
-       BEQ     QHOW
-       BMI     QHOW
-       MOVE.L  D0,D1
-       MOVE.L  RANPNT,A1        ;get memory as a random number
-       CMPA.L  #LSTROM,A1
-       BCS     RA1
-       LEA     START,A1        ;wrap around if end of program
-RA1    MOVE.L  (A1)+,D0        ;get the slightly random number
-       BCLR    #31,D0          ;make sure it's positive
-       MOVE.L  A1,RANPNT       ;(even I can do better than this!)
-       BSR     DIV32           ;RND(n)..410D(number,n)+1
-       MOVE.L  D1,D0           ;MOD is the remainder of the div.
-       ADDQ.L  #1,D0
-       RTS
+RND     BSR     PARN            ;get the upper limit
+        TST.L   D0              ;it must be positive and non-zero
+        BEQ     QHOW
+        BMI     QHOW
+        MOVE.L  D0,D1
+        MOVE.L  RANPNT,A1        ;get memory as a random number
+        CMPA.L  #LSTROM,A1
+        BCS     RA1
+        LEA     START,A1        ;wrap around if end of program
+RA1     MOVE.L  (A1)+,D0        ;get the slightly random number
+        BCLR    #31,D0          ;make sure it's positive
+        MOVE.L  A1,RANPNT       ;(even I can do better than this!)
+        BSR     DIV32           ;RND(n)..410D(number,n)+1
+        MOVE.L  D1,D0           ;MOD is the remainder of the div.
+        ADDQ.L  #1,D0
+        RTS
 
 *
 * ===== The ABS function returns an absolute value in *D0.
@@ -1011,9 +1011,9 @@ ABSRT  RTS
 * ===== The SIZE function returns the size of free memory in *D0.
 *
 *
-SIZE   MOVE.L VARBGN,D0      ;get the number of free bytes...
-       SUB.L  TXTUNF,D0      ;between 'TXTUNF' and 'VARBGN'
-       RTS                   ;return the number in DO
+SIZE    MOVE.L VARBGN,D0      ;get the number of free bytes...
+        SUB.L  TXTUNF,D0      ;between 'TXTUNF' and 'VARBGN'
+        RTS                   ;return the number in DO
 
 *
 ********************************************************************
@@ -1046,31 +1046,31 @@ SIZE   MOVE.L VARBGN,D0      ;get the number of free bytes...
 * 'QSORRY' and 'ASORRY' do the same kind of thing.
 * 'QHOW' and 'AHOW' also do this for "How?".
 *
-SETVAL BSR    TSTV           ;variable name?
-       BCS    QWHAT          ;if not, say "What?"
-       MOVE.L D0,-(SP)       ;save the variable's address
-       BSR    TSTC           ;get past the "■" sign
-       DC.B   '=',SV1-*
-       BSR    EXPR           ;evaluate the expression
-       MOVE.L (SP)+,A6
-       MOVE.L D0,(A6)        ;and save its value in the variable
-       RTS
-SV1    BRA    QWHAT          ;if no "-" sign
+SETVAL  BSR    TSTV           ;variable name?
+        BCS    QWHAT          ;if not, say "What?"
+        MOVE.L D0,-(SP)       ;save the variable's address
+        BSR    TSTC           ;get past the "■" sign
+        DC.B   '=',SV1-*
+        BSR    EXPR           ;evaluate the expression
+        MOVE.L (SP)+,A6
+        MOVE.L D0,(A6)        ;and save its value in the variable
+        RTS
+SV1     BRA    QWHAT          ;if no "-" sign
 
-FIN    BSR    TSTC           ;*** FIN "0
-       DC.B   ':',FI1-*
-       ADDQ.L #4,SP         ;if ":", discard return address
-       BRA    RUNSML         ;continue on the same line
-FI1    BSR   TSTC           ;not ":", is it a CR?
-       DC.B   CR,FI2-*
-       ADDQ.L #4,SP          ;yes, purge return address
-       BRA    RUNNXL         ;execute the next line
-FI2    RTS                   ;else return to the caller
+FIN     BSR    TSTC           ;*** FIN "0
+        DC.B   ':',FI1-*
+        ADDQ.L #4,SP         ;if ":", discard return address
+        BRA    RUNSML         ;continue on the same line
+FI1     BSR   TSTC           ;not ":", is it a CR?
+        DC.B   CR,FI2-*
+        ADDQ.L #4,SP          ;yes, purge return address
+        BRA    RUNNXL         ;execute the next line
+FI2     RTS                   ;else return to the caller
 
-ENDCHK BSR    IGNBLK
-       CMPI.B  #CR,(A0)       ;does it end with a CR?
-       BNE    QWHAT          ;if not, say "WHAT?"
-       RTS
+ENDCHK  BSR    IGNBLK
+        CMPI.B  #CR,(A0)       ;does it end with a CR?
+        BNE    QWHAT          ;if not, say "WHAT?"
+        RTS
 
 QWHAT   MOVE.L   A0,-(SP)
 AWHAT   LEA      WHTMSG,A6
@@ -1292,8 +1292,8 @@ QT1     MOVE.L A0,A1
 QT2     ADDQ.L #2,A1           ;skip 2 bytes on return 
         JMP    (A1)            ;return
 QT3     BSR    TSTC            ;is it a single quote?
-        DC.B   ''',QT4-* 
-        MOVE.B #''',D0         ;if so, do same as above
+        DC.B   '''',QT4-* 
+        MOVE.B #'''',D0         ;if so, do same as above
         BRA    QT1
 QT4     BSR    TSTC            ;is it an underline?
         DC.B  '_', QT5-*
@@ -1425,7 +1425,7 @@ TOUPB1 MOVE.B (A0)+,D0      ;get the next text char.
        BEQ    TOUPBRT       ;if so, return
        CMP.B  #'"',D0       ;a double quote?
        BEQ    DOQUO
-       CMP.B  #''',D0       ;or a single quote?
+       CMP.B  #'''',D0       ;or a single quote?
        BEQ    DOQUO
        TST.B  D1            ;inside quotes?
        BNE    TOUPB1        ;if so, do the next one
@@ -1465,7 +1465,7 @@ CHKIO    BSR      GOIN              ;get input if possible
          BEQ      CHKRET            ;if Zero, no input
          CMP.B    #CTRLC,D0         ;is it control-C?
          BNE      CHKRET            ;if not
-         BRA      MSTART            ;if so, do a warm start
+         BRA      WSTART            ;if so, do a warm start
 CHKRET RTS
 
 *
@@ -1557,5 +1557,5 @@ VARBGN DS.L       1                   ;points to variable area
 STKLMT DS.L       1                   ;holds lower limit for stack growth 
 BUFFER DS.B       BUFLEN              ;Keyboard input buffer
 TXT    EQU      *                   ;Beginning of program area
-       END 
+       END START
        
