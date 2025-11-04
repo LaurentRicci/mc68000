@@ -197,7 +197,7 @@ any visitor::visitAddq(parser68000::AddqContext* ctx)
 		size = any_cast<uint16_t>(visit(ctx->children[1]));
 		arg++; // the optional size is included so there is one extra child
 	}
-	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg+1]));
+	int32_t immediate_data = getIntegerValue(ctx->address());
 	if (immediate_data <= 0 || immediate_data > 8)
 	{
 		addError("Immediate data for ADDQ/SUBQ must be between 0 and 8", ctx->children[arg+1]);
@@ -416,7 +416,7 @@ any visitor::visitShiftRegister(tree::ParseTree* ctx, uint16_t code)
 }
 
 /// <summary>
-/// ASL/ASR/LSL/LSR size? HASH number COMMA dRegister
+/// ASL/ASR/LSL/LSR size? HASH address COMMA dRegister
 /// </summary>
 /// <param name="ctx">Pointer to the parse tree context.</param>
 /// <param name="code">Instruction code differentiator: ASL/ASR 0 LSL/LSR 1.</param>
@@ -432,10 +432,11 @@ any visitor::visitShiftImmediate(tree::ParseTree* ctx, uint16_t code)
 		size = any_cast<uint16_t>(visit(ctx->children[1]));
 		arg++; // the optional size is included so there is one extra child
 	}
-	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[arg]));
+	parser68000::AddressContext* addressCtx = dynamic_cast<parser68000::AddressContext*>(ctx->children[arg]);
+	int32_t immediate_data = getIntegerValue(addressCtx);
 	if (immediate_data <= 0 || immediate_data > 8)
 	{
-		addError("Immediate data for ASL/ASR must be between 0 and 8", ctx->children[arg]);
+		addError("Immediate data must be between 0 and 8", ctx->children[arg]);
 		immediate_data = 0; // reset to 0 to avoid further errors
 	}
 	else if (immediate_data == 8)
@@ -547,7 +548,7 @@ any visitor::visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx)
 	uint16_t instruction = any_cast<uint16_t>(visit(ctx->children[0]));
 
 	size = 0;
-	int32_t immediate_data = any_cast<int32_t>(visit(ctx->children[2]));
+	int32_t immediate_data = getIntegerValue(ctx->address());
 	uint16_t data8 = (uint16_t)(immediate_data & 0xff);
 	extensionsList.push_back(data8);
 
@@ -1474,7 +1475,7 @@ any visitor::visitTas(parser68000::TasContext* ctx)
 /// </summary>
 any visitor::visitTrap(parser68000::TrapContext* ctx)
 {
-	int32_t vector = any_cast<int32_t>(visit(ctx->children[2]));
+	int32_t vector = getIntegerValue(ctx->address());
 	if (vector < 0 || vector > 15)
 	{
 		addError("Trap vector must be between 0 and 15", ctx->children[2]);
@@ -1970,7 +1971,7 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 {
 	any immediate_data = visit(ctx->children[1]);
 
-	int32_t target = getAddressValue(ctx->address());
+	int32_t target = getIntegerValue(ctx->address());
 
 	if (size == 0)
 	{

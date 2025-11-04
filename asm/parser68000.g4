@@ -118,7 +118,7 @@ addaSubaInstruction returns [uint16_t value]
     ;
 
 addq
-    : addqSubqInstruction size? HASH number COMMA addressingMode
+    : addqSubqInstruction size? HASH address COMMA addressingMode
     ;
 addqSubqInstruction returns [uint16_t value]
     : ADDQ { $value = 0b0; }
@@ -147,7 +147,7 @@ andOrInstruction returns [uint16_t value]
 
 aslAsr
     : shiftInstruction size? dRegister COMMA dRegister       #aslAsr_dRegister
-    | shiftInstruction size? HASH number COMMA dRegister     #aslAsr_immediateData
+    | shiftInstruction size? HASH address COMMA dRegister     #aslAsr_immediateData
     | shiftInstruction size? addressingMode                  #aslAsr_addressingMode
     ;
 shiftInstruction returns [uint16_t value]
@@ -179,7 +179,7 @@ bccInstruction returns [uint16_t value]
 
 bit
     : bitInstruction dRegister COMMA addressingMode     #bit_dRegister
-    | bitInstruction HASH number COMMA addressingMode   #bit_immediateData
+    | bitInstruction HASH address COMMA addressingMode   #bit_immediateData
     ;
 bitInstruction returns [uint16_t value]
     : BCHG { $value = 0b001; }
@@ -285,7 +285,7 @@ link
 
 lslLsr
     : logicalShiftInstruction size? dRegister COMMA dRegister                #lslLsr_dRegister
-    | logicalShiftInstruction size? HASH number COMMA dRegister              #lslLsr_immediateData
+    | logicalShiftInstruction size? HASH address COMMA dRegister              #lslLsr_immediateData
     | logicalShiftInstruction size? addressingMode                           #lslLsr_addressingMode
     ;
 logicalShiftInstruction returns [uint16_t value]
@@ -369,7 +369,7 @@ resetInstruction // using reset as name would conflict with the 'reset' used by 
 
 rolRor
     : rotateInstruction size? dRegister COMMA dRegister                #RolRor_dRegister
-    | rotateInstruction size? HASH number COMMA dRegister              #RolRor_immediateData
+    | rotateInstruction size? HASH address COMMA dRegister              #RolRor_immediateData
     | rotateInstruction size? addressingMode                           #RolRor_addressingMode
     ;
 rotateInstruction returns [uint16_t value]
@@ -379,7 +379,7 @@ rotateInstruction returns [uint16_t value]
 
 roxlRoxr
     : rotateXInstruction size? dRegister COMMA dRegister                #RoxlRoxr_dRegister
-    | rotateXInstruction size? HASH number COMMA dRegister              #RoxlRoxr_immediateData
+    | rotateXInstruction size? HASH address COMMA dRegister              #RoxlRoxr_immediateData
     | rotateXInstruction size? addressingMode                           #RoxlRoxr_addressingMode
     ;
 rotateXInstruction returns [uint16_t value]
@@ -448,7 +448,7 @@ toSR
     ;
 
 trap
-    : TRAP HASH number
+    : TRAP HASH address
     ;
 
 trapv
