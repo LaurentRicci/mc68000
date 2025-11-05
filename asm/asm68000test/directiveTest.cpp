@@ -455,7 +455,69 @@ namespace directiveTest
 		parser.parseText("  ds -20\n");
 		validate_errorsCount(parser, 2);
 	}
+	// ====================================================================================================
+	// ORG
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(org_number)
+	{
+		asmparser parser;
+		parser.parseText(" org $2A00\n lea *,a0\n");
 
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 2);
+		BOOST_CHECK_EQUAL(0x41F8, code[0]);
+		BOOST_CHECK_EQUAL(0x2A00, code[1]);
+	}
+	BOOST_AUTO_TEST_CASE(org_number_negative)
+	{
+		asmparser parser;
+		parser.parseText(" org -100\n");
+
+		validate_errorsCount(parser, 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(org_symbol)
+	{
+		asmparser parser;
+		parser.parseText("START EQU $2A00\n org START\n lea *,a0\n");
+
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 2);
+		BOOST_CHECK_EQUAL(0x41F8, code[0]);
+		BOOST_CHECK_EQUAL(0x2A00, code[1]);
+	}
+
+	BOOST_AUTO_TEST_CASE(org_symbol_string)
+	{
+		asmparser parser;
+		parser.parseText("START EQU 'start'\n org START\n");
+
+		validate_errorsCount(parser, 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(org_symbol_negative)
+	{
+		asmparser parser;
+		parser.parseText("START EQU -100\n org START\n");
+
+		validate_errorsCount(parser, 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(org_label)
+	{
+		asmparser parser;
+		parser.parseText("START nop\n org START\n lea *,a0\n");
+
+		validate_errorsCount(parser, 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(org_unknown)
+	{
+		asmparser parser;
+		parser.parseText(" org START\n");
+
+		validate_errorsCount(parser, 1);
+	}
 	// ====================================================================================================
 	// Expression
 	// ====================================================================================================

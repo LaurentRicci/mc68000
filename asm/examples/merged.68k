@@ -22,7 +22,7 @@
 *       1.1 1984/12/9   - Addition of 'S. print term by Marvin Lipford
 *       1.2 1985/4/9    - Bug fix in multiply routine by Rick Murray
 
-        OPT FRS,BRS ;forward ref.'s c branches default to short
+*        OPT FRS,BRS ;forward ref.'s c branches default to short
     
 CR      EQU $0d  ;ASCII equates
 LF      EQU $0A
