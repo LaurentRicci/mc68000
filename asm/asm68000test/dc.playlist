@@ -324,6 +324,48 @@
                         <Property Name="DisplayName" Value="dsb_symbol_count" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_number" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_number" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_symbol" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_symbol" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_label" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_label" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_symbol_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_symbol_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_symbol_string" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_symbol_string" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_unknown" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_unknown" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_number_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="org_number_negative" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

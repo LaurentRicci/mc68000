@@ -127,6 +127,15 @@ any visitor::visitDs(parser68000::DsContext* ctx)
 	return *code.rbegin();
 }
 
+any visitor::visitOrg(parser68000::OrgContext* ctx)
+{
+	auto blockAddress = ctx->blockAddress();
+	uint32_t address = getAddressValue(blockAddress);
+
+	currentAddress = address;
+	return any();
+}
+
 any visitor::visitDataList(parser68000::DataListContext* ctx)
 {
 	size_t n = ctx->children.size();
@@ -328,4 +337,59 @@ any visitor::visitDleStar(parser68000::DleStarContext* ctx)
 any visitor::visitDleExpression(parser68000::DleExpressionContext* ctx)
 {
 	return visit(ctx->children[1]);
+}
+
+uint32_t visitor::getAddressValue(parser68000::BlockAddressContext* ctx)
+{
+	any address = visit(ctx);
+	uint32_t target;
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		// search first for a symbol
+		auto it = symbols.find(label);
+		if (it != symbols.end())
+		{
+			if (it->second.type() != typeid(int32_t))
+			{
+				addError("Argument is not an number: " + label, ctx);
+				target = 0;
+			}
+			else
+			{
+				int32_t value = any_cast<int32_t>(it->second);
+				if (value < 0)
+				{
+					addError("Address cannot be negative: " + label, ctx);
+					value = 0;
+				}
+				target = static_cast<uint32_t>(value);
+			}
+		}
+		else
+		{
+			// then search for a label
+			auto it = labels.find(label);
+			if (it != labels.end())
+			{
+				addError("Labels cannot be used in the ORG directive: " + label, ctx);
+			}
+			else
+			{
+				addError("Symbol not found: " + label, ctx);
+			}
+			target = 0;
+		}
+	}
+	else
+	{
+		int32_t value = any_cast<long>(address);
+		if (value < 0)
+		{
+			addError("Address cannot be negative: " + std::to_string(value), ctx);
+			value = 0;
+		}
+		target = static_cast<uint32_t>(value);
+	}
+	return target;
 }

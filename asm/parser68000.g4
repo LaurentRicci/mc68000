@@ -582,7 +582,7 @@ directive
     | NOLIST
     | MEMORY
     | OPT identifiers
-    | ORG  number
+    | org
     | PAGE
     | REG
     | SECTION
@@ -593,6 +593,7 @@ directive
 dc  : DC size  dataList ;
 equ : EQU expression ;
 ds  : DS size? address ;
+org : ORG blockAddress ;
 
 // ============================================
 // Directivess arguments
@@ -619,4 +620,11 @@ primaryExpr
 
 identifiers
     : ID2 (COMMA ID2)*
+    ;
+
+blockAddress returns [std::any value]
+    : OCTAL         { $value = std::stol($OCTAL.text.c_str()+1, nullptr, 8);        }
+    | DECIMAL       { $value = std::stol($DECIMAL.text.c_str(), nullptr, 10);       }
+    | HEXADECIMAL   { $value = std::stol($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
+    | ID2           { $value = $ID2.text; }
     ;
