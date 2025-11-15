@@ -194,6 +194,18 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 
+	BOOST_AUTO_TEST_CASE(dcw_address)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" bra label\n dc.w $ffff\nlabel: nop\n");
+
+		auto code = validate_codeSize(parser, 4);
+		BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+		BOOST_CHECK_EQUAL(0x0004, code[1]); // 
+		BOOST_CHECK_EQUAL(0xffff, code[2]); // dc.w $ffff
+		BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
+	}
+
 	// ====================================================================================================
 	// DC.L
 	// ====================================================================================================
@@ -257,6 +269,18 @@ namespace directiveTest
 
 		BOOST_CHECK_EQUAL(0x0000, code[4]); // 10
 		BOOST_CHECK_EQUAL(0x0081, code[5]); // 129
+	}
+	BOOST_AUTO_TEST_CASE(dcl_address)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" bra label\n dc.l $ffffeeee\nlabel: nop\n");
+
+		auto code = validate_codeSize(parser, 5);
+		BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+		BOOST_CHECK_EQUAL(0x0006, code[1]); // 
+		BOOST_CHECK_EQUAL(0xffff, code[2]); // dc.l $ffffeeee
+		BOOST_CHECK_EQUAL(0xeeee, code[3]); // 
+		BOOST_CHECK_EQUAL(0x4e71, code[4]); // nop
 	}
 	// ====================================================================================================
 	// EQU

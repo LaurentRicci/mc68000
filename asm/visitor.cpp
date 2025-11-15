@@ -1648,7 +1648,7 @@ any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPr
 /// </summary>
 any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRegistr)
 {
-	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
+	int32_t displacement = getDisplacementValue(pDisplacement);
 	if (displacement > 0x7fff || displacement < -0x8000)
 	{
 		addError("Displacement doesn't fit on in one word: " + std::to_string(displacement), pDisplacement);
@@ -1683,7 +1683,7 @@ any visitor::visitARegisterIndirectDisplacementNew(parser68000::ARegisterIndirec
 /// </summary>
 any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr, tree::ParseTree* pIndex)
 {
-	int32_t displacement = any_cast<int32_t>(visit(pDisplacement));
+	int32_t displacement = getDisplacementValue(pDisplacement);
 	if (displacement > 0x7f || displacement < -0x80)
 	{
 		addError("Displacement doesn't fit on in one byte: " + std::to_string(displacement), pDisplacement);
@@ -1712,145 +1712,6 @@ any visitor::visitARegisterIndirectIndexOld(parser68000::ARegisterIndirectIndexO
 any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexNewContext* ctx)
 {
 	return visitARegisterIndirectDisplacement(ctx->children[1], ctx->children[3], ctx->children[5]);
-}
-
-uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
-{
-	any address = visit(ctx);
-	uint32_t target;
-	if (address.type() == typeid(std::string))
-	{
-		std::string label = any_cast<std::string>(address);
-		// search first for a symbol
-		auto it = symbols.find(label);
-		if (it != symbols.end())
-		{
-			if (it->second.type() != typeid(int32_t))
-			{
-				addError("Argument is not an number: " + label, ctx);
-				target = 0;
-			}
-			else
-			{
-				int32_t value = any_cast<int32_t>(it->second);
-				if (value < 0)
-				{
-					addError("Address cannot be negative: " + label, ctx);
-					value = 0;
-				}
-				target = static_cast<uint32_t>(value);
-			}
-		}
-		else
-		{
-			// then search for a label
-			auto it = labels.find(label);
-			if (it == labels.end())
-			{
-				// During the 1st pass the label may not be defined yet
-				if (pass != 0)
-				{
-					addError("Label not found: " + label, ctx);
-				}
-				target = 0;
-			}
-			else
-			{
-				target = it->second;
-			}
-		}
-	}
-	else if (address.type() == typeid(char))
-	{
-		char c = any_cast<char>(address);
-		if (c == '*')
-		{
-			target = this->currentAddress;
-		}
-		else
-		{
-			addError("Syntax error; * expected", ctx);
-			target = 0xabcd;
-		}
-	}
-	else
-	{
-		int32_t value = any_cast<int32_t>(address);
-		if (value < 0)
-		{
-			addError("Address cannot be negative: " + std::to_string(value), ctx);
-			value = 0;
-		}
-		target = static_cast<uint32_t>(value);
-	}
-	return target;
-}
-int32_t visitor::getIntegerValue(parser68000::AddressContext* ctx)
-{
-	any address = visit(ctx);
-	int32_t target;
-	if (address.type() == typeid(std::string))
-	{
-		std::string label = any_cast<std::string>(address);
-		// search first for a symbol
-		auto it = symbols.find(label);
-		if (it != symbols.end())
-		{
-			if (it->second.type() != typeid(int32_t))
-			{
-				addError("Argument is not an number: " + label, ctx);
-				target = 0;
-			}
-			else
-			{
-				target = any_cast<int32_t>(it->second);
-			}
-		}
-		else
-		{
-			// then search for a label
-			auto it = labels.find(label);
-			if (it == labels.end())
-			{
-				// During the 1st pass the label may not be defined yet
-				if (pass != 0)
-				{
-					addError("Label not found: " + label, ctx);
-				}
-				target = 0;
-			}
-			else
-			{
-				if (it->second > INT32_MAX)
-				{
-					addError("Label value too large for integer: " + label, ctx);
-					target = INT32_MAX;
-				}
-				else
-				{
-					target = static_cast<int32_t>(it->second);
-				}
-			}
-		}
-	}
-	else if (address.type() == typeid(char))
-	{
-		char c = any_cast<char>(address);
-		if (c == '*')
-		{
-			target = this->currentAddress;
-		}
-		else
-		{
-			addError("Syntax error; * expected", ctx);
-			target = 0x5555;
-		}
-	}
-	else
-	{
-		target = any_cast<int32_t>(address);
-	}
-	return target;
 }
 
 /// <summary>
@@ -1937,7 +1798,7 @@ any visitor::visitAbsoluteLong(parser68000::AbsoluteLongContext* ctx)
 /// </summary>
 any visitor::visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementContext* ctx)
 {
-	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
+	int32_t displacement = getDisplacementValue(ctx->children[0]);
 	if (displacement > 0x7fff || displacement < -0x8000)
 	{
 		addError("Displacement doesn't fit on in one word: " + std::to_string(displacement), ctx->children[0]);
@@ -1951,7 +1812,7 @@ any visitor::visitPcIndirectDisplacement(parser68000::PcIndirectDisplacementCont
 /// </summary>
 any visitor::visitPcIndirectIndex(parser68000::PcIndirectIndexContext* ctx)
 {
-	int32_t displacement = any_cast<int32_t>(visit(ctx->children[0]));
+	int32_t displacement = getDisplacementValue(ctx->children[0]);
 	if (displacement > 0x7f || displacement < -0x80)
 	{
 		addError("Displacement doesn't fit on in one byte: " + std::to_string(displacement), ctx->children[0]);
@@ -2006,6 +1867,182 @@ any visitor::visitImmediateData(parser68000::ImmediateDataContext* ctx)
 // ====================================================================================================
 // Addressing modes helpers
 // ====================================================================================================
+
+/// <summary>
+/// Retrieves the displacement value from a parse tree node.
+/// </summary>
+/// <param name="pDisplacement">Pointer to the parse tree node representing the displacement.</param>
+/// <returns>The resolved displacement value as a 32-bit signed integer.</returns>
+int32_t visitor::getDisplacementValue(tree::ParseTree* pDisplacement)
+{
+	any value = visit(pDisplacement);
+	if (value.type() == typeid(uint32_t))
+	{
+		return any_cast<uint32_t>(value);
+	}
+	else
+	{
+		return any_cast<int32_t>(value);
+	}
+}
+
+/// <summary>
+/// Resolves and returns the value of an address context, handling labels, symbols, and direct values.
+/// </summary>
+/// <param name="ctx">Pointer to a parser68000::AddressContext object representing the parsed address expression.</param>
+/// <returns>The resolved address value as a uint32_t. Returns 0 or a default value if errors are encountered (e.g., undefined label, invalid type, or negative address).</returns>
+uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
+{
+	any address = visit(ctx);
+	uint32_t target;
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		// search first for a symbol
+		auto it = symbols.find(label);
+		if (it != symbols.end())
+		{
+			if (it->second.type() != typeid(int32_t))
+			{
+				addError("Argument is not an number: " + label, ctx);
+				target = 0;
+			}
+			else
+			{
+				int32_t value = any_cast<int32_t>(it->second);
+				if (value < 0)
+				{
+					addError("Address cannot be negative: " + label, ctx);
+					value = 0;
+				}
+				target = static_cast<uint32_t>(value);
+			}
+		}
+		else
+		{
+			// then search for a label
+			auto it = labels.find(label);
+			if (it == labels.end())
+			{
+				// During the 1st pass the label may not be defined yet
+				if (pass != 0)
+				{
+					addError("Label not found: " + label, ctx);
+				}
+				target = 0;
+			}
+			else
+			{
+				target = it->second;
+			}
+		}
+	}
+	else if (address.type() == typeid(char))
+	{
+		char c = any_cast<char>(address);
+		if (c == '*')
+		{
+			target = this->currentAddress;
+		}
+		else
+		{
+			addError("Syntax error; * expected", ctx);
+			target = 0xabcd;
+		}
+	}
+	else if (address.type() == typeid(uint32_t))
+	{
+		target = any_cast<uint32_t>(address);
+	}
+	else
+	{
+		int32_t value = any_cast<int32_t>(address);
+		if (value < 0)
+		{
+			addError("Address cannot be negative: " + std::to_string(value), ctx);
+			value = 0;
+		}
+		target = static_cast<uint32_t>(value);
+	}
+	return target;
+}
+/// <summary>
+/// Retrieves the integer value represented by an address context, resolving symbols, labels, or direct values as needed.
+/// </summary>
+/// <param name="ctx">Pointer to the AddressContext node to evaluate.</param>
+/// <returns>The resolved 32-bit integer value corresponding to the address context. Returns 0 or INT32_MAX in case of errors or out-of-range values.</returns>
+int32_t visitor::getIntegerValue(parser68000::AddressContext* ctx)
+{
+	any address = visit(ctx);
+	int32_t target;
+	if (address.type() == typeid(std::string))
+	{
+		std::string label = any_cast<std::string>(address);
+		// search first for a symbol
+		auto it = symbols.find(label);
+		if (it != symbols.end())
+		{
+			if (it->second.type() != typeid(int32_t))
+			{
+				addError("Argument is not an number: " + label, ctx);
+				target = 0;
+			}
+			else
+			{
+				target = any_cast<int32_t>(it->second);
+			}
+		}
+		else
+		{
+			// then search for a label
+			auto it = labels.find(label);
+			if (it == labels.end())
+			{
+				// During the 1st pass the label may not be defined yet
+				if (pass != 0)
+				{
+					addError("Label not found: " + label, ctx);
+				}
+				target = 0;
+			}
+			else
+			{
+				if (it->second > INT32_MAX)
+				{
+					addError("Label value too large for integer: " + label, ctx);
+					target = INT32_MAX;
+				}
+				else
+				{
+					target = static_cast<int32_t>(it->second);
+				}
+			}
+		}
+	}
+	else if (address.type() == typeid(char))
+	{
+		char c = any_cast<char>(address);
+		if (c == '*')
+		{
+			target = this->currentAddress;
+		}
+		else
+		{
+			addError("Syntax error; * expected", ctx);
+			target = 0x5555;
+		}
+	}
+	else if (address.type() == typeid(uint32_t))
+	{
+		target = any_cast<uint32_t>(address);
+	}
+	else
+	{
+		target = any_cast<int32_t>(address);
+	}
+	return target;
+}
+
 
 any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
 {

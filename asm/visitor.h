@@ -284,5 +284,6 @@ private:
 	uint32_t getAddressValue(parser68000::AddressContext* ctx);
     uint32_t getAddressValue(parser68000::BlockAddressContext* ctx);
     int32_t  getIntegerValue(parser68000::AddressContext* ctx);
+    int32_t  getDisplacementValue(tree::ParseTree* pDisplacement);
 
 };

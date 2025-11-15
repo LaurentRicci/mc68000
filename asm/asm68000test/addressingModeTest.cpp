@@ -247,6 +247,16 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 
 	}
+	BOOST_AUTO_TEST_CASE(address_aReg_index_hexa)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add $6(a1, a3.l), d0\n");
+		validate_noErrors(parser);
+		auto code = validate_codeSize(parser, 2);
+		BOOST_CHECK_EQUAL(0xd071, code[0]);
+		BOOST_CHECK_EQUAL(0b1'011'1'000'0000'0110, code[1]);
+	}
+
 	// ====================================================================================================
 	// Absolute addressing mode
 	// ====================================================================================================
@@ -338,6 +348,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(42, code[1]);
 	}
 
+	BOOST_AUTO_TEST_CASE(address_pc_displacement_hexa)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add $2a(pc), d0\n");
+		validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0x2a, code[1]);
+	}
+
 	BOOST_AUTO_TEST_CASE(address_pc_displacement_error)
 	{
 		asmparser parser;
@@ -356,6 +377,17 @@ namespace addressing_mode
 		const std::vector<uint16_t>& code = parser.getCode();
 		BOOST_CHECK_EQUAL(2, code.size());
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
+	}
+
+	BOOST_AUTO_TEST_CASE(address_pc_index_hexa)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" add $2a(pc, d2), d0\n");
+		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
+
+		const std::vector<uint16_t>& code = parser.getCode();
+		BOOST_CHECK_EQUAL(2, code.size());
+		BOOST_CHECK_EQUAL(0b0'010'0'000'0010'1010, code[1]);
 	}
 
 	BOOST_AUTO_TEST_CASE(address_pc_indexA)

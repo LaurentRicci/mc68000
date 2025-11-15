@@ -187,6 +187,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 						word = (word << 8);
 					}
 					code.push_back(word);
+					currentAddress += 2;
 				}
 			}
 			else
@@ -199,6 +200,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 					number = 0;
 				}
 				code.push_back(number);
+				currentAddress += 2;
 			}
 		}
 		return 0;
@@ -229,6 +231,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 					}
 					code.push_back(codelong >> 16);
 					code.push_back(codelong & 0xffff);
+					currentAddress += 4;
 				}
 			}
 			else
@@ -236,6 +239,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				uint32_t number = static_cast<uint32_t>(any_cast<int>(data));
 				code.push_back(number >> 16);
 				code.push_back(number & 0xffff);
+				currentAddress += 4;
 			}
 		}
 		return 0;
@@ -249,6 +253,22 @@ any visitor::visitExpression(parser68000::ExpressionContext* ctx)
 	return visit(ctx->children[0]);
 }
 
+int32_t anytoint(any val)
+{
+	if (val.type() == typeid(int32_t))
+	{
+		return any_cast<int32_t>(val);
+	}
+	else if (val.type() == typeid(uint32_t))
+	{
+		return static_cast<int32_t>(any_cast<uint32_t>(val));
+	}
+	else
+	{
+		assert(!"Invalid type in expression");
+		return 0;
+	}
+}
 any visitor::visitAdditiveExpr(parser68000::AdditiveExprContext* ctx) 
 {
 	any lhs = visit(ctx->children[0]);
@@ -258,15 +278,15 @@ any visitor::visitAdditiveExpr(parser68000::AdditiveExprContext* ctx)
 		assert(ctx->children.size() == 1);
 		return lhs;
 	}
-	int32_t result = any_cast<int32_t>(lhs);
+	int32_t result = anytoint(lhs);
 
 	for(int i=1; i<ctx->children.size(); i+=2)
 	{
 		string op = ctx->children[i]->getText();
 		any anyrhs = visit(ctx->children[i + 1]);
-		if (anyrhs.type() == typeid(int32_t))
+		if (anyrhs.type() == typeid(int32_t) || anyrhs.type() == typeid(uint32_t))
 		{
-			int32_t rhs = any_cast<int32_t>(anyrhs);
+			int32_t rhs = anytoint(anyrhs);
 			if (op == "+")
 			{
 				result += rhs;

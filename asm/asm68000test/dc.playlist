@@ -366,6 +366,18 @@
                         <Property Name="DisplayName" Value="org_number_negative" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_address" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcl_address" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_address" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_address" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>
