@@ -5,6 +5,7 @@
 #include "instructions.h"
 #include "cpu.h"
 #include "exceptions.h"
+#include "disasm.h"
 
 namespace mc68000
 {
@@ -75,6 +76,27 @@ namespace mc68000
 		while (!done)
 		{
 			uint16_t x = localMemory.getWord(pc);
+			pc += 2;
+			(this->*handlers[x])(x);
+		}
+	}
+
+	void Cpu::debug(uint32_t startPc, uint32_t startSP, uint32_t startSSP)
+	{
+		done = false;
+		pc = startPc;
+		aRegisters[7] = startSP;
+		usp = startSP;
+		ssp = startSSP;
+
+		uint16_t* memory = static_cast<uint16_t*>(localMemory.get<void*>(0u));
+		DisAsm disAsm(memory);
+
+		while (!done)
+		{
+			uint16_t x = localMemory.getWord(pc);
+			auto s = disAsm.disassembleInstruction(pc);
+			std::cout << std::hex << x << " - " << s << std::endl;
 			pc += 2;
 			(this->*handlers[x])(x);
 		}

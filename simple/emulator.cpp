@@ -80,6 +80,14 @@ Emulator::Emulator() :
     current = this;
 }
 
+Emulator::Emulator(const char* binaryFile) :
+    memory(binaryFile),
+    cpu(memory)
+{
+    cpu.registerTrapHandler(15, trap15);
+    current = this;
+}
+
 Emulator::Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize) :
 	memory(memorySize, base, code, codeSize),
 	cpu(memory)
@@ -87,10 +95,35 @@ Emulator::Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size
 	cpu.registerTrapHandler(15, trap15);
 	current = this;
 }
+bool Emulator::debug(bool enable)
+{
+    debugMode = enable;
+    return debugMode;
+}
 
 void Emulator::run()
 {
     cpu.reset();
-    cpu.start(base, base + 1024);
+    if (debugMode)
+    {
+        cpu.debug(base, base + 1024, base + 1024);
+	}
+    else
+    {
+        cpu.start(base, base + 1024);
+    }
+}
+
+void Emulator::run(uint32_t startPc, uint32_t startSP, uint32_t startUSP)
+{
+    cpu.reset();
+    if (debugMode)
+    {
+        cpu.debug(startPc, startSP, startUSP);
+    }
+    else
+    {
+        cpu.start(startPc, startSP, startUSP);
+    }
 }
 

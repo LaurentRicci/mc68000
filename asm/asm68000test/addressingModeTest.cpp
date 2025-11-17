@@ -88,8 +88,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(a1), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'101'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 
@@ -99,8 +98,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'101'111, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 	BOOST_AUTO_TEST_CASE(address_aReg_displacement_error)
@@ -109,8 +107,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $4ffff(a1), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'101'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
 
@@ -120,8 +117,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (4,a1), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'101'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 
@@ -131,8 +127,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (4,SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'101'111, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 
@@ -145,8 +140,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(a1, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
@@ -156,8 +150,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(a1, a2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'010'0'000'00000100, code[1]);
 	}
 
@@ -167,8 +160,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(a1, SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'111'0'000'00000100, code[1]);
 	}
 
@@ -178,8 +170,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (4, a1, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
@@ -189,8 +180,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(SP, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'111, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
@@ -200,8 +190,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (4, SP, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'111, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
@@ -211,8 +200,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (420, a1, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'10100100, code[1]);
 		// TODO: Check for error message
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
@@ -224,8 +212,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add -4(a1, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'11111100, code[1]);
 	}
 
@@ -235,8 +222,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 6(a1, a3.l), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'011'1'000'00000110, code[1]);
 	}
 
@@ -252,7 +238,7 @@ namespace addressing_mode
 		asmparser parser;
 		auto opcode = parser.parseText(" add $6(a1, a3.l), d0\n");
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 2);
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0xd071, code[0]);
 		BOOST_CHECK_EQUAL(0b1'011'1'000'0000'0110, code[1]);
 	}
@@ -266,8 +252,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $1234.W, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 	}
 
@@ -277,8 +262,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $1234, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 	}
 
@@ -295,8 +279,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add data, d0\n add #1, d0\n nop\n nop\ndata:\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(6, code.size());
+		const auto& code = validate_codeSize(parser, 6);
 		BOOST_CHECK_EQUAL(0xc,    code[1]);
 		BOOST_CHECK_EQUAL(0xd07c, code[2]);
 		BOOST_CHECK_EQUAL(0x1,    code[3]);
@@ -317,8 +300,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $12345678.L, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 		BOOST_CHECK_EQUAL(0x5678, code[2]);
 	}
@@ -329,8 +311,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $12345678, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'001, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 		BOOST_CHECK_EQUAL(0x5678, code[2]);
 	}
@@ -343,8 +324,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 42(pc), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(42, code[1]);
 	}
 
@@ -354,8 +334,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $2a(pc), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x2a, code[1]);
 	}
 
@@ -374,8 +353,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(pc, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
@@ -385,8 +363,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add $2a(pc, d2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b0'010'0'000'0010'1010, code[1]);
 	}
 
@@ -396,8 +373,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add 4(pc, a2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'010'0'000'00000100, code[1]);
 	}
 	BOOST_AUTO_TEST_CASE(address_pc_indexSP)
@@ -405,8 +381,8 @@ namespace addressing_mode
 		asmparser parser;
 		auto opcode = parser.parseText(" add 4(pc, SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'111'0'000'00000100, code[1]);
 	}
 
@@ -426,8 +402,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add.b #4, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'000'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4, code[1]);
 	}
 
@@ -437,8 +412,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add.b #'A', d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'000'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x41, code[1]);
 	}
 
@@ -448,7 +422,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add.b #'''', d0\n");
 
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 2);
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1101'000'000'111'100, code[0]);
 		BOOST_CHECK_EQUAL(0x0027, code[1]);
 	}
@@ -466,8 +440,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add #4, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4, code[1]);
 	}
 
@@ -484,8 +457,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add.l #$12345678, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'010'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 		BOOST_CHECK_EQUAL(0x5678, code[2]);
 	}
@@ -496,8 +468,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add.l #$1234, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'010'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x0, code[1]);
 		BOOST_CHECK_EQUAL(0x1234, code[2]);
 	}
@@ -508,8 +479,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" move.l #label, a0\nlabel: nop\n");
 		validate_hasValue<uint16_t>(0b0010'000'001'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(4, code.size());
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x0, code[1]);
 		BOOST_CHECK_EQUAL(0x6, code[2]);
 		BOOST_CHECK_EQUAL(0x4e71, code[3]);
@@ -521,8 +491,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" move #*, a0\n");
 		validate_hasValue<uint16_t>(0b0011'000'001'111'100, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x0, code[1]);
 	}
 
@@ -533,7 +502,7 @@ namespace addressing_mode
 		validate_hasValue<uint16_t>(0b0010'000'010'111'100, opcode);
 
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 3);
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0xffff, code[1]);
 		BOOST_CHECK_EQUAL(0xffff, code[2]);
 	}
@@ -544,7 +513,7 @@ namespace addressing_mode
 		parser.parseText(" MOVE.B    #$FF,-(SP) \n move.b #-1,-(sp)\n move.b #255,-(sp)\n move.b #-128,-(sp)\n");
 
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 8);
+		const auto& code = validate_codeSize(parser, 8);
 		BOOST_CHECK_EQUAL(0x1F3C, code[0]);
 		BOOST_CHECK_EQUAL(0x00ff, code[1]);
 		BOOST_CHECK_EQUAL(0x1F3C, code[2]);
@@ -563,8 +532,7 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" lea LIST, a0\nLIST: nop\n");
 		validate_hasValue<uint16_t>(0b0100'000'111'111'000, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x4, code[1]);
 		BOOST_CHECK_EQUAL(0x4e71, code[2]);
 	}
@@ -574,8 +542,7 @@ namespace addressing_mode
 		asmparser parser;
 		auto opcode = parser.parseText("move move move,d0 ; just a move\n lea move, a0\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(4, code.size());
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x3038, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x41f8, code[2]);
@@ -589,8 +556,7 @@ namespace addressing_mode
 		asmparser parser;
 		auto opcode = parser.parseText("    move *,d0\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x3038, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 	}

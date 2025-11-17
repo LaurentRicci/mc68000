@@ -23,7 +23,7 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 		if (incompleteBinary)
 		{
 			// complete the last word with the 1st byte of the dcBytes
-			code.back() = code.back() | dcBytes[0];
+			code().back() = code().back() | dcBytes[0];
 			currentAddress += 1;
 			start = 1;
 			incompleteBinary = false;
@@ -43,12 +43,12 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 				incompleteBinary = true;
 				currentAddress += 1;
 			}
-			code.push_back(word);
+			code().push_back(word);
 		}
 		dcBytes.clear();
-		return *code.rbegin();
+		return code().back();
 	}
-	return *code.rbegin();
+	return code().back();
 }
 any visitor::visitEqu(parser68000::EquContext* ctx)
 {
@@ -117,22 +117,37 @@ any visitor::visitDs(parser68000::DsContext* ctx)
 	}
 	for (uint32_t i = 0; i < bytesNeeded; i += 2)
 	{
-		code.push_back(0);
+		code().push_back(0);
 	}
 	if ((bytesNeeded) % 2 != 0)
 	{
 		incompleteBinary = true;
 	}
 	currentAddress += bytesNeeded;
-	return *code.rbegin();
+	return *code().rbegin();
 }
 
 any visitor::visitOrg(parser68000::OrgContext* ctx)
 {
 	auto blockAddress = ctx->blockAddress();
 	uint32_t address = getAddressValue(blockAddress);
-
-	currentAddress = address;
+	if (pass == 0)
+	{
+		if (currentAddress == 0)
+		{
+			// We are at the begining of the first block
+			assert(codeBlocks.size() == 1);
+			codeBlocks.back().origin = address;
+			start = address;
+			currentAddress = address;
+		}
+		else
+		{
+			// We start a new block
+			codeBlock newBlock(address);
+			codeBlocks.push_back(newBlock);
+		}
+	}
 	return any();
 }
 
@@ -186,7 +201,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 					{
 						word = (word << 8);
 					}
-					code.push_back(word);
+					code().push_back(word);
 					currentAddress += 2;
 				}
 			}
@@ -199,7 +214,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 					addError("Value out of range for dc.w: " + to_string(value), ctx->children[i]);
 					number = 0;
 				}
-				code.push_back(number);
+				code().push_back(number);
 				currentAddress += 2;
 			}
 		}
@@ -229,16 +244,16 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 							codelong = (codelong << 8);
 						}
 					}
-					code.push_back(codelong >> 16);
-					code.push_back(codelong & 0xffff);
+					code().push_back(codelong >> 16);
+					code().push_back(codelong & 0xffff);
 					currentAddress += 4;
 				}
 			}
 			else
 			{
 				uint32_t number = static_cast<uint32_t>(any_cast<int>(data));
-				code.push_back(number >> 16);
-				code.push_back(number & 0xffff);
+				code().push_back(number >> 16);
+				code().push_back(number & 0xffff);
 				currentAddress += 4;
 			}
 		}
@@ -317,7 +332,6 @@ any visitor::visitDleString(parser68000::DleStringContext* ctx)
 {
 	return ctx->children[0]->getText();
 }
-
 
 any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 {

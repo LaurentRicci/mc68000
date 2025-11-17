@@ -367,15 +367,21 @@
                       </Rule>
                     </Rule>
                     <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_address" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_address" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
                       <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcl_address" />
                       <Rule Match="Any">
                         <Property Name="DisplayName" Value="dcl_address" />
                       </Rule>
                     </Rule>
                     <Rule Match="All">
-                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_address" />
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/org_multi" />
                       <Rule Match="Any">
-                        <Property Name="DisplayName" Value="dcw_address" />
+                        <Property Name="DisplayName" Value="org_multi" />
                       </Rule>
                     </Rule>
                   </Rule>

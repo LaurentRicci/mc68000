@@ -31,16 +31,16 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 		auto s = tree->toStringTree(&parser);
 		std::cout << "Parse Tree: " << s << std::endl;
 	}
-	visitor v(code, labels, labelsLocation, errorsList);
-	auto result = v.generateCode(tree);
+	visitor v(result);
+	auto res = v.generateCode(tree);
 
-	auto errs = errorsList.get();
+	auto errs = result.errors.get();
 	if (!errs.empty())
 	{
-		std::cout << errs.size() << " errors found during parsing:" << std::endl;
+		std::cerr << errs.size() << " errors found during parsing:" << std::endl;
 		for (const auto& error : errs)
 		{
-			std::cout << error.toString() << std::endl;
+			std::cerr << error.toString() << std::endl;
 		}
 		return false;
 	}
@@ -63,7 +63,7 @@ std::any asmparser::parseText(const char* text)
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)
 	{
-		visitor v(code, labels, labelsLocation, errorsList);
+		visitor v(result);
 		auto result = v.generateCode(tree);
 		return result;
 	}
@@ -85,4 +85,9 @@ size_t asmparser::checkSyntax(const char* text)
 	tree::ParseTree* tree = parser.prog();
 
 	return parser.getNumberOfSyntaxErrors();
+}
+
+bool asmparser::saveBinary(const char* filename)
+{
+	return result.save(filename);
 }

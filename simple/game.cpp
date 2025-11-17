@@ -97,11 +97,18 @@ uint8_t* assemble()
 	return memory;
 }
 
-void game()
+void game(bool debugMode)
 {
 	uint8_t* code = assemble();
 
 	Emulator emulator(4096, 0x1000, code, 4096);
-
+	emulator.debug(debugMode);
 	emulator.run();
+}
+
+void game(const char* binaryFile, bool debugMode)
+{
+	Emulator emulator(binaryFile);
+	emulator.debug(debugMode);
+	emulator.run(0, 1024, 1024);
 }

@@ -19,7 +19,6 @@ else()
 endif()
 message(STATUS "boost: ${Boost_INCLUDE_DIRS} ")
 
-
 set(ANTLR4_WITH_STATIC_CRT OFF) # using /MD flag for antlr4_runtime (for Visual C++ compilers only)
 set(ANTLR_BUILD_SHARED ON) # in my case I built the shared version
 set(ANTLR_TAG 4.13.1) # to specify the GitHub tag for the jar too
@@ -56,6 +55,8 @@ add_library(asm68000lib
     visitor.h
     errors.cpp
     errors.h
+    asmResult.h
+    asmResult.cpp
     ${ANTLR_lexer_CXX_OUTPUTS}
     ${ANTLR_parser_CXX_OUTPUTS}
     )

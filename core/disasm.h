@@ -192,11 +192,12 @@ namespace mc68000
 		void reset(const uint16_t* memory);
 
 	private:
-		uint32_t pc;
-		const uint16_t* memory;
-		uint32_t origin;
+		uint32_t pc = 0;
+		const uint16_t* memory = nullptr;
+		uint32_t origin = 0;
 		std::string disassembly;
-		bool done;
+		bool done = false;
+		bool swapMemory = false;
 
 		// DecodeEffectiveAddress size options
 		const bool Ignore = false;
@@ -207,8 +208,10 @@ namespace mc68000
 
 	public:
 		DisAsm();
+		DisAsm(const uint16_t* memory);
 		~DisAsm();
 		std::string disassemble(const uint16_t*);
+		std::string disassembleInstruction(uint32_t pc);
 		std::string dasm(const uint16_t*, uint32_t org);
 	};
 }

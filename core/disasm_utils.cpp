@@ -14,12 +14,33 @@ namespace mc68000
 
 	uint16_t DisAsm::fetchNextWord()
 	{
-		return memory[pc++];
+		if (swapMemory)
+		{
+			const uint8_t* p8 = reinterpret_cast<const uint8_t*>(memory + pc++);
+
+			uint16_t word = (*p8 << 8) | *(p8 + 1);
+
+			return word;
+
+		}
+		else
+		{
+			return memory[pc++];
+		}
 	}
 
 	uint32_t DisAsm::fetchRelativeAddress()
 	{
-		uint16_t offset = memory[pc];
+		uint16_t offset;
+		if (swapMemory)
+		{
+			const uint8_t* p8 = reinterpret_cast<const uint8_t*>(memory + pc);
+			offset = (*p8 << 8) | *(p8 + 1);
+		}
+		else
+		{
+			offset = memory[pc];
+		}
 		uint32_t address = origin + (pc * 2)  + (int16_t) offset;
 		pc++;
 		return address;

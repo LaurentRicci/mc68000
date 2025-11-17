@@ -5,11 +5,11 @@ using namespace mc68000;
 
 uint16_t visitor::finalize_instruction(uint16_t opcode)
 {
-	code.push_back(opcode);
+	code().push_back(opcode);
 	currentAddress += 2;
 	if (!extensionsList.empty())
 	{
-		code.insert(code.end(), extensionsList.begin(), extensionsList.end());
+		code().insert(code().end(), extensionsList.begin(), extensionsList.end());
 	}
 	currentAddress += 2 * (uint32_t) extensionsList.size();
 	extensionsList.clear();
@@ -20,9 +20,9 @@ any visitor::generateCode(tree::ParseTree* tree)
 {
 	pass = 0;
 	tree->accept(this);
-	code.clear();
+	code().clear();
 	extensionsList.clear();
-	currentAddress = 0;
+	currentAddress = codeBlocks.back().origin;
 	incompleteBinary = false;
 
 	pass = 1;
@@ -269,7 +269,7 @@ any visitor::visitAddx_indirect(parser68000::Addx_indirectContext* ctx)
 any visitor::visitAndOr_to_dRegister(parser68000::AndOr_to_dRegisterContext* ctx)
 {
 	uint16_t instructionCode = any_cast<uint16_t>(visit(ctx->children[0]));
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5)
 	{
@@ -295,7 +295,7 @@ any visitor::visitAndOr_to_dRegister(parser68000::AndOr_to_dRegisterContext* ctx
 any visitor::visitAndOr_from_dRegister(parser68000::AndOr_from_dRegisterContext* ctx)
 {
 	uint16_t instructionCode = any_cast<uint16_t>(visit(ctx->children[0]));
-	uint16_t size = 1;
+	size = 1;
 	int arg = 1;
 	if (ctx->children.size() == 5)
 	{
@@ -2043,7 +2043,6 @@ int32_t visitor::getIntegerValue(parser68000::AddressContext* ctx)
 	return target;
 }
 
-
 any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
 {
 	auto s = ctx->children[0]->getText();
@@ -2100,7 +2099,6 @@ bool visitor::isValidAddressingMode(unsigned short effectiveAddress, unsigned sh
 	return (acceptable & masks[offset]) == masks[offset];
 }
 
-
 void visitor::addError(const std::string& message, tree::ParseTree* ctx)
 {
     if (pass == 1) 
@@ -2137,5 +2135,4 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 		errorList.add(message, 0, 0);
 	}
 }
-
 
