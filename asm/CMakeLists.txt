@@ -1,7 +1,7 @@
 # LAURENT:
 # taken from https://github.com/antlr/antlr4/discussions/4418
 #
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.31)
 project(asm)
 
 if (WIN32)
@@ -14,6 +14,11 @@ if (WIN32)
     else()
         message(FATAL_ERROR "*** boost library not found ***")
     endif()
+    # Use dynamic runtime (/MD, /MDd) for all MSVC targets
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    #include symbols even in release mode
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG")
 else()
     set(Boost_INCLUDE_DIRS "/usr/include/boost")
 endif()

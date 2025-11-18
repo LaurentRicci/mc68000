@@ -1,7 +1,7 @@
 # CMakeList.txt : CMake project for cpu, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.31)
 cmake_policy(SET CMP0076 NEW)
 set (CMAKE_CXX_STANDARD 20)
 
