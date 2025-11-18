@@ -17,15 +17,15 @@ steps:
     gcc --version
     ls /usr/bin
 - task: CMake@1
+  displayName: Checking CMake version
+  inputs:
+    workingDirectory: '.'
+    cmakeArgs: '--version'
+- task: CMake@1
   displayName: Preparing emulator makefile
   inputs:
     workingDirectory: '.'
     cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
-- task: CMake@1
-  displayName: Checking cmake version
-  inputs:
-    workingDirectory: '.'
-    cmakeArgs: '--version'
 - task: CMake@1
   displayName: Building emulator
   inputs:
