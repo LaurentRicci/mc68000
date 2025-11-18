@@ -1,7 +1,7 @@
 # CMakeList.txt : CMake project for coretest, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.31)
 
 # Add source to this project's executable.
 add_executable (dasmtest "module.cpp" "disasmtest.cpp" "tutorial2.cpp"  "offset.cpp"
