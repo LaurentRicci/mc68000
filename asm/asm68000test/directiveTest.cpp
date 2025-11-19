@@ -25,7 +25,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 1);
-		auto code = validate_codeSize(parser, 4);
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
 		BOOST_CHECK_EQUAL(0x2a2a, code[1]); // 42,42
 		BOOST_CHECK_EQUAL(0x41f8, code[2]); // lea instruction
@@ -68,8 +68,7 @@ namespace directiveTest
 		auto opcode = parser.parseText(" DC.B   'LIS', 'T'\n");
 		validate_hasValue<uint16_t>(0x5354, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4C49, code[0]); // 'LI'
 		BOOST_CHECK_EQUAL(0x5354, code[1]); // 'ST'
 	}
@@ -80,8 +79,7 @@ namespace directiveTest
 		auto opcode = parser.parseText(" DC.B   'ABC', $ff\n");
 		validate_hasValue<uint16_t>(0x43ff, opcode);
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4142, code[0]); // 'AB'
 		BOOST_CHECK_EQUAL(0x43ff, code[1]); // 'C' + $ff
 	}
@@ -91,8 +89,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.b 'lau', 10, 129\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x6C61, code[0]); // 'la'
 		BOOST_CHECK_EQUAL(0x750A, code[1]); // 'u' 10
 		BOOST_CHECK_EQUAL(0x8100, code[2]); // 129
@@ -103,8 +100,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.b 10\n nop\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x0a00, code[0]); // 10
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 	}
@@ -114,8 +110,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.b 10\n dc.b 129\n nop\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x0a81, code[0]); // 10 129
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 	}
@@ -125,8 +120,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.b 10\n nop\n dc.b 129\n nop\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(4, code.size());
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x0a00, code[0]);
 		BOOST_CHECK_EQUAL(0x4e71, code[1]);
 		BOOST_CHECK_EQUAL(0x8100, code[2]);
@@ -162,8 +156,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.w $12, $34\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x0012, code[0]);
 		BOOST_CHECK_EQUAL(0x0034, code[1]);
 	}
@@ -180,18 +173,30 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.w 'lau', 10, 129\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(4, code.size());
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x6C61, code[0]); // 'la'
 		BOOST_CHECK_EQUAL(0x7500, code[1]); // 'u'
 		BOOST_CHECK_EQUAL(0x000A, code[2]); // 10
 		BOOST_CHECK_EQUAL(0x0081, code[3]); // 129
 	}
+
 	BOOST_AUTO_TEST_CASE(dcw_toolong)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.w $12345\n");
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+	}
+
+	BOOST_AUTO_TEST_CASE(dcw_address)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" bra label\n dc.w $ffff\nlabel: nop\n");
+
+		const auto& code = validate_codeSize(parser, 4);
+		BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+		BOOST_CHECK_EQUAL(0x0004, code[1]); // 
+		BOOST_CHECK_EQUAL(0xffff, code[2]); // dc.w $ffff
+		BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
 	}
 
 	// ====================================================================================================
@@ -201,9 +206,8 @@ namespace directiveTest
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.l 42\n");
-		const std::vector<uint16_t>& code = parser.getCode();
 
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0, code[0]);
 		BOOST_CHECK_EQUAL(42, code[1]);
 	}
@@ -212,9 +216,8 @@ namespace directiveTest
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.l -50000\n");
-		const std::vector<uint16_t>& code = parser.getCode();
 
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0xffff, code[0]);
 		BOOST_CHECK_EQUAL(0x3cb0, code[1]);
 	}
@@ -224,8 +227,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.l $12, $34\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(4, code.size());
+		const auto& code = validate_codeSize(parser, 4);
 		BOOST_CHECK_EQUAL(0x0000, code[0]);
 		BOOST_CHECK_EQUAL(0x0012, code[1]);
 		BOOST_CHECK_EQUAL(0x0000, code[2]);
@@ -237,8 +239,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.l 'AB'\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4142, code[0]); // AB
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 	}
@@ -247,8 +248,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.l 'lau', 10, 129\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(6, code.size());
+		const auto& code = validate_codeSize(parser, 6);
 		BOOST_CHECK_EQUAL(0x6C61, code[0]); // 'la'
 		BOOST_CHECK_EQUAL(0x7500, code[1]); // 'u'
 
@@ -257,6 +257,18 @@ namespace directiveTest
 
 		BOOST_CHECK_EQUAL(0x0000, code[4]); // 10
 		BOOST_CHECK_EQUAL(0x0081, code[5]); // 129
+	}
+	BOOST_AUTO_TEST_CASE(dcl_address)
+	{
+		asmparser parser;
+		auto opcode = parser.parseText(" bra label\n dc.l $ffffeeee\nlabel: nop\n");
+
+		const auto& code = validate_codeSize(parser, 5);
+		BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+		BOOST_CHECK_EQUAL(0x0006, code[1]); // 
+		BOOST_CHECK_EQUAL(0xffff, code[2]); // dc.l $ffffeeee
+		BOOST_CHECK_EQUAL(0xeeee, code[3]); // 
+		BOOST_CHECK_EQUAL(0x4e71, code[4]); // nop
 	}
 	// ====================================================================================================
 	// EQU
@@ -267,7 +279,7 @@ namespace directiveTest
 		parser.parseText("X EQU 42\n moveq #X,d0\n");
 
 		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
-		const std::vector<uint16_t>& code = parser.getCode();
+		const auto& code = validate_codeSize(parser, 1);
 		BOOST_CHECK_EQUAL(0x702A, code[0]);
 	}
 
@@ -277,7 +289,7 @@ namespace directiveTest
 		parser.parseText("X EQU 42\n dc.b X,X\n");
 
 		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
-		const std::vector<uint16_t>& code = parser.getCode();
+		const auto& code = validate_codeSize(parser, 1);
 		BOOST_CHECK_EQUAL(0x2A2A, code[0]);
 	}
 
@@ -287,8 +299,8 @@ namespace directiveTest
 		parser.parseText("CR EQU $0d \nCODE CMPI.B #CR,(A0) \n DC.B CR\n");
 
 		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x0c10, code[0]);
 		BOOST_CHECK_EQUAL(0x000d, code[1]);
 		BOOST_CHECK_EQUAL(0x0d00, code[2]);
@@ -299,8 +311,8 @@ namespace directiveTest
 		parser.parseText("X EQU 'x' \nY EQU 'y' \n DC.B X,Y\n");
 
 		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(1, code.size());
+
+		const auto& code = validate_codeSize(parser, 1);
 		BOOST_CHECK_EQUAL(0x7879, code[0]);
 	}
 
@@ -310,8 +322,8 @@ namespace directiveTest
 		parser.parseText("X EQU 42 \nY EQU 43 \n DC.B X+Y\n");
 
 		BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(1, code.size());
+
+		const auto& code = validate_codeSize(parser, 1);
 		BOOST_CHECK_EQUAL(0x5500, code[0]);
 	}
 
@@ -339,7 +351,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 6);
+		const auto& code = validate_codeSize(parser, 6);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x41f8, code[2]);
@@ -354,7 +366,7 @@ namespace directiveTest
 		parser.parseText("count EQU 2\n nop\nfrom ds.b count\nto lea from,a0\n lea to,a1\n");
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 6);
+		const auto& code = validate_codeSize(parser, 6);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x41f8, code[2]);
@@ -370,7 +382,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 6);
+		const auto& code = validate_codeSize(parser, 6);
 		BOOST_CHECK_EQUAL(0x3f00, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x41f8, code[2]);
@@ -385,7 +397,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 7);
+		const auto& code = validate_codeSize(parser, 7);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x0000, code[2]);
@@ -401,7 +413,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 7);
+		const auto& code = validate_codeSize(parser, 7);
 		BOOST_CHECK_EQUAL(0x3f00, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x0000, code[2]);
@@ -418,7 +430,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 9);
+		const auto& code = validate_codeSize(parser, 9);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x0000, code[2]);
@@ -437,7 +449,7 @@ namespace directiveTest
 
 		validate_noErrors(parser);
 		validate_labelsCount(parser, 2);
-		auto code = validate_codeSize(parser, 9);
+		const auto& code = validate_codeSize(parser, 9);
 		BOOST_CHECK_EQUAL(0x3f00, code[0]);
 		BOOST_CHECK_EQUAL(0x0000, code[1]);
 		BOOST_CHECK_EQUAL(0x0000, code[2]);
@@ -464,7 +476,7 @@ namespace directiveTest
 		parser.parseText(" org $2A00\n lea *,a0\n");
 
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 2);
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x41F8, code[0]);
 		BOOST_CHECK_EQUAL(0x2A00, code[1]);
 	}
@@ -482,7 +494,7 @@ namespace directiveTest
 		parser.parseText("START EQU $2A00\n org START\n lea *,a0\n");
 
 		validate_noErrors(parser);
-		auto code = validate_codeSize(parser, 2);
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x41F8, code[0]);
 		BOOST_CHECK_EQUAL(0x2A00, code[1]);
 	}
@@ -503,12 +515,17 @@ namespace directiveTest
 		validate_errorsCount(parser, 1);
 	}
 
-	BOOST_AUTO_TEST_CASE(org_label)
+	BOOST_AUTO_TEST_CASE(org_multi)
 	{
 		asmparser parser;
-		parser.parseText("START nop\n org START\n lea *,a0\n");
+		parser.parseText(" org $1000\n nop\n org $2000\n nop\n");
 
-		validate_errorsCount(parser, 1);
+		validate_noErrors(parser);
+
+		const auto& codeBlocks = parser.getCodeBlocks();
+		BOOST_CHECK_EQUAL(2, codeBlocks.size());
+		BOOST_CHECK_EQUAL(0x1000, codeBlocks[0].origin);
+		BOOST_CHECK_EQUAL(0x2000, codeBlocks[1].origin);
 	}
 
 	BOOST_AUTO_TEST_CASE(org_unknown)
@@ -533,8 +550,7 @@ namespace directiveTest
 		asmparser parser;
 		parser.parseText(" DC.B   'LIS',   ('T'+$80) \n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x4C49, code[0]); // LI
 		BOOST_CHECK_EQUAL(0x53D4, code[1]); // S, 'T' + $80
 	}
@@ -544,8 +560,7 @@ namespace directiveTest
 		asmparser parser;
 		parser.parseText(" DC.B   ':',PR2-*\nPR2 NOP\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(2, code.size());
+		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x3A01, code[0]); // : PR2-*
 		BOOST_CHECK_EQUAL(0x4E71, code[1]); // NOP
 	}
@@ -576,8 +591,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" dc.b lbl - *\n nop\nlbl nop\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x0400, code[0]); // lbl-*
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 		BOOST_CHECK_EQUAL(0x4e71, code[2]); // nop
@@ -590,8 +604,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" nop\nlbl: nop\n dc.b lbl\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 		BOOST_CHECK_EQUAL(0x0200, code[2]); // lbl
@@ -604,8 +617,7 @@ namespace directiveTest
 		asmparser parser;
 		auto opcode = parser.parseText(" nop\nLIST: nop\n dc.b LIST\n");
 
-		const std::vector<uint16_t>& code = parser.getCode();
-		BOOST_CHECK_EQUAL(3, code.size());
+		const auto& code = validate_codeSize(parser, 3);
 		BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
 		BOOST_CHECK_EQUAL(0x4e71, code[1]); // nop
 		BOOST_CHECK_EQUAL(0x0200, code[2]); // lbl

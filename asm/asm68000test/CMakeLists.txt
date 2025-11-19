@@ -1,12 +1,12 @@
 # CMakeList.txt : CMake project for cputest, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.31)
 
 # Add source to this project's executable.
 add_executable (asm68000test 
-	"test.cpp"  "module.cpp" "addressingModeTest.cpp" "directiveTest.cpp"
-	"../asmparser.h" )
+	"instructionTest.cpp"  "module.cpp" "addressingModeTest.cpp" "directiveTest.cpp" "parserTest.cpp"
+	"../asmparser.h" "util.h")
 
 target_include_directories(asm68000test PUBLIC ${Boost_INCLUDE_DIRS}) 
 target_include_directories(asm68000test PRIVATE "..")

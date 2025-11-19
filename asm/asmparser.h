@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 
+#include "asmResult.h"
 #include "errors.h"
 
 class asmparser
@@ -11,12 +12,12 @@ public:
 	bool parseFile(const char* filename, bool showTree=false);
 	std::any parseText(const char* text);
 	size_t checkSyntax(const char* text);
-	const std::vector<uint16_t>& getCode() const { return code; }
-	const std::map<std::string, uint32_t>& getLabels() const { return labels; }
-	const mc68000::errors& getErrors() const { return errorsList; }
+	bool saveBinary(const char* filename);
+
+	const std::vector<codeBlock>& getCodeBlocks() const { return result.code; }
+	const std::map<std::string, uint32_t>& getLabels() const { return result.labels; }
+	const mc68000::errors& getErrors() const { return result.errors; }
+	const asmResult& getCode68000() const { return result; }
 private:
-	std::vector<uint16_t> code;
-	std::map<std::string, uint32_t> labels;
-	std::vector<uint32_t> labelsLocation;
-	mc68000::errors errorsList;
+	asmResult result;
 };

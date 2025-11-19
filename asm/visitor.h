@@ -1,6 +1,7 @@
 #pragma once
 #include "parser68000BaseVisitor.h"
 #include <tree/ParseTree.h>
+#include "asmResult.h"
 #include "errors.h"
 
 using namespace antlr4;
@@ -9,28 +10,34 @@ using namespace std;
 class visitor : public parser68000BaseVisitor
 {
 public: 
-    visitor(vector<uint16_t>& code, map<string, uint32_t>& labels, vector<uint32_t>& labelsLocation, mc68000::errors& errorList) 
-        : code(code), labels(labels), errorList(errorList) 
+    visitor(asmResult& code68000)
+      : codeBlocks(code68000.code), start(code68000.start),
+        labels(code68000.labels), symbols(code68000.symbols), errorList(code68000.errors)
     {
     }
     ~visitor() override = default;
     any generateCode(tree::ParseTree* tree);
 
 private:
-    vector<uint16_t>& code;                       // the assembly code as a results of the parsing
-    vector<uint16_t> extensionsList;              // the list of extra words for the addressing mode
-    int pass = 0;                                      // the current pass (0 = first pass, 1 = second pass)
-    uint32_t currentAddress = 0;                       // the current address in the code
-    uint16_t size = 1;                                 // the size of the current instruction
+    vector<codeBlock>& codeBlocks;                // the assembly code as a results of the parsing
+    uint32_t& start;
+    map<string, uint32_t>& labels;                // the labels found in the code label -> index
+    map<string, any>& symbols;                    // the symbol table (from the EQU directive)
+    mc68000::errors& errorList;                   // the list of errors found during the parsing
 
-    map<string, uint32_t>& labels;           // the labels found in the code label -> index
-    map<string, any> symbols;                          // the symbol table (from the EQU directive)
+    vector<uint16_t>& code()                      // the code in the current code block being processed
+    { 
+        return codeBlocks.back().code; 
+    }
+
+    vector<uint16_t> extensionsList;              // the list of extra words for the addressing mode
+    int pass = 0;                                 // the current pass (0 = first pass, 1 = second pass)
+    uint32_t currentAddress = 0;                  // the current address in the code
+    uint16_t size = 1;                            // the size of the current instruction
 
 	vector<uint8_t> dcBytes;                      // the data in the dc section
-	bool incompleteBinary = false;                     // true if the last instruction was a dc.b with an odd number of bytes
-    parser68000::LabelSectionContext* labelCtx;        // the current label section
-
-    mc68000::errors& errorList;                        // the list of errors found during the parsing
+	bool incompleteBinary = false;                // true if the last instruction was a dc.b with an odd number of bytes
+    parser68000::LabelSectionContext* labelCtx;   // the current label section
 
 private:
     any visitProg(parser68000::ProgContext* ctx) override;
@@ -284,5 +291,6 @@ private:
 	uint32_t getAddressValue(parser68000::AddressContext* ctx);
     uint32_t getAddressValue(parser68000::BlockAddressContext* ctx);
     int32_t  getIntegerValue(parser68000::AddressContext* ctx);
+    int32_t  getDisplacementValue(tree::ParseTree* pDisplacement);
 
 };

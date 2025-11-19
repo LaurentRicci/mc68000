@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <stddef.h>
+#include <fstream>
 
 namespace mc68000
 {
@@ -41,6 +42,50 @@ namespace mc68000
 			}
 		}
 
+		memory(const char* binaryFile)
+		{
+			std::ifstream inputFile(binaryFile, std::ios::binary);
+			if (!inputFile)
+			{
+				throw "cannot open file";
+			}
+
+			// Read the header
+			uint32_t magicNumber;
+			inputFile.read(reinterpret_cast<char*>(&magicNumber), sizeof(uint32_t));
+			if (magicNumber != 0x69344059)
+			{
+				throw "invalid magic number";
+			}
+			uint32_t start;
+			inputFile.read(reinterpret_cast<char*>(&start), sizeof(uint32_t));
+
+			uint32_t blocksCount;
+			inputFile.read(reinterpret_cast<char*>(&blocksCount), sizeof(uint32_t));
+
+			// For now, only one block is supported
+			if (blocksCount != 1)
+			{
+				throw "only one block supported";
+			}
+
+			for (uint32_t i = 0; i < blocksCount; i++)
+			{
+				uint32_t codeSize;
+				inputFile.read(reinterpret_cast<char*>(&codeSize), sizeof(uint32_t));
+				size = codeSize * 2; // Each instruction is 2 bytes
+
+				inputFile.read(reinterpret_cast<char*>(&baseAddress), sizeof(uint32_t));
+
+				// Read the content
+				rawMemory = new unsigned char[size + 1024];		// need some extra space for the stack
+				char* p = reinterpret_cast<char*>(rawMemory);
+				for (uint32_t i = 0; i < size; ++i, ++p)
+				{
+					inputFile.read(p, sizeof(uint8_t));
+				}
+			}
+		}
 		memory() :
 			rawMemory(nullptr),
 			size(0),

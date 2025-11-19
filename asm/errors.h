@@ -27,7 +27,6 @@ namespace mc68000
 		size_t column;          // Column number where the error occurred
 	};
 
-
 	class errors
 	{
 	public:

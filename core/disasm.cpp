@@ -18,7 +18,12 @@ namespace mc68000
 	extern const char* const Conditions[] = { "t", "f", "hi", "ls", "cc", "cs", "ne", "eq", "vc", "vs", "pl", "mi", "ge", "lt", "gt", "le" };
 
 
-	DisAsm::DisAsm() : pc(0), memory(nullptr), done(false)
+	DisAsm::DisAsm()
+	{
+		handlers = setup<DisAsm>();
+	}
+
+	DisAsm::DisAsm(const uint16_t* mem) : memory(mem), swapMemory(true)
 	{
 		handlers = setup<DisAsm>();
 	}
@@ -35,6 +40,15 @@ namespace mc68000
 
 		uint16_t x = memory[pc];
 		pc++;
+
+		auto resultCode = (this->*handlers[x])(x);
+		return disassembly;
+	}
+
+	std::string DisAsm::disassembleInstruction(uint32_t cpuPC)
+	{
+		this->pc = cpuPC / 2;
+		uint16_t x = fetchNextWord();
 
 		auto resultCode = (this->*handlers[x])(x);
 		return disassembly;
@@ -205,7 +219,7 @@ namespace mc68000
 
 	uint16_t DisAsm::bra(uint16_t opcode)
 	{
-		return disassembleBccInstruction("bra", instructions::BHI, opcode);
+		return disassembleBccInstruction("bra", instructions::BRA, opcode);
 	}
 	uint16_t DisAsm::bhi(uint16_t opcode)
 	{

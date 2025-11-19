@@ -29,7 +29,7 @@ inline void validate_labelsCount(const asmparser& parser, size_t expectedCount)
 
 inline const std::vector<uint16_t>& validate_codeSize(const asmparser& parser, size_t expectedSize)
 {
-	const std::vector<uint16_t>& code = parser.getCode();
+	const std::vector<uint16_t>& code = parser.getCodeBlocks()[0].code;
 	BOOST_CHECK_EQUAL(expectedSize, code.size());
 	return code;
 }

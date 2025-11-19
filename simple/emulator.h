@@ -6,6 +6,7 @@ class Emulator
 private:
     mc68000::memory memory;
     mc68000::Cpu cpu;
+    bool debugMode = false;
 
 private:
     static Emulator* current;
@@ -16,7 +17,10 @@ private:
 
 public:
     Emulator();
+	Emulator(const char* binaryFile);
 	Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize);
 
+	bool debug(bool enable);
     void run();
+    void run(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 };
