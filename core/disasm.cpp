@@ -23,7 +23,7 @@ namespace mc68000
 		handlers = setup<DisAsm>();
 	}
 
-	DisAsm::DisAsm(const uint16_t* mem) : memory(mem), swapMemory(true)
+	DisAsm::DisAsm(const uint16_t* mem, uint32_t origin) : memory(mem), origin(origin), swapMemory(true)
 	{
 		handlers = setup<DisAsm>();
 	}
@@ -47,7 +47,7 @@ namespace mc68000
 
 	std::string DisAsm::disassembleInstruction(uint32_t cpuPC)
 	{
-		this->pc = cpuPC / 2;
+		this->pc = (cpuPC-origin) / 2;
 		uint16_t x = fetchNextWord();
 
 		auto resultCode = (this->*handlers[x])(x);

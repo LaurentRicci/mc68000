@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(rol_memory)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(rol_memory2)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ror_memory)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ror_memory2)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(rol_register_byte3)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(rol_register_word12)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(rol_register_long72)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(ror_register_byte3)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(ror_register_word12)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(ror_register_long72)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -299,7 +299,7 @@ void verifyRoxlExecution(uint8_t value, uint8_t rotation, uint8_t ccr, uint32_t 
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -370,7 +370,7 @@ void verifyRoxrExecution(uint8_t value, uint8_t rotation, uint8_t ccr, uint32_t 
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -443,7 +443,7 @@ void verifyRotateMemoryExecution(direction dir, uint16_t value, uint8_t ccr, uin
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

@@ -9,7 +9,7 @@
 
 namespace mc68000
 {
-	Cpu::Cpu(const memory& memory) :
+	Cpu::Cpu(const Memory& memory) :
 		dRegisters{ 0 },
 		aRegisters{ 0 },
 		d0(dRegisters[0]),
@@ -54,7 +54,7 @@ namespace mc68000
 		pc = 0;
 	}
 
-	void Cpu::reset(const memory& memory)
+	void Cpu::reset(const Memory& memory)
 	{
 		reset();
 		localMemory = memory;
@@ -89,8 +89,9 @@ namespace mc68000
 		usp = startSP;
 		ssp = startSSP;
 
-		uint16_t* memory = static_cast<uint16_t*>(localMemory.get<void*>(0u));
-		DisAsm disAsm(memory);
+		uint16_t* memory = static_cast<uint16_t*>(localMemory.get<void*>(startPc));
+        auto memoryInfo = localMemory.getMemoryRange();
+		DisAsm disAsm(memory, memoryInfo.first);
 
 		while (!done)
 		{

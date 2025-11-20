@@ -6,9 +6,6 @@ extern void game(const char*, bool);
 
 int main(int argc, const char* argv[])
 {
-    Emulator emulator;
-
-    emulator.run();
 	bool debugMode = false;
 	const char* binaryFile = nullptr;
 
@@ -38,10 +35,13 @@ int main(int argc, const char* argv[])
     }
 	if (binaryFile != nullptr)
     {
-        game(binaryFile, debugMode);
+        mc68000::Emulator emulator(binaryFile);
+        emulator.debug(debugMode);
+        emulator.run(0, 1024, 1024);
     }
     else
     {
-        game(debugMode);
+        mc68000::Emulator emulator;
+        emulator.run();
     }
 }

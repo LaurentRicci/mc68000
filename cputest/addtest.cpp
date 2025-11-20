@@ -18,7 +18,7 @@ void verifyAbcdExecution(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t expected
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -47,7 +47,7 @@ void verifyAbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t ex
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(abcd_overflow)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(add_to_dregister_b)
 		0x29, 0xfe };              // value dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(add_from_dregister_b)
 		0x29, 0xfe };              // value dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(add_to_dregister_w)
 		0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(add_from_dregister_w)
 		0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(add_to_dregister_l)
 		0xfe, 0xfe, 0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(add_from_dregister_l)
 		0xfe, 0xfe, 0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(adda_1)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(adda_2)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -358,7 +358,7 @@ void verifyAddiExecution_b(uint8_t destination, uint8_t source, uint8_t expected
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -387,7 +387,7 @@ void verifyAddiExecution_w(uint16_t destination, uint16_t source, uint16_t expec
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -414,7 +414,7 @@ void verifyAddiExecution_l(uint32_t destination, uint32_t source, uint32_t expec
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(addq_dataRegister_b)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(addq_dataRegister_b8)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(addq_dataRegister_wl)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(addq_addressRegister)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(addq_increment)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

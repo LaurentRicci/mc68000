@@ -1,0 +1,27 @@
+# Top-level EditorConfig file
+root = true
+
+# Apply to all C++ files
+[*.{cpp,h,hpp}]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Naming conventions
+# (Visual Studio uses these for suggestions, not enforcement)
+dotnet_naming_rule.methods_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.methods_should_be_pascal_case.symbols = method_symbols
+dotnet_naming_rule.methods_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.method_symbols.applicable_kinds = method
+dotnet_naming_symbols.method_symbols.applicable_accessibilities = *
+dotnet_naming_symbols.method_symbols.required_modifiers = *
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# C++ specific formatting
+cpp_space_after_keywords = true
+cpp_brace_style = allman
+cpp_new_line_before_open_brace = all

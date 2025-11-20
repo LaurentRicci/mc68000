@@ -229,18 +229,18 @@ namespace mc68000
 		uint32_t ssp;
 		StatusRegister statusRegister;
 		uint32_t pc;
-		memory localMemory;
+		Memory localMemory;
 		bool done;
 
 		//
 		// public methods
 		//
 	public:
-		Cpu(const memory& memory);
+		Cpu(const Memory& memory);
 		~Cpu();
 
 		void reset();
-		void reset(const memory& memory);
+		void reset(const Memory& memory);
 		void start(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 		void debug(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
 		void setARegister(int reg, uint32_t value);
@@ -270,6 +270,6 @@ namespace mc68000
 		const uint32_t& a6;
 		const uint32_t& a7;
 		const StatusRegister& sr;
-		const memory& mem;
+		const Memory& mem;
 	};
 }

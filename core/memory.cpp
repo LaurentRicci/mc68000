@@ -2,14 +2,14 @@
 
 namespace mc68000
 {
-	template<> uint8_t memory::get<uint8_t>(uint32_t address) const
+	template<> uint8_t Memory::get<uint8_t>(uint32_t address) const
 	{
 		verifyAddress(address, sizeof(uint8_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
 		return *(p8 + 0); // TODO: why was it +1
 	}
 
-	template<> uint16_t memory::get<uint16_t>(uint32_t address) const
+	template<> uint16_t Memory::get<uint16_t>(uint32_t address) const
 	{
 		verifyAddress(address, sizeof(uint16_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
@@ -17,7 +17,7 @@ namespace mc68000
 		return word;
 	}
 
-	template<> uint32_t memory::get<uint32_t>(uint32_t address) const
+	template<> uint32_t Memory::get<uint32_t>(uint32_t address) const
 	{
 		verifyAddress(address, sizeof(uint32_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
@@ -25,21 +25,21 @@ namespace mc68000
 		return longWord;
 	}
 
-	template<> void* memory::get<void*>(uint32_t address) const
+	template<> void* Memory::get<void*>(uint32_t address) const
 	{
 		verifyAddress(address, 0);
 		uint8_t* p8 = rawMemory + (address - baseAddress);
 		return p8;
 	}
 
-	template<> void memory::set<uint8_t>(uint32_t address, uint8_t data)
+	template<> void Memory::set<uint8_t>(uint32_t address, uint8_t data)
 	{
 		verifyAddress(address, sizeof(uint8_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
 		*p8 = data;
 	}
 
-	template<> void memory::set<uint16_t>(uint32_t address, uint16_t data)
+	template<> void Memory::set<uint16_t>(uint32_t address, uint16_t data)
 	{
 		verifyAddress(address, sizeof(uint16_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);
@@ -47,7 +47,7 @@ namespace mc68000
 		*p8 = data & 0xff;
 	}
 
-	template<> void memory::set<uint32_t>(uint32_t address, uint32_t data)
+	template<> void Memory::set<uint32_t>(uint32_t address, uint32_t data)
 	{
 		verifyAddress(address, sizeof(uint32_t));
 		uint8_t* p8 = rawMemory + (address - baseAddress);

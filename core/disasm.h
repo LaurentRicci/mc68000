@@ -208,7 +208,7 @@ namespace mc68000
 
 	public:
 		DisAsm();
-		DisAsm(const uint16_t* memory);
+		DisAsm(const uint16_t* memory, uint32_t origin);
 		~DisAsm();
 		std::string disassemble(const uint16_t*);
 		std::string disassembleInstruction(uint32_t pc);

@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(movem_to_memory)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(movem_to_memory_word)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(movem_to_from_memory)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(movem_to_from_memory_word)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(movem_incremental_word)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(movem_incremental_long)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(movem_with_register)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(movem_with_register_incremental)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(movep_from_reg_word)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE(movep_from_reg_long)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(pea)
 	};
 
 	// Arrange
-	memory memory(1024, 0, code, sizeof(code));
+	Memory memory(1024, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -582,7 +582,7 @@ uint32_t validateMove2sr(bool supervisorMode)
 	};
 
 	// Arrange
-	memory memory(128, 0, code, sizeof(code));
+	Memory memory(128, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

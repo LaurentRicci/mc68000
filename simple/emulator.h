@@ -1,26 +1,25 @@
 #pragma once
 #include "../core/cpu.h"
+#include "ibios.h"
 
-class Emulator
+namespace mc68000
 {
-private:
-    mc68000::memory memory;
-    mc68000::Cpu cpu;
-    bool debugMode = false;
+    class Emulator
+    {
+    private:
+        Memory memory;
+        Cpu cpu;
+		IBios* bios;
 
-private:
-    static Emulator* current;
-    static void trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1);
-	static int32_t getInteger();
-	static int32_t getTime();
-	static void displayString(uint32_t address);
+        bool debugMode = false;
 
-public:
-    Emulator();
-	Emulator(const char* binaryFile);
-	Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize);
+    public:
+        Emulator();
+	    Emulator(const char* binaryFile);
+	    Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize);
 
-	bool debug(bool enable);
-    void run();
-    void run(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
-};
+	    bool debug(bool enable);
+        void run();
+        void run(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
+    };
+}

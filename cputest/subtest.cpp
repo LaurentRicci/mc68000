@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(sub_to_dregister_b)
 		0x29, 0xfe };              // value: dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(sub_from_dregister_b)
 		0x29, 0xfe };              // value: dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(sub_to_dregister_w)
 		0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(sub_from_dregister_w)
 		0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(sub_to_dregister_l)
 		0xfe, 0xfe, 0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(sub_from_dregister_l)
 		0xfe, 0xfe, 0xfe, 0xfe };
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(nbcd_17)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(nbcd_83)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(nbcd_0)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(nbcd_17x)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(nbcd_83x)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(nbcd_0x)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(neg)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(neg_neg)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(negx)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(negx_neg)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(negx_zero)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -565,7 +565,7 @@ void verifySbcdExecution(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t expected
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -608,7 +608,7 @@ void verifySbcdExecutionMemory(uint8_t op1, uint8_t op2, uint8_t ccr, uint8_t ex
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(sbcd_overflow)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -682,7 +682,7 @@ BOOST_AUTO_TEST_CASE(suba)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(subi_b)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(subi_w)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(subi_l)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

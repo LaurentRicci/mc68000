@@ -5,10 +5,10 @@
 
 namespace mc68000
 {
-	class memory
+	class Memory
 	{
 	public:
-		memory(uint32_t size, uint32_t baseAddress) :
+		Memory(uint32_t size, uint32_t baseAddress) :
 			size(size),
 			baseAddress(baseAddress)
 		{
@@ -20,7 +20,7 @@ namespace mc68000
 			}
 		}
 
-		memory(uint32_t size, uint32_t baseAddress, const uint8_t* content, uint32_t contentSize) :
+		Memory(uint32_t size, uint32_t baseAddress, const uint8_t* content, uint32_t contentSize) :
 			size(size),
 			baseAddress(baseAddress)
 		{
@@ -42,7 +42,7 @@ namespace mc68000
 			}
 		}
 
-		memory(const char* binaryFile)
+		Memory(const char* binaryFile)
 		{
 			std::ifstream inputFile(binaryFile, std::ios::binary);
 			if (!inputFile)
@@ -84,16 +84,17 @@ namespace mc68000
 				{
 					inputFile.read(p, sizeof(uint8_t));
 				}
+                size += 1024;
 			}
 		}
-		memory() :
+		Memory() :
 			rawMemory(nullptr),
 			size(0),
 			baseAddress(0)
 		{
 		}
 
-		memory(const memory& rhs) :
+		Memory(const Memory& rhs) :
 			rawMemory(nullptr),
 			size(rhs.size),
 			baseAddress(rhs.baseAddress)
@@ -110,7 +111,7 @@ namespace mc68000
 			}
 		}
 
-		memory& operator=(const memory& rhs)
+		Memory& operator=(const Memory& rhs)
 		{
 			size = rhs.size;
 			baseAddress = rhs.baseAddress;
@@ -151,7 +152,12 @@ namespace mc68000
 			return word;
 		}
 
-		~memory()
+        std::pair<uint32_t, uint32_t> getMemoryRange() const
+		{
+			return { baseAddress, size };
+		}
+
+		~Memory()
 		{
 			delete[] rawMemory;
 		}
@@ -170,13 +176,13 @@ namespace mc68000
 		uint32_t baseAddress;
 	};
 
-	template<> uint8_t memory::get<uint8_t>(uint32_t address) const;
-	template<> uint16_t memory::get<uint16_t>(uint32_t address) const;
-	template<> uint32_t memory::get<uint32_t>(uint32_t address) const;
-	template<> void* memory::get<void*>(uint32_t address) const;
+	template<> uint8_t Memory::get<uint8_t>(uint32_t address) const;
+	template<> uint16_t Memory::get<uint16_t>(uint32_t address) const;
+	template<> uint32_t Memory::get<uint32_t>(uint32_t address) const;
+	template<> void* Memory::get<void*>(uint32_t address) const;
 
-	template<> void memory::set<uint8_t>(uint32_t address, uint8_t data);
-	template<> void memory::set<uint16_t>(uint32_t address, uint16_t data);
-	template<> void memory::set<uint32_t>(uint32_t address, uint32_t data);
+	template<> void Memory::set<uint8_t>(uint32_t address, uint8_t data);
+	template<> void Memory::set<uint16_t>(uint32_t address, uint16_t data);
+	template<> void Memory::set<uint32_t>(uint32_t address, uint32_t data);
 
 }

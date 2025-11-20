@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(asl_memory)
 		0x87, 0xf3 };              // data: dc.w $87f3
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(asl_b)
 		};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(asl_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(asl_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(asr_memory)
 		0x87, 0xf3 };              // data: dc.w $87f3
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(asr_b)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(asr_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(asr_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(lsl_memory)
 		0x87, 0xf3 };              // data: dc.w $87f3
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(lsl_b)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(lsl_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(lsl_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(lsr_memory)
 		0x87, 0xf3 };              // data: dc.w $87f3
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(lsr_b)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(lsr_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(lsr_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(a_toLowerCase)
 	BOOST_CHECK_EQUAL('L', code[src]);
 
 	uint32_t base = 0x001000;
-	memory memory(1024, base, code, sizeof(code));
+	Memory memory(1024, base, code, sizeof(code));
 	memory.set<uint32_t>(base + a6 + 8, base + src);
 	memory.set<uint32_t>(base + a6 + 12, base + dst);
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(clr)
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(exg)
 	0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(ext)
 	};
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

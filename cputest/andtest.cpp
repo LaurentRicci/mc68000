@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(and_to_dregister_b)
 		0x29, 0xfe };              // value dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(and_to_dregister_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(and_to_dregister_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(and_from_dregister_b)
 		0x29, 0xfe };              // value dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(and_from_dregister_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(and_from_dregister_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(andi_b)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(andi_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(andi_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(andi2ccr_1)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(andi2ccr_2)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -347,7 +347,7 @@ uint32_t validateAndi2sr(bool supervisorMode)
 	};
 
 	// Arrange
-	memory memory(128, 0, code, sizeof(code));
+	Memory memory(128, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

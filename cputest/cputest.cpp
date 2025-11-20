@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(cpuSuite)
 BOOST_AUTO_TEST_CASE(cpu_reset)
 {
 	// Arrange
-	memory memory(4, 0);
+	Memory memory(4, 0);
 	Cpu cpu(memory);
 
 	// Act
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(cpu_reset)
 
 BOOST_AUTO_TEST_CASE(cpu_reset_sr)
 {
-	memory memory;
+	Memory memory;
 	Cpu cpu(memory);
 
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(addressMode_000_value)
 		0xFF, 0xFF };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

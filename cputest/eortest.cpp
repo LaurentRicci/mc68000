@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(eor_from_dregister_b)
 		0x29, 0xfe };              // value dc.b $29
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(eor_from_dregister_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(eor_from_dregister_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(eori_b)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(eori_w)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(eori_l)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(eori2ccr_1)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(eori2ccr_2)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -256,7 +256,7 @@ uint32_t validateEori2sr(bool supervisorMode)
 	};
 
 	// Arrange
-	memory memory(128, 0, code, sizeof(code));
+	Memory memory(128, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

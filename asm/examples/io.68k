@@ -1,0 +1,54 @@
+*
+* Simple example to test the IO functions
+*   - to output a char to the console
+*   - to input a char to the console
+*
+            ORG 0
+
+            LEA     MSG1,A6
+            BSR     PRMESG
+
+CHKIO       BSR     INC
+            CMP.B   #'z',D0
+            BEQ     PART2
+            BSR     OUTC
+            BRA     CHKIO
+
+PART2       LEA     MSG2,A6
+            BSR     PRMESG
+            DC.W    $FFFF
+
+CR          EQU     13
+LF          EQU     10
+
+MSG1        DC.B    'enter your name ending with z', CR, LF, 0
+MSG2        DC.B    'thank you',CR, LF, 0
+
+*
+* ===== Display a zero-ended string pointed to by register A6
+*
+PRMESG      MOVE.B  (A6)+,D0        ;get the char.
+            BEQ     PRMRET          ;if it's zero, we're done
+            BSR     OUTC            ;else display it
+            BRA     PRMESG
+PRMRET      RTS
+
+*
+* ===== Output character to the console from register D0
+*
+OUTC    MOVE.L  D1,-(SP)        ; preserve D1
+        MOVE.L  D0,D1           ; D1 contains the character to be displayed
+        MOVEQ   #10, D0         ; putCharacter
+        TRAP    #15             ;
+        MOVE.L  D1,D0           ; restore D0 to its initial value
+        MOVE.L (SP)+, D1        ; restore D1
+        RTS
+*
+* =====  Input a character from the console into register D0 
+*
+INC     MOVE.L  D1,-(SP)        ; preserve D1
+        MOVEQ   #1,D0           ; getCharacter
+        TRAP    #15             ; 
+        MOVE.L  D1,D0           ;
+        MOVE.L (SP)+, D1        ; restore D1
+        RTS

@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(divs_plusplus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(divs_plusminus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(divs_minusplus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(divs_minusminus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(divs_overflow)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(divu_plusplus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(divu_plusminus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(divu_minusplus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(divu_minusminus)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(divu_overflow)
 	};
 
 	// Arrange
-	memory memory(256, 0x1000, code, sizeof(code));
+	Memory memory(256, 0x1000, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

@@ -15,7 +15,7 @@ void verifyCmpiExecution_b(uint8_t d0, uint8_t cmp, uint8_t n, uint8_t z, uint8_
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -40,7 +40,7 @@ void verifyCmpiExecution_w(uint16_t d0, uint16_t cmp, uint8_t n, uint8_t z, uint
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -64,7 +64,7 @@ void verifyCmpiExecution_l(uint32_t d0, uint32_t cmp, uint8_t n, uint8_t z, uint
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 0, code, sizeof(code));
+	Memory memory(256, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(cmp)
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 100, code, sizeof(code));
+	Memory memory(256, 100, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(cmpa)
 		0xff, 0xff };
 
 	// Arrange
-	memory memory(256, 100, code, sizeof(code));
+	Memory memory(256, 100, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(cmpm_b)
 	};
 
 	// Arrange
-	memory memory(256, 100, code, sizeof(code));
+	Memory memory(256, 100, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(cmpm_w)
 	};
 
 	// Arrange
-	memory memory(256, 100, code, sizeof(code));
+	Memory memory(256, 100, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(cmpm_l)
 	};
 
 	// Arrange
-	memory memory(256, 100, code, sizeof(code));
+	Memory memory(256, 100, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act

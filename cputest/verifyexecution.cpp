@@ -7,7 +7,7 @@ using namespace mc68000;
 void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(const Cpu& c))
 {
 	// Arrange
-	memory memory(256, 0, code, size);
+	Memory memory(256, 0, code, size);
 	Cpu cpu(memory);
 
 	// Act
@@ -21,7 +21,7 @@ void verifyExecution(const uint8_t* code, uint32_t size, void (*assertFunctor)(c
 void verifyExecution(const uint8_t* code, uint32_t size, uint32_t baseAddress, void (*assertFunctor)(const Cpu& c))
 {
 	// Arrange
-	memory memory(256, baseAddress, code, size);
+	Memory memory(256, baseAddress, code, size);
 	Cpu cpu(memory);
 
 	// Act

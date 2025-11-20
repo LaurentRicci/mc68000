@@ -49,7 +49,7 @@ GOBYE   BRA   BYEBYE    ; Jump to monitor, DOS, etc.
 *	
 * Modifiable system constants:
 TXTBGN DC.L	TXT         ; beginning of program memory
-ENDMEM DC.L	$8000       ; end of available memory
+ENDMEM DC.L	TXT+1024       ; end of available memory
 
 * The main interpreter starts here: 
 *
@@ -1492,19 +1492,23 @@ PRMRET RTS
 * ===== Output character to the console (Port 1) from register D0
 *        (Preserves all registers.)
 *
-OUTC     BTST    #1,$10040         ;is port 1 ready for a character?
-         BEQ     OUTC              ;if not, wait for it
-         MOVE.B  D0,$10042           ;out it gots.
-         RTS
+OUTC    MOVE.L  D1,-(SP)        ; preserve D1
+        MOVE.L  D0,D1           ; D1 contains the character to be displayed
+        MOVEQ   #10, D0         ; putCharacter
+        TRAP    #15             ;
+        MOVE.L  D1,D0           ; restore D0 to its initial value
+        MOVE.L (SP)+, D1        ; restore D1
+        RTS
 
 *
 * =====  Input a character from the console into register D0 (or
 *          return Zero status if there's no character available).
 *
-INC     BTST      #0,$10040           ;is character ready?
-        BEQ       INCRET              ;if not, return Zero status 
-        MOVE.B    $10042,D0           ;else get the character 
-        AND.B     #$7F,D0           ;zero out the high bit
+INC     MOVE.L  D1,-(SP)        ; preserve D1
+        MOVEQ   #1,D0           ; getCharacter
+        TRAP    #15             ; 
+        MOVE.L  D1,D0           ;
+        MOVE.L (SP)+, D1        ; restore D1
 INCRET  RTS
 
 *

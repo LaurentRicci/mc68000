@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(illegal)
 	};
 
 	// Arrange
-	memory memory(128, 0, code, sizeof(code));
+	Memory memory(128, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
@@ -79,7 +79,7 @@ void validateRte(bool supervisorMode)
 	};
 
 	// Arrange
-	memory memory(128, 0, code, sizeof(code));
+	Memory memory(128, 0, code, sizeof(code));
 	Cpu cpu(memory);
 
 	// Act
