@@ -147,8 +147,16 @@ any visitor::visitOrg(parser68000::OrgContext* ctx)
 			codeBlock newBlock(address);
 			codeBlocks.push_back(newBlock);
 		}
+    	return any();
 	}
-	return any();
+    if (memoryStart != 0 || memoryEnd != 0)
+    {
+        // Validate that the origin is within the addressable memory
+        if (address < memoryStart || address > memoryEnd)
+        {
+            addError("ORG " + to_string(address) + " should be inside addressable space: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
+        }
+    }
 }
 /// <summary>
 /// MEMORY blockAddress COMMA blockAddress
@@ -164,7 +172,7 @@ any visitor::visitMemory(parser68000::MemoryContext* ctx)
     }
     if (memEnd <= memStart)
     {
-        addPass0Error("Invalid MEMORY range: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
+        addPass0Error("Invalid MEMORY range: " + to_string(memStart) + " - " + to_string(memEnd), ctx);
         return any();
     }
     if (memoryStart != 0 || memoryEnd != 0)
