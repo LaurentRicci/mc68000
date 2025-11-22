@@ -384,6 +384,42 @@
                         <Property Name="DisplayName" Value="org_multi" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_block" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_block" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_badOrder" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_badOrder" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_ok" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_ok" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_orgOutside" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_orgOutside" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_empty" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_empty" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_multiple" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_multiple" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

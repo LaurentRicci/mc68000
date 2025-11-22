@@ -18,7 +18,6 @@ class asmResult
 {
 public:
 	asmResult()
-		: start(0)
 	{
 		code.push_back(codeBlock());
 	}
@@ -26,7 +25,9 @@ public:
 	bool load(const char* filename);
 
 	std::vector<codeBlock>		    code;
-	uint32_t                        start;
+	uint32_t                        start = 0;
+    uint32_t                        memoryStart = 0;
+    uint32_t                        memoryEnd = 0;
 
 	std::map<std::string, uint32_t>	labels;
 	std::map<std::string, std::any> symbols;

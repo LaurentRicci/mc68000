@@ -150,6 +150,33 @@ any visitor::visitOrg(parser68000::OrgContext* ctx)
 	}
 	return any();
 }
+/// <summary>
+/// MEMORY blockAddress COMMA blockAddress
+/// </summary>
+any visitor::visitMemory(parser68000::MemoryContext* ctx)
+{
+    uint32_t memStart = getAddressValue(ctx->blockAddress(0));
+    uint32_t memEnd = getAddressValue(ctx->blockAddress(1));
+
+    if (pass != 0)
+    {
+        return any();
+    }
+    if (memEnd <= memStart)
+    {
+        addPass0Error("Invalid MEMORY range: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
+        return any();
+    }
+    if (memoryStart != 0 || memoryEnd != 0)
+    {
+        addPass0Error("Multiple MEMORY directives are not allowed", ctx);
+        return any();
+    }
+    memoryStart = memStart;
+    memoryEnd = memEnd;
+
+    return any();
+}
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)
 {

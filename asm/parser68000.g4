@@ -580,7 +580,7 @@ directive
     | INCBIN
     | LIST
     | NOLIST
-    | MEMORY
+    | memory
     | OPT identifiers
     | org
     | PAGE
@@ -593,6 +593,9 @@ directive
 dc  : DC size  dataList ;
 equ : EQU expression ;
 ds  : DS size? address ;
+memory
+    : MEMORY blockAddress COMMA blockAddress
+    ;
 org : ORG blockAddress ;
 
 // ============================================

@@ -535,7 +535,53 @@ namespace directiveTest
 
 		validate_errorsCount(parser, 1);
 	}
-	// ====================================================================================================
+    // ====================================================================================================
+    // MEMORY
+    // ====================================================================================================
+    BOOST_AUTO_TEST_CASE(memory_ok)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $100,$110\n");
+
+        validate_noErrors(parser);
+
+        const auto& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(0x100, result.memoryStart);
+        BOOST_CHECK_EQUAL(0x110, result.memoryEnd);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_badOrder)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$100\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_multiple)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$100\n MEMORY $300,$400\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_empty)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$200\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_orgOutside)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $100,$200\n org $300\n");
+
+        validate_errorsCount(parser, 1);
+    }
+    // ====================================================================================================
 	// Expression
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcb_expression)
