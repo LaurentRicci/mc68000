@@ -88,22 +88,24 @@ namespace mc68000
 			{
 				uint32_t codeSize;
 				inputFile.read(reinterpret_cast<char*>(&codeSize), sizeof(uint32_t));
-				size = codeSize * 2; // Each instruction is 2 bytes
+				codeSize *= 2; // Each instruction is 2 bytes
 
-				inputFile.read(reinterpret_cast<char*>(&baseAddress), sizeof(uint32_t));
+                uint32_t codeAddress;
+                inputFile.read(reinterpret_cast<char*>(&codeAddress), sizeof(uint32_t));
 
 				// Read the content
                 uint8_t* blockStart;
                 if (rawMemory == nullptr)
                 {
-                    rawMemory = new uint8_t[size + 1024];		// need some extra space for the stack
+                    rawMemory = new uint8_t[codeSize + 1024];		// need some extra space for the stack
                     blockStart = rawMemory;
-                    size += 1024;
+                    size = codeSize + 1024;
+                    baseAddress = codeAddress;
                 }
                 else
                 {
-                    blockStart = rawMemory + (baseAddress - memoryStart);
-                    if (baseAddress + size > memoryEnd)
+                    blockStart = rawMemory + (codeAddress - memoryStart);
+                    if (codeAddress + codeSize > memoryEnd)
                     {
                         std::cerr << "block size exceeds allocated memory size" << std::endl;
                         throw "block size exceeds allocated memory size";
