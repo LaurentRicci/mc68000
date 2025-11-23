@@ -1,7 +1,7 @@
 *****************************************************************
-*	Tiny BASIC for the Motorola MC68000                         *
+*	Tiny BASIC for the Motorola MC68000                     *
 *                                                               *
-*	                                                            *
+*	                                                        *
 *                                                               *
 * Derived from Palo Alto Tiny BASIC as published in the May 1976*
 * issue of Dr. Dobb's Journal. Adapted to the 68000 by:         *
@@ -13,7 +13,7 @@
 *                                                               *
 * This version is for MEX68KECB Educational Computer Board I/0. *
 *                                                               *
-* Copyright (C) 1984 by Gordon Brandly. This program may be	    *
+* Copyright (C) 1984 by Gordon Brandly. This program may be	*
 * freely distributed for personal use only. All commercial      *
 * rights are reserved.                                          *
 *****************************************************************
@@ -34,7 +34,8 @@ CTRLX   EQU $18
 
 BUFLEN  EQU 80   ;length of keyboard input butter
 
-    ORG $900    ;first free address using Tutor
+        MEMORY $900,$8000       ;Address space
+        ORG $900                ;first free address using Tutor
 *	
 * Standard jump table. You can change these addresses if you are
 * customizing this interpreter for a different environment.
