@@ -420,6 +420,18 @@
                         <Property Name="DisplayName" Value="memory_multiple" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_id" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_id" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

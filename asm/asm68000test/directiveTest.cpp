@@ -581,6 +581,23 @@ namespace directiveTest
 
         validate_errorsCount(parser, 1);
     }
+    BOOST_AUTO_TEST_CASE(memory_negative)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY -1000,$200\n");
+
+        validate_errorsCount(parser, 1);
+    }
+    BOOST_AUTO_TEST_CASE(memory_id)
+    {
+        asmparser parser;
+        parser.parseText("low equ $100\nhigh equ $200\n MEMORY low,high\n");
+
+        validate_noErrors(parser);
+        const auto& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(0x100, result.memoryStart);
+        BOOST_CHECK_EQUAL(0x200, result.memoryEnd);
+    }
     // ====================================================================================================
 	// Expression
 	// ====================================================================================================
