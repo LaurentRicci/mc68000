@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <cstdint>
+
 #include "errors.h"
 
 struct codeBlock

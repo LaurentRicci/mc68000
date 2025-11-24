@@ -86,7 +86,7 @@ any visitor::visitDs(parser68000::DsContext* ctx)
 	uint32_t count = getAddressValue(ctx->address());
 	if (count <= 0)
 	{
-		addError("Storage size should be a positive integer:" + count, ctx->address());
+		addError("Storage size should be a positive integer:" + to_string(count), ctx->address());
 		count = 1;
 	}
 	uint32_t bytesNeeded = count * (1 << size);
@@ -157,6 +157,7 @@ any visitor::visitOrg(parser68000::OrgContext* ctx)
             addError("ORG " + to_string(address) + " should be inside addressable space: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
         }
     }
+    return any();
 }
 /// <summary>
 /// MEMORY blockAddress COMMA blockAddress
