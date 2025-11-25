@@ -341,7 +341,42 @@ namespace directiveTest
 
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(equ_complex_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFFER EQU $1000\nBUFLEN EQU 80\nBUFEND  EQU BUFFER + BUFLEN - 1\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(3, symbols.size());
+
+        auto buffer = std::any_cast<int32_t>(symbols.find("BUFFER")->second);
+        auto buflen = std::any_cast<int32_t>(symbols.find("BUFLEN")->second);
+        auto bufend = std::any_cast<int32_t>(symbols.find("BUFEND")->second);
+
+        BOOST_CHECK_EQUAL(0x1000, buffer);
+        BOOST_CHECK_EQUAL(80, buflen);
+        BOOST_CHECK_EQUAL(buffer + buflen - 1, bufend);
+    }
+
+    BOOST_AUTO_TEST_CASE(equ_complex_not_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFLEN EQU 80\nBUFEND  EQU BUFFER + BUFLEN - 1\nBUFFER EQU $1000\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(3, symbols.size());
+
+        auto buffer = std::any_cast<int32_t>(symbols.find("BUFFER")->second);
+        auto buflen = std::any_cast<int32_t>(symbols.find("BUFLEN")->second);
+        auto bufend = std::any_cast<int32_t>(symbols.find("BUFEND")->second);
+
+        BOOST_CHECK_EQUAL(0x1000, buffer);
+        BOOST_CHECK_EQUAL(80, buflen);
+        BOOST_CHECK_EQUAL(buffer + buflen - 1, bufend);
+    }
+    // ====================================================================================================
 	// DS
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dsb)

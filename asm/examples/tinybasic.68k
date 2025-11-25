@@ -32,10 +32,10 @@ CTRLH   EQU $08
 CTRLS   EQU $13
 CTRLX   EQU $18
 
-BUFLEN  EQU 80   ;length of keyboard input butter
-
-        MEMORY $900,$8000       ;Address space
-        ORG $900                ;first free address using Tutor
+BUFLEN  EQU 80                  ; length of keyboard input butter
+BUFEND  EQU BUFFER + BUFLEN - 1 ; end of keyboard buffer
+        MEMORY $900,$8000       ; address space
+        ORG $900                ; first free address using Tutor
 *	
 * Standard jump table. You can change these addresses if you are
 * customizing this interpreter for a different environment.
@@ -70,7 +70,7 @@ WSTART  CLR.L    D0             ;Initialize internal variables
         MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
         LEA     OKMSG,A6       ;display "OK"
         BSR     PRMESG
-ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
+ST3     MOVE.B  #'>',D0        ;Prompt with a '>' and 
         BSR     GETLN          ;read a line.
         BSR     TOUPBUF        ;convert to upper case
         MOVE.L  A0, A4         ;save pointer to end of line 
@@ -1126,52 +1126,51 @@ AHOW    LEA      HOWMSG,A6
 * 'FNDNXT' will bump Al by 2, find a CR and then start search.
 * 'FNDSKP' uses Al to find a CR, and then starts the search.
 *
-GETLN   BSR      GOOUT            ;display the prompt
-        MOVE.B   #' ',D0          ;and a space
-        BSR      GOOUT
-        LEA      BUFFER,A0        ;A0 is the buffer pointer
-GL1     BSR      CHKIO            ;check keyboard
-        BEQ      GL1              ;wait for a char. to come in
-        CMP.B    #CTRLH,D0        ;delete last character?
-        BEQ    GL3            ;if so
-        CMP.B  #CTRLX,D0      ;delete the whole line?
-        BEQ    GL4            ;if so
-        CMP.B  #CR, D0        ;accept a CR
-        BEQ    GL2
-        CMP.B  #' ',D0          ;if other control char., discard it
-        BCS    GL1
-GL2     MOVE.B D0,(A0)+       ;save the char.
-        BSR    GOOUT          ;echo the char back out
-        CMP.B  #CR,D0         ;if it's a CR, end the line
-        BEQ    GL7
-*****        CMP.L  #(BUFFER+BUFLEN-1),A0 ;any more room?
-        CMPA.L  #BUFFER,A0     ;TODO fixi it
-        BCS    GL1            ;yes: get some more, else delete last char.
-GL3     MOVE.B #CTRLH,D0      ;delete a char. if possible
-        BSR    GOOUT
-        MOVE.B #' ',D0
-        BSR    GOOUT
-        CMPA.L  #BUFFER,A0    ;any char.'s left?
-        BLS    GL1            ;if not
-        MOVE.B #CTRLH,D0      ;if so, finish the BS-space-BS sequence
-        BSR    GOOUT
-        SUBQ.L #1,A0          ;decrement the text pointer
-        BRA    GL1            ;back for more
-GL4     MOVE.L A0,D1          ;delete the whole line
-        SUB.L  #BUFFER,D1     ;figure out how many backspaces we need
-        BEQ    GL6            ;if none needed, branch
-        SUBQ   #1,D1          ;adjust for DBRA
-GL5     MOVE.B #CTRLH,D0      ;and display BS-space-BS sequences
-        BSR    GOOUT
-        MOVE.B #' ',D0
-        BSR    GOOUT
-        MOVE.B #CTRLH,D0
-        BSR    GOOUT
-        DBRA   D1,GL5
-GL6     LEA    BUFFER,A0      ;reinitialize the text pointer
-        BRA    GL1            ;and go back for more
-GL7     MOVE.B #LF,D0          ;echo a LF for the CR
-        BSR    GOOUT
+GETLN   BSR     GOOUT           ;display the prompt
+        MOVE.B  #' ',D0         ;and a space
+        BSR     GOOUT
+        LEA     BUFFER,A0       ;A0 is the buffer pointer
+GL1     BSR     CHKIO           ;check keyboard
+        BEQ     GL1             ;wait for a char. to come in
+        CMP.B   #CTRLH,D0       ;delete last character?
+        BEQ     GL3             ;if so
+        CMP.B   #CTRLX,D0       ;delete the whole line?
+        BEQ     GL4             ;if so
+        CMP.B   #CR, D0         ;accept a CR
+        BEQ     GL2
+        CMP.B   #' ',D0         ;if other control char., discard it
+        BCS     GL1
+GL2     MOVE.B  D0,(A0)+        ;save the char.
+        BSR     GOOUT           ;echo the char back out
+        CMP.B   #CR,D0          ;if it's a CR, end the line
+        BEQ     GL7
+        CMPA.L  #BUFEND,A0      ;any more room?
+        BCS     GL1             ;yes: get some more, else delete last char.
+GL3     MOVE.B  #CTRLH,D0       ;delete a char. if possible
+        BSR     GOOUT
+        MOVE.B  #' ',D0
+        BSR     GOOUT
+        CMPA.L  #BUFFER,A0      ;any char.'s left?
+        BLS     GL1             ;if not
+        MOVE.B  #CTRLH,D0       ;if so, finish the BS-space-BS sequence
+        BSR     GOOUT
+        SUBQ.L  #1,A0           ;decrement the text pointer
+        BRA     GL1             ;back for more
+GL4     MOVE.L  A0,D1           ;delete the whole line
+        SUB.L   #BUFFER,D1      ;figure out how many backspaces we need
+        BEQ     GL6             ;if none needed, branch
+        SUBQ    #1,D1           ;adjust for DBRA
+GL5     MOVE.B  #CTRLH,D0       ;and display BS-space-BS sequences
+        BSR     GOOUT
+        MOVE.B  #' ',D0
+        BSR     GOOUT
+        MOVE.B  #CTRLH,D0
+        BSR     GOOUT
+        DBRA    D1,GL5
+GL6     LEA     BUFFER,A0       ;reinitialize the text pointer
+        BRA     GL1             ;and go back for more
+GL7     MOVE.B  #LF,D0          ;echo a LF for the CR
+        BSR     GOOUT
         RTS
 
 FNDLN   CMP.L  #$FFFF,D1      ;line no. must be < 65535
@@ -1510,6 +1509,7 @@ INC     MOVE.L  D1,-(SP)        ; preserve D1
         TRAP    #15             ; 
         MOVE.L  D1,D0           ;
         MOVE.L (SP)+, D1        ; restore D1
+        TST.B   D0              ; reflect status from the TRAP result
 INCRET  RTS
 
 *
@@ -1548,19 +1548,19 @@ LSTROM  EQU       *                  ;end of possible ROM area
 *
 * Internal variables follow: 
 *
-RANPNT DC.L       START               ;random number pointer 
-CURRNT DS.L       1                   ;Current line pointer
-STKGOS DS.L       1                   ;Saves stack pointer in 'GOSUB' 
-STKINP DS.L       1                    ;Saves stack pointer during 'INPUT' 
-LOPVAR DS.L       1                   ;'FOR' loop save area
-LOPINC DS.L       1                   ;increment
-LOPLMT DS.L       1                   ;limit
-LOPLN  DS.L     1                   ;line number
-LOPPT  DS.L     1                   ;text pointer
-TXTUNF DS.L       1                    ;points to unfilled text area 
-VARBGN DS.L       1                   ;points to variable area
-STKLMT DS.L       1                   ;holds lower limit for stack growth 
-BUFFER DS.B       BUFLEN              ;Keyboard input buffer
-TXT    EQU      *                   ;Beginning of program area
-       END START
+RANPNT  DC.L    START          ;random number pointer 
+CURRNT  DS.L    1              ;Current line pointer
+STKGOS  DS.L    1              ;Saves stack pointer in 'GOSUB' 
+STKINP  DS.L    1              ;Saves stack pointer during 'INPUT' 
+LOPVAR  DS.L    1              ;'FOR' loop save area
+LOPINC  DS.L    1              ;increment
+LOPLMT  DS.L    1              ;limit
+LOPLN   DS.L    1              ;line number
+LOPPT   DS.L    1              ;text pointer
+TXTUNF  DS.L    1              ;points to unfilled text area 
+VARBGN  DS.L    1              ;points to variable area
+STKLMT  DS.L    1              ;holds lower limit for stack growth 
+BUFFER  DS.B    BUFLEN         ;Keyboard input buffer
+TXT     EQU     *              ;Beginning of program area
+        END     START
        
