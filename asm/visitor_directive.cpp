@@ -55,26 +55,24 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
 	if (labelCtx->value.empty())
 	{
 		addError("Missing label in EQU directive", ctx);
+        return any();
 	}
-	else
+	any value = visit(ctx->expression());
+	if (pass == 0)
 	{
-		any value = visit(ctx->expression());
-		if (pass == 0)
+		if (labels.find(labelCtx->value) != labels.end())
 		{
-			if (labels.find(labelCtx->value) != labels.end())
-			{
-				addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
-			}
-			else if (symbols.find(labelCtx->value) == symbols.end())
-			{
-				symbols[labelCtx->value] = value;
-			}
-			else
-			{
-				addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
-			}
-		}
+			addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
+            return any();
+        }
+		if (symbols.find(labelCtx->value) != symbols.end())
+		{
+            addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
+            return any();
+        }
 	}
+    symbols[labelCtx->value] = value;
+
 	return any();
 }
 any visitor::visitDs(parser68000::DsContext* ctx)

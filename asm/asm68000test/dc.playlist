@@ -450,6 +450,12 @@
                         <Property Name="DisplayName" Value="equ_complex_ordered" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_simple_not_ordered" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_simple_not_ordered" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

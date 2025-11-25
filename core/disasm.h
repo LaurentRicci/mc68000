@@ -213,5 +213,6 @@ namespace mc68000
 		std::string disassemble(const uint16_t*);
 		std::string disassembleInstruction(uint32_t pc);
 		std::string dasm(const uint16_t*, uint32_t org);
+        uint32_t getPc() const { return pc; }
 	};
 }

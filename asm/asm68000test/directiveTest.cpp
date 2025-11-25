@@ -376,6 +376,26 @@ namespace directiveTest
         BOOST_CHECK_EQUAL(80, buflen);
         BOOST_CHECK_EQUAL(buffer + buflen - 1, bufend);
     }
+
+    BOOST_AUTO_TEST_CASE(equ_simple_not_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFPOS EQU BUFFER\n nop\nBUFFER nop\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(1, symbols.size());
+
+        auto& labels = parser.getLabels();
+        BOOST_CHECK_EQUAL(1, labels.size());
+
+        auto buffer = std::any_cast<uint32_t>(labels.find("BUFFER")->second);
+        auto bufpos = std::any_cast<int32_t>(symbols.find("BUFPOS")->second);
+
+        BOOST_CHECK_EQUAL(2, buffer);
+        BOOST_CHECK_EQUAL(2, bufpos);
+    }
+
     // ====================================================================================================
 	// DS
 	// ====================================================================================================

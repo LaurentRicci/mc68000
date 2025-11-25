@@ -801,7 +801,7 @@ namespace mc68000
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
 
-		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t size = (opcode >> 6) & 0b111;
 		switch (size)
 		{
 		case 3:

@@ -909,7 +909,17 @@ namespace instructionTest
 		BOOST_CHECK_EQUAL(0x12, code[1]);
 		BOOST_CHECK_EQUAL(0x3456, code[2]);
 	}
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(cmpa_165f)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  cmpa.l #$165f,a0\n");
+
+        const auto& code = validate_codeSize(parser, 3);
+        BOOST_CHECK_EQUAL(0xb1fc, code[0]);
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+        BOOST_CHECK_EQUAL(0x165f, code[2]);
+    }
+    // ====================================================================================================
 	// CMPM instructions
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(cmpm_default)
