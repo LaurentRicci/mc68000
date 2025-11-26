@@ -199,7 +199,18 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
 	}
 
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(dcw_label)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" org $1000\n bra label\n dc.w label\nlabel: nop\n");
+
+        const auto& code = validate_codeSize(parser, 4);
+        BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+        BOOST_CHECK_EQUAL(0x0004, code[1]); // 
+        BOOST_CHECK_EQUAL(0x1006, code[2]); // dc.w label
+        BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
+    }
+    // ====================================================================================================
 	// DC.L
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcl_byte)

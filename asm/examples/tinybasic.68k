@@ -95,7 +95,7 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a '>' and
         MOVE.L  A2, TXTUNF     ;update the end pointer
 ST4     MOVE.L  A4, D0         ;calculate the length of new line
         SUB.L   A0, D0 
-        CMP.L   03,D0          ;is it just a line no. i CR? 
+        CMP.L   #3,D0          ;is it just a line no. i CR? 
         BEQ     ST3            ;if so, it was just a delete 
         MOVE.L  TXTUNF, A3     ;compute new end
         MOVE.L  A3,A6 
@@ -358,7 +358,7 @@ LS2     BSR    CHKIO           ;if so. wait for another keypress
 LS3     BSR    FNDLNP          ;find the next line
         BRA    LS1
 
-PRINT   MOVE   #11,04          ;D4 - number of print spaces
+PRINT   MOVE   #11,D4          ;D4 - number of print spaces
         BSR    TSTC            ;if null list and ":"
         DC.B   ':',PR2-*
         BSR    CRLF            ;give CR-LF and continue
@@ -388,7 +388,7 @@ PR6     BSR    CRLF            ;list ends here
 PR8     MOVE   D4,-(SP)        ;save the width value
         BSR    EXPR            ;evaluate the expression
         MOVE   (SP)+,D4        ;restore the width
-        MOVE.L D0,01
+        MOVE.L D0,D1
         BSR    PRTNUM          ;print its value
         BRA    PR3             ;more to print?
 
@@ -656,7 +656,7 @@ LODEND MOVE.L A0,TXTUNF      ;set end-of program pointer
        BRA     WSTART        ;back to direct mode
 
 GBYTE  MOVEQ   #1,D2         ;get two hex characters from auxiliary
-       CLR     D1            ;and store them as a byte in DI
+       CLR     D1            ;and store them as a byte in D1
 GBYTE1 BSR     GOAUXI        ;get a char.
        BEQ     GBYTE1
        CMP.B   #'A',D0
@@ -697,7 +697,7 @@ SAVEND MOVE.B  #'@',D0        ;send end-of-program indicator
        BSR     GOAUXO
        BRA     WSTART        ;then go do a warm start
 
-PBYTE  MOVEQ   #1,D2         ;send two hex characters from DI's low byte
+PBYTE  MOVEQ   #1,D2         ;send two hex characters from D1's low byte
 PBYTE1 ROL.B   #4,D1         ;get the next nybble
        MOVE.B  D1,D0
        AND.B   #$F,D0        ;strip off garbage
@@ -766,7 +766,7 @@ EXPR    BSR     EXPR2
         BRA     EXEC           ;go do it
 
 XP11    BSR     XP18           ;is it *>"?
-        BLT     XPRT0          ;no, return 00-0
+        BLT     XPRT0          ;no, return D0-0
         BRA     XPRT1          ;else return Deal
 XP12    BSR    XP18             ;is it "<>"?
         BEQ    XPRT0            ;no, return D0=O
@@ -799,7 +799,7 @@ XPRT1   MOVEQ  #1,D0            ;return D0-1 (true)
 XP17    MOVE.L (SP)+,D0         ;it's not a rel. operator
         RTS                     ;return D0-<EXPR2>
 
-XP18    MOVE.L (SP)+,00         ;reverse the top two stack items
+XP18    MOVE.L (SP)+,D0         ;reverse the top two stack items
         MOVE.L (SP)+,D1
         MOVE.L D0,-(SP)
         MOVE.L D1,-(SP)
@@ -940,7 +940,7 @@ MLTRET  RTS
 *
 DIV32   TST.L D1          ;check for divide-by-zero
         BEQ   QHOW       ;if so, say "How?"
-        MOVE.L 01,D2 
+        MOVE.L D1,D2 
         MOVE.L D1,D4
         EOR.L D0,D4       ;see if the signs are the same
         TST.L D0          ;take absolute value of D0
@@ -1260,7 +1260,7 @@ PU1      MOVE.L     D1,-(SP)
 * end quote. After the printing, the next 2 bytes of the caller are
 * skipped over (usually a short branch instruction).
 *
-* 'PRTNUM' prints the 32 bit number in DI, leading blanks are added if
+* 'PRTNUM' prints the 32 bit number in D1, leading blanks are added if
 * needed to pad the number of spaces to the number in D4.
 * However, if the number of digits is larger than the no. in
 * D4, all digits are printed anyway. Negative sign is also
