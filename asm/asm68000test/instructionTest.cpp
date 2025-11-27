@@ -59,7 +59,14 @@ namespace instructionTest
 		auto opcode = parser.parseText("  add.b (a2), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'000'010'010, opcode);
 	}
-	// ====================================================================================================
+
+    BOOST_AUTO_TEST_CASE(add_to_areg)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  add.l d1, a1\n");
+        validate_errorsCount(parser,1);
+    }
+    // ====================================================================================================
 	// ADDA
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(adda_word_default)
@@ -92,7 +99,13 @@ namespace instructionTest
 		auto opcode = parser.parseText("  adda.l (a2),A4\n");
 		validate_hasValue<uint16_t>(0b1101'100'111'010'010, opcode);
 	}
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(adda_d3c1)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  adda.l D1,A1\n");
+        validate_hasValue<uint16_t>(0b1101'001'111'000'001, opcode);
+    }
+    // ====================================================================================================
 	// ADDI
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(addi_byte)

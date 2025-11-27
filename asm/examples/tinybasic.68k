@@ -99,7 +99,7 @@ ST4     MOVE.L  A4, D0         ;calculate the length of new line
         BEQ     ST3            ;if so, it was just a delete 
         MOVE.L  TXTUNF, A3     ;compute new end
         MOVE.L  A3,A6 
-        ADD.L   D0,A3 
+        ADDA.L  D0,A3           ; changed from ADD to ADDA 
         MOVE.L  VARBGN, D0     ;see if there's enough room
         CMP.L   A3, D0 
         BLS     QSORRY         ;If not, say so
@@ -344,56 +344,56 @@ GOTO    BSR     EXPR                   ;evaluate the following expression
 * however, no <CR LF> is generated.
 *
 
-LIST    BSR     TSTNUM                 ;see if there's a line no.
-        BSR     ENDCHK                 ;if not, we get a zero
-        BSR     FNDLN                  ;find this or next line
-LS1     BCS     WSTART                 ;warm start if we passed the end
-        BSR     PRTLN                  ;print the line
-        BSR     CHKIO                  ;check for listing halt request
+LIST    BSR     TSTNUM          ;see if there's a line no.
+        BSR     ENDCHK          ;if not, we get a zero
+        BSR     FNDLN           ;find this or next line
+LS1     BCS     WSTART          ;warm start if we passed the end
+        BSR     PRTLN           ;print the line
+        BSR     CHKIO           ;check for listing halt request
         BEQ     LS3
-        CMP.B   #CTRLS,D0              ;pause the listing?
-        BNE    LS3
-LS2     BSR    CHKIO           ;if so. wait for another keypress
-        BEQ    LS2
-LS3     BSR    FNDLNP          ;find the next line
-        BRA    LS1
+        CMP.B   #CTRLS,D0       ;pause the listing?
+        BNE     LS3
+LS2     BSR     CHKIO           ;if so. wait for another keypress
+        BEQ     LS2
+LS3     BSR     FNDLNP          ;find the next line
+        BRA     LS1
 
-PRINT   MOVE   #11,D4          ;D4 - number of print spaces
-        BSR    TSTC            ;if null list and ":"
-        DC.B   ':',PR2-*
-        BSR    CRLF            ;give CR-LF and continue
-        BRA    RUNSML          ;execution on the same line
-PR2     BSR    TSTC            ;if null list and <CR>
-        DC.B   CR,PR0-*
-        BSR    CRLF            ;also give CR-LF and
-        BRA    RUNNXL          ;execute the next line
-PR0     BSR    TSTC            ;else 13 it a format? 
-        DC.B   '#',PR1-*
-        BSR    EXPR            ;yes, evaluate expression
-        MOVE   D0,D4           ;and save it as print width
-        BRA    PR3             ;look for more to print
-PR1     BSR    TSTC            ;Is character expression? (MRL)
-        DC.B   '5',PR4-*
-        BSR    EXPR            ;yep. Evaluate expression (MRL)
-        BSR    GOOUT           ;print low byte IMRL)
-        BRA    PR3             ;look for more. iMRLI
-PR4     BSR    QTSTG           ;is it a string?
-        BRA    PR8             ;if not, must be an expression
-PR3     BSR    TSTC            ;If ",", go find next 
-        DC.B   ',',PR6-*
-        BSR    FIN             ;in the list.
-        BRA    PR0
-PR6     BSR    CRLF            ;list ends here
-        BRA    FINISH
-PR8     MOVE   D4,-(SP)        ;save the width value
-        BSR    EXPR            ;evaluate the expression
-        MOVE   (SP)+,D4        ;restore the width
-        MOVE.L D0,D1
-        BSR    PRTNUM          ;print its value
-        BRA    PR3             ;more to print?
+PRINT   MOVE    #11,D4          ;D4 - number of print spaces
+        BSR     TSTC            ;if null list and ":"
+        DC.B    ':',PR2-*
+        BSR     CRLF            ;give CR-LF and continue
+        BRA     RUNSML          ;execution on the same line
+PR2     BSR     TSTC            ;if null list and <CR>
+        DC.B    CR,PR0-*
+        BSR     CRLF            ;also give CR-LF and
+        BRA     RUNNXL          ;execute the next line
+PR0     BSR     TSTC            ;else 13 it a format? 
+        DC.B    '#',PR1-*
+        BSR     EXPR            ;yes, evaluate expression
+        MOVE    D0,D4           ;and save it as print width
+        BRA     PR3             ;look for more to print
+PR1     BSR     TSTC            ;Is character expression? (MRL)
+        DC.B    '5',PR4-*
+        BSR     EXPR            ;yep. Evaluate expression (MRL)
+        BSR     GOOUT           ;print low byte IMRL)
+        BRA     PR3             ;look for more. iMRLI
+PR4     BSR     QTSTG           ;is it a string?
+        BRA     PR8             ;if not, must be an expression
+PR3     BSR     TSTC            ;If ",", go find next 
+        DC.B    ',',PR6-*
+        BSR     FIN             ;in the list.
+        BRA     PR0
+PR6     BSR     CRLF            ;list ends here
+        BRA     FINISH
+PR8     MOVE    D4,-(SP)        ;save the width value
+        BSR     EXPR            ;evaluate the expression
+        MOVE    (SP)+,D4        ;restore the width
+        MOVE.L  D0,D1
+        BSR     PRTNUM          ;print its value
+        BRA     PR3             ;more to print?
 
-FINISH  BSR    FIN             ;Check end of command
-        BRA    QWHAT           ;print "What?" if wrong
+FINISH  BSR     FIN             ;Check end of command
+        BRA     QWHAT           ;print "What?" if wrong
 
 *
 ********************************************************************
@@ -1366,18 +1366,18 @@ PRTLN  CLR.L  D1
 *        the call. If they are not equal, branch to the point
 *        indicated by the offset byte following the text byte. 
 *
-TSTC   BSR    IGNBLK       ;ignore leading blanks
-       MOVE.L (SP)+,A1     ;get the return address
-       MOVE.B (A1)+,D1     ;get the byte to compare
-       CMP.B  (A0),D1      ;is it = to what AO points to?
-       BEQ    TC1          ;if so
-       CLR.L  D1           ;If not, add the second
-       MOVE.B (A1),D1      ;byte following the call to
-       ADD.L  D1,A1        ;the return address.
-       JMP    (A1)         ;jump to the routine
-TC1    ADDQ.L #1,A0        ;if equal, bump text pointer
-       ADDQ.L #1,A1        ;Skip the 2 bytes following
-       JMP    (A1)          ;the call and continue.
+TSTC   BSR    IGNBLK            ;ignore leading blanks
+       MOVE.L   (SP)+,A1        ;get the return address
+       MOVE.B   (A1)+,D1        ;get the byte to compare
+       CMP.B    (A0),D1         ;is it = to what AO points to?
+       BEQ      TC1             ;if so
+       CLR.L    D1              ;If not, add the second
+       MOVE.B   (A1),D1         ;byte following the call to
+       ADDA.L   D1,A1           ;the return address.
+       JMP      (A1)            ;jump to the routine
+TC1    ADDQ.L   #1,A0           ;if equal, bump text pointer
+       ADDQ.L   #1,A1           ;Skip the 2 bytes following
+       JMP      (A1)            ;the call and continue.
 
 *
 * ===== See if the text pointed to by AO is a number. If so, 
