@@ -373,7 +373,7 @@ PR0     BSR     TSTC            ;else 13 it a format?
         MOVE    D0,D4           ;and save it as print width
         BRA     PR3             ;look for more to print
 PR1     BSR     TSTC            ;Is character expression? (MRL)
-        DC.B    '5',PR4-*
+        DC.B    '$',PR4-*
         BSR     EXPR            ;yep. Evaluate expression (MRL)
         BSR     GOOUT           ;print low byte IMRL)
         BRA     PR3             ;look for more. iMRLI
@@ -790,10 +790,10 @@ XP16    BSR    XP18             ;is it "<"?
         BRA    XPRT1            ;else return D0-1
 XP16RT  RTS
 
-XPRT0   CLR.L  D0               ;return D0-0 (false)
+XPRT0   CLR.L  D0               ;return D0=0 (false)
         RTS
 
-XPRT1   MOVEQ  #1,D0            ;return D0-1 (true)
+XPRT1   MOVEQ  #1,D0            ;return D0=1 (true)
         RTS
 
 XP17    MOVE.L (SP)+,D0         ;it's not a rel. operator
@@ -831,7 +831,7 @@ XP26    MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
         JMP    XP24             ;and do an addition
 EXPR3   BSR    EXPR4        ;get first <EXPR4> 
 XP31    BSR    TSTC         ;multiply?
-        DC.B   ',',XP34-*
+        DC.B   '*',XP34-*
         MOVE.L D0,-(SP)     ;yes, save that first result 
         BSR    EXPR4        ;get second <EXPR4>
         MOVE.L (SP)+,D1
