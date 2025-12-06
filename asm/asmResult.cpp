@@ -1,7 +1,8 @@
 #include <fstream>
+#include <sstream>
 #include "asmResult.h"
 
-bool asmResult::save(const char* filename) const
+bool asmResult::saveBinary(const char* filename) const
 {
 	std::ofstream outputFile(filename, std::ios::binary);
 	if (!outputFile)
@@ -31,7 +32,45 @@ bool asmResult::save(const char* filename) const
 	}
 	return true;
 }
-bool asmResult::load(const char* filename)
+
+bool asmResult::saveSymbols(const char* filename) const
+{
+    std::ofstream outputFile(filename);
+    if (!outputFile)
+    {
+        return false;
+    }
+    // Save labels
+    outputFile << "# Labels" << std::endl;
+    for (const auto& [label, address] : labels)
+    {
+        outputFile << label << " " << address << std::endl;
+    }
+    // Save symbols
+    outputFile << "# Symbols" << std::endl;
+    for (const auto& [symbol, value] : symbols)
+    {
+        if (value.type() == typeid(int32_t))
+        {
+            outputFile << symbol << " " << any_cast<int32_t>(value) << std::endl;
+        }
+        else if (value.type() == typeid(uint32_t))
+        {
+            outputFile << symbol << " " << any_cast<uint32_t>(value) << std::endl;
+        }
+        else if (value.type() == typeid(std::string))
+        {
+            outputFile << symbol << " " << any_cast<std::string>(value) << std::endl;
+        }
+        else
+        {
+            outputFile << symbol << " <unsupported type>" << std::endl;
+        }
+    }
+    return true;
+}
+
+bool asmResult::loadBinary(const char* filename)
 {
 	std::ifstream inputFile(filename, std::ios::binary);
 	if (!inputFile)
@@ -74,4 +113,65 @@ bool asmResult::load(const char* filename)
 		}
 	}
 	return true;
+}
+
+bool asmResult::loadSymbols(const char* filename)
+{
+    std::ifstream inputFile(filename);
+    if (!inputFile)
+    {
+        return false;
+    }
+    labels.clear();
+    symbols.clear();
+    std::string line;
+    enum class Section { None, Labels, Symbols };
+    Section currentSection = Section::None;
+    while (std::getline(inputFile, line))
+    {
+        if (line.empty() || line[0] == '#')
+        {
+            if (line == "# Labels")
+            {
+                currentSection = Section::Labels;
+            }
+            else if (line == "# Symbols")
+            {
+                currentSection = Section::Symbols;
+            }
+            continue;
+        }
+        std::istringstream iss(line);
+        std::string name;
+        iss >> name;
+        if (currentSection == Section::Labels)
+        {
+            uint32_t address;
+            iss >> address;
+            labels[name] = address;
+        }
+        else if (currentSection == Section::Symbols)
+        {
+            std::string valueStr;
+            iss >> valueStr;
+            try
+            {
+                int32_t intValue = std::stoi(valueStr);
+                symbols[name] = intValue;
+            }
+            catch (const std::invalid_argument&)
+            {
+                try
+                {
+                    uint32_t uintValue = static_cast<uint32_t>(std::stoul(valueStr));
+                    symbols[name] = uintValue;
+                }
+                catch (const std::invalid_argument&)
+                {
+                    symbols[name] = valueStr; // treat as string
+                }
+            }
+        }
+    }
+    return true;
 }

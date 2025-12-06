@@ -12,7 +12,8 @@ public:
 	bool parseFile(const char* filename, bool showTree=false);
 	std::any parseText(const char* text);
 	size_t checkSyntax(const char* text);
-	bool saveBinary(const char* filename);
+    bool saveBinary(const char* filename);
+    bool saveSymbols(const char* filename);
 
 	const std::vector<codeBlock>& getCodeBlocks() const { return result.code; }
 	const std::map<std::string, uint32_t>& getLabels() const { return result.labels; }

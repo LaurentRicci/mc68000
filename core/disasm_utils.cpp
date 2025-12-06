@@ -95,17 +95,28 @@ namespace mc68000
 			{
 			case 0: // (xxx).w
 			{
+                uint32_t immediate = fetchNextWord();
+                auto it = symbolTable.find(immediate);
+                if (it != symbolTable.end())
+                {
+                    return it->second;
+                }
 				std::string result = "$";
-				result += toHex(fetchNextWord());
+				result += toHex(immediate);
 				result += ".w";
 				return result;
 			}
 			case 1: // (xxx).l
 			{
-				std::string result = "$";
 				uint32_t immediate = fetchNextWord() << 16;
 				immediate |= fetchNextWord();
-				result += toHex(immediate);
+                auto it = symbolTable.find(immediate);
+                if (it != symbolTable.end())
+                {
+                    return it->second;
+                }
+                std::string result = "$";
+                result += toHex(immediate);
 				result += ".l";
 				return result;
 			}
@@ -131,19 +142,31 @@ namespace mc68000
 			}
 			case 4: // #
 			{
-				std::string result = "#$";
-				
 				if (isLongOperation)
 				{
 					uint32_t immediate = fetchNextWord() << 16;
 					immediate |= fetchNextWord();
+                    auto it = symbolTable.find(immediate);
+                    if (it != symbolTable.end())
+                    {
+                        return it->second;
+                    }
+                    std::string result = "#$";
 					result += toHex(immediate);
-				}
+                    return result;
+                }
 				else
 				{
-					result += toHex(fetchNextWord());
-				}
-				return result;
+                    uint32_t immediate = fetchNextWord();
+                    auto it = symbolTable.find(immediate);
+                    if (it != symbolTable.end())
+                    {
+                        return it->second;
+                    }
+                    std::string result = "#$";
+					result += toHex(immediate);
+                    return result;
+                }
 			}
 			default:
 				return "<ea>";

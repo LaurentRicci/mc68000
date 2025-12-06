@@ -155,11 +155,11 @@ namespace parserTest
 		BOOST_CHECK_EQUAL(0x1000, result.start);
 		BOOST_CHECK_EQUAL(3, result.code.front().code.size());
 
-		bool saved = result.save("test.bin");
+		bool saved = result.saveBinary("test.bin");
 		BOOST_CHECK(saved);
 
 		asmResult loadedCode;
-		bool loaded = loadedCode.load("test.bin");
+		bool loaded = loadedCode.loadBinary("test.bin");
 		BOOST_CHECK(loaded);
 		BOOST_CHECK_EQUAL(result.code.front().origin, loadedCode.code.front().origin);
 		BOOST_CHECK_EQUAL(result.start, loadedCode.start);
@@ -169,5 +169,31 @@ namespace parserTest
 			BOOST_CHECK_EQUAL(result.code.front().code[i], loadedCode.code.front().code[i]);
 		}
 	}
+
+    BOOST_AUTO_TEST_CASE(symbol_save)
+    {
+        asmparser parser;
+        parser.parseText(" org $1000\nstart: nop\n bsr finish\nfinish: nop\n end start\n");
+        validate_noErrors(parser);
+        const asmResult& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(2, result.labels.size());
+
+        bool saved = result.saveSymbols("symbols.txt");
+        BOOST_CHECK(saved);
+
+        asmResult loadedCode;
+        bool loaded = loadedCode.loadSymbols("symbols.txt");
+        BOOST_CHECK(loaded);
+        BOOST_CHECK_EQUAL(result.labels.size(), loadedCode.labels.size());
+        for (auto it = result.labels.begin(); it != result.labels.end(); it++)
+        {
+            const std::string& label = it->first;
+            uint32_t address = it->second;
+
+            BOOST_CHECK(loadedCode.labels.find(label) != loadedCode.labels.end());
+            BOOST_CHECK_EQUAL(address, loadedCode.labels[label]);
+        }
+    }
+
 	BOOST_AUTO_TEST_SUITE_END()
 }

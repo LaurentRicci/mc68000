@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <map>
 
 #include "core.h"
 
@@ -205,13 +206,20 @@ namespace mc68000
 		const bool AlwaysWord = false;
 		const bool AlwaysLong = true;
 
+        // symbol table
+        std::map<uint32_t, std::string> symbolTable;
 
 	public:
 		DisAsm();
 		DisAsm(const uint16_t* memory, uint32_t origin);
+        bool loadSymbols(const char* filename);
 		~DisAsm();
 		std::string disassemble(const uint16_t*);
 		std::string disassembleInstruction(uint32_t pc);
 		std::string dasm(const uint16_t*, uint32_t org);
+        void addSymbol(uint32_t address, const std::string& name)
+        {
+            symbolTable[address] = name;
+        }
 	};
 }

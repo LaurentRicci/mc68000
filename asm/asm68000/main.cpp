@@ -9,8 +9,10 @@ int main(int argc, const char * argv[])
 {
 	bool showTree = false;
 	bool saveBinary = false;
+    bool saveSymbols = false;
 	const char* filename = "test.68k";
 	const char* binaryFilename = nullptr;
+    const char* symbolsFilename = nullptr;
 
 	for (int i=1; i<argc; i++)
 	{
@@ -24,7 +26,8 @@ int main(int argc, const char * argv[])
 				std::cout << "  -h, --help    Show this help message" << std::endl;
 				std::cout << "  -t, --tree    Show parse tree" << std::endl;
 				std::cout << "  -o, --output  <binary file>  Save binary output" << std::endl;
-				return 0;
+                std::cout << "  -s, --symbols <symbols file> Save the symbol table" << std::endl;
+                return 0;
 			}
 			else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tree") == 0)
 			{
@@ -45,7 +48,21 @@ int main(int argc, const char * argv[])
 				}
 				continue;
 			}
-			else
+            else if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--symbols") == 0)
+            {
+                if (i + 1 < argc)
+                {
+                    saveSymbols = true;
+                    symbolsFilename = argv[i + 1];
+                    i++;
+                }
+                else
+                {
+                    std::cerr << "Missing symbols filename following " << argv[i] << std::endl;
+                }
+                continue;
+            }
+            else
 			{
 				std::cerr << "Unknown option: " << argv[i] << std::endl;
 				return 1;
@@ -70,5 +87,10 @@ int main(int argc, const char * argv[])
 		std::cerr << "error saving binary file: " << binaryFilename << std::endl;
 		return 1;
 	}
+    if (saveSymbols && !parser.saveSymbols(symbolsFilename))
+    {
+        std::cerr << "error saving symbols file: " << symbolsFilename << std::endl;
+        return 1;
+    }
 	return 0;
 }

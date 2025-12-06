@@ -86,9 +86,37 @@ BOOST_AUTO_TEST_CASE(addressMode_111_0)
     verifyDisassembly(0x3078, 0x007B, "movea.w $7b.w,a0");
 }
 
+BOOST_AUTO_TEST_CASE(addressMode_111_0S)
+{
+    // Arrange
+    DisAsm d;
+    unsigned short memory[2] = { 0x3078, 0x007B };
+    d.addSymbol(0x007B, "target");
+
+    // Act
+    std::string actual = d.disassemble(memory);
+
+    // Assert
+    BOOST_CHECK_EQUAL("movea.w target,a0", actual);
+}
+
 BOOST_AUTO_TEST_CASE(addressMode_111_1)
 {
     verifyDisassembly(0x3079, 0x1234, 0x5678, "movea.w $12345678.l,a0");
+}
+
+BOOST_AUTO_TEST_CASE(addressMode_111_1S)
+{
+    // Arrange
+    DisAsm d;
+    unsigned short memory[3] = { 0x3079, 0x1234, 0x5678 };
+    d.addSymbol(0x12345678, "target");
+
+    // Act
+    std::string actual = d.disassemble(memory);
+
+    // Assert
+    BOOST_CHECK_EQUAL("movea.w target,a0", actual);
 }
 
 BOOST_AUTO_TEST_CASE(addressMode_111_2)

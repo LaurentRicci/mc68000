@@ -89,5 +89,10 @@ size_t asmparser::checkSyntax(const char* text)
 
 bool asmparser::saveBinary(const char* filename)
 {
-	return result.save(filename);
+	return result.saveBinary(filename);
+}
+
+bool asmparser::saveSymbols(const char* filename)
+{
+    return result.saveSymbols(filename);
 }

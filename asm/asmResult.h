@@ -22,8 +22,10 @@ public:
 	{
 		code.push_back(codeBlock());
 	}
-	bool save(const char* filename) const;
-	bool load(const char* filename);
+	bool saveBinary(const char* filename) const;
+    bool saveSymbols(const char* filename) const;
+    bool loadBinary(const char* filename);
+    bool loadSymbols(const char* filename);
 
 	std::vector<codeBlock>		    code;
 	uint32_t                        start;

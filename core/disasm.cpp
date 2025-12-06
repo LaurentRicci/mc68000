@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 #include "core.h"
@@ -27,6 +28,44 @@ namespace mc68000
 	{
 		handlers = setup<DisAsm>();
 	}
+
+    bool DisAsm::loadSymbols(const char* filename)
+    {
+        std::ifstream inputFile(filename);
+        if (!inputFile)
+        {
+            return false;
+        }
+        symbolTable.clear();
+        std::string line;
+        enum class Section { None, Labels, Symbols };
+        Section currentSection = Section::None;
+        while (std::getline(inputFile, line))
+        {
+            if (line.empty() || line[0] == '#')
+            {
+                if (line == "# Labels")
+                {
+                    currentSection = Section::Labels;
+                }
+                else if (line == "# Symbols")
+                {
+                    currentSection = Section::Symbols;
+                }
+                continue;
+            }
+            std::istringstream iss(line);
+            std::string name;
+            iss >> name;
+            if (currentSection == Section::Labels)
+            {
+                uint32_t address;
+                iss >> address;
+                symbolTable[address] = name;
+            }
+        }
+        return true;
+    }
 
 	DisAsm::~DisAsm()
 	{

@@ -19,25 +19,25 @@ public:
     any generateCode(tree::ParseTree* tree);
 
 private:
-    vector<codeBlock>& codeBlocks;                // the assembly code as a results of the parsing
+    vector<codeBlock>& codeBlocks;                          // the assembly code as a results of the parsing
     uint32_t& start;
-    map<string, uint32_t>& labels;                // the labels found in the code label -> index
-    map<string, any>& symbols;                    // the symbol table (from the EQU directive)
-    mc68000::errors& errorList;                   // the list of errors found during the parsing
+    map<string, uint32_t>& labels;                          // the labels found in the code label -> index
+    map<string, any>& symbols;                              // the symbol table (from the EQU directive)
+    mc68000::errors& errorList;                             // the list of errors found during the parsing
 
-    vector<uint16_t>& code()                      // the code in the current code block being processed
+    vector<uint16_t>& code()                                // the code in the current code block being processed
     { 
         return codeBlocks.back().code; 
     }
 
-    vector<uint16_t> extensionsList;              // the list of extra words for the addressing mode
-    int pass = 0;                                 // the current pass (0 = first pass, 1 = second pass)
-    uint32_t currentAddress = 0;                  // the current address in the code
-    uint16_t size = 1;                            // the size of the current instruction
+    vector<uint16_t> extensionsList;                        // the list of extra words for the addressing mode
+    int pass = 0;                                           // the current pass (0 = first pass, 1 = second pass)
+    uint32_t currentAddress = 0;                            // the current address in the code
+    uint16_t size = 1;                                      // the size of the current instruction
 
-	vector<uint8_t> dcBytes;                      // the data in the dc section
-	bool incompleteBinary = false;                // true if the last instruction was a dc.b with an odd number of bytes
-    parser68000::LabelSectionContext* labelCtx;   // the current label section
+	vector<uint8_t> dcBytes;                                // the data in the dc section
+	bool incompleteBinary = false;                          // true if the last instruction was a dc.b with an odd number of bytes
+    parser68000::LabelSectionContext* labelCtx = nullptr;   // the current label section
 
 private:
     any visitProg(parser68000::ProgContext* ctx) override;
