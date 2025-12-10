@@ -217,9 +217,19 @@ namespace mc68000
 		std::string disassemble(const uint16_t*);
 		std::string disassembleInstruction(uint32_t pc);
 		std::string dasm(const uint16_t*, uint32_t org);
+        uint32_t getPc() const { return pc; }
         void addSymbol(uint32_t address, const std::string& name)
         {
             symbolTable[address] = name;
+        }
+        std::string findSymbol(uint32_t address)
+        {
+            auto it = symbolTable.find(address);
+            if (it != symbolTable.end())
+            {
+                return it->second;
+            }
+            return std::string();
         }
 	};
 }

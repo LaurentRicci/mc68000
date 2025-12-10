@@ -55,26 +55,24 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
 	if (labelCtx->value.empty())
 	{
 		addError("Missing label in EQU directive", ctx);
+        return any();
 	}
-	else
+	any value = visit(ctx->expression());
+	if (pass == 0)
 	{
-		any value = visit(ctx->expression());
-		if (pass == 0)
+		if (labels.find(labelCtx->value) != labels.end())
 		{
-			if (labels.find(labelCtx->value) != labels.end())
-			{
-				addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
-			}
-			else if (symbols.find(labelCtx->value) == symbols.end())
-			{
-				symbols[labelCtx->value] = value;
-			}
-			else
-			{
-				addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
-			}
-		}
+			addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
+            return any();
+        }
+		if (symbols.find(labelCtx->value) != symbols.end())
+		{
+            addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
+            return any();
+        }
 	}
+    symbols[labelCtx->value] = value;
+
 	return any();
 }
 any visitor::visitDs(parser68000::DsContext* ctx)
@@ -86,7 +84,7 @@ any visitor::visitDs(parser68000::DsContext* ctx)
 	uint32_t count = getAddressValue(ctx->address());
 	if (count <= 0)
 	{
-		addError("Storage size should be a positive integer:" + count, ctx->address());
+		addError("Storage size should be a positive integer:" + to_string(count), ctx->address());
 		count = 1;
 	}
 	uint32_t bytesNeeded = count * (1 << size);
@@ -147,8 +145,44 @@ any visitor::visitOrg(parser68000::OrgContext* ctx)
 			codeBlock newBlock(address);
 			codeBlocks.push_back(newBlock);
 		}
+    	return any();
 	}
-	return any();
+    if (memoryStart != 0 || memoryEnd != 0)
+    {
+        // Validate that the origin is within the addressable memory
+        if (address < memoryStart || address > memoryEnd)
+        {
+            addError("ORG " + to_string(address) + " should be inside addressable space: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
+        }
+    }
+    return any();
+}
+/// <summary>
+/// MEMORY blockAddress COMMA blockAddress
+/// </summary>
+any visitor::visitMemory(parser68000::MemoryContext* ctx)
+{
+    uint32_t memStart = getAddressValue(ctx->blockAddress(0));
+    uint32_t memEnd = getAddressValue(ctx->blockAddress(1));
+
+    if (pass != 0)
+    {
+        return any();
+    }
+    if (memEnd <= memStart)
+    {
+        addPass0Error("Invalid MEMORY range: " + to_string(memStart) + " - " + to_string(memEnd), ctx);
+        return any();
+    }
+    if (memoryStart != 0 || memoryEnd != 0)
+    {
+        addPass0Error("Multiple MEMORY directives are not allowed", ctx);
+        return any();
+    }
+    memoryStart = memStart;
+    memoryEnd = memEnd;
+
+    return any();
 }
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)

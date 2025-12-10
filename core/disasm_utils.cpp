@@ -218,14 +218,24 @@ namespace mc68000
 		disassembly += " ";
 
 		uint8_t offset = opcode & 0xff;
+        uint32_t address = 0;
 		if (offset == 0)
 		{
-			disassembly += toHexDollar(fetchRelativeAddress());
+            address = fetchRelativeAddress();
 		}
 		else
 		{
-			disassembly += toHexDollar(origin + (pc * 2) + (int8_t) offset);
+            address = origin + (pc * 2) + (int8_t)offset;
 		}
+        auto it = symbolTable.find(address);
+        if (it != symbolTable.end())
+        {
+            disassembly += it->second;
+        }
+        else
+        {
+            disassembly += toHexDollar(address);
+        }
 
 		return instructionId;
 	}

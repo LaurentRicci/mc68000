@@ -8,6 +8,7 @@ int main(int argc, const char* argv[])
 {
 	bool debugMode = false;
 	const char* binaryFile = nullptr;
+    const char* symbolsFile = nullptr;
 
     for (int i = 1; i < argc; i++)
     {
@@ -16,7 +17,7 @@ int main(int argc, const char* argv[])
             std::cout << "Option " << i << ": " << argv[i] << std::endl;
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             {
-                std::cout << "Usage: simple [options] [binaryFile]" << std::endl;
+                std::cout << "Usage: simple [options] [binaryFile] [symbolsFile]" << std::endl;
                 std::cout << "Options:" << std::endl;
                 std::cout << "  -h, --help    Show this help message" << std::endl;
                 std::cout << "  -d, --debug   Debug mode" << std::endl;
@@ -27,15 +28,23 @@ int main(int argc, const char* argv[])
                 debugMode = true;
             }
         }
-        else
+        else if (binaryFile == nullptr)
         {
             binaryFile = argv[i];
-            break;
+        }
+        else if (symbolsFile == nullptr)
+        {
+            symbolsFile = argv[i];
+        }
+        else
+        {
+            std::cerr << "Unknown argument: " << argv[i] << std::endl;
+            return 1;
         }
     }
 	if (binaryFile != nullptr)
     {
-        mc68000::Emulator emulator(binaryFile);
+        mc68000::Emulator emulator(binaryFile, symbolsFile);
         emulator.debug(debugMode);
         emulator.run(0, 1024, 1024);
     }

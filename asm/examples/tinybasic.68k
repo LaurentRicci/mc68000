@@ -1,7 +1,7 @@
 *****************************************************************
-*	Tiny BASIC for the Motorola MC68000                         *
+*	Tiny BASIC for the Motorola MC68000                     *
 *                                                               *
-*	                                                            *
+*	                                                        *
 *                                                               *
 * Derived from Palo Alto Tiny BASIC as published in the May 1976*
 * issue of Dr. Dobb's Journal. Adapted to the 68000 by:         *
@@ -13,7 +13,7 @@
 *                                                               *
 * This version is for MEX68KECB Educational Computer Board I/0. *
 *                                                               *
-* Copyright (C) 1984 by Gordon Brandly. This program may be	    *
+* Copyright (C) 1984 by Gordon Brandly. This program may be	*
 * freely distributed for personal use only. All commercial      *
 * rights are reserved.                                          *
 *****************************************************************
@@ -32,9 +32,10 @@ CTRLH   EQU $08
 CTRLS   EQU $13
 CTRLX   EQU $18
 
-BUFLEN  EQU 80   ;length of keyboard input butter
-
-    ORG $900    ;first free address using Tutor
+BUFLEN  EQU 80                  ; length of keyboard input butter
+BUFEND  EQU BUFFER + BUFLEN - 1 ; end of keyboard buffer
+        MEMORY $900,$8000       ; address space
+        ORG $900                ; first free address using Tutor
 *	
 * Standard jump table. You can change these addresses if you are
 * customizing this interpreter for a different environment.
@@ -69,7 +70,7 @@ WSTART  CLR.L    D0             ;Initialize internal variables
         MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
         LEA     OKMSG,A6       ;display "OK"
         BSR     PRMESG
-ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and 
+ST3     MOVE.B  #'>',D0        ;Prompt with a '>' and 
         BSR     GETLN          ;read a line.
         BSR     TOUPBUF        ;convert to upper case
         MOVE.L  A0, A4         ;save pointer to end of line 
@@ -94,11 +95,11 @@ ST3     MOVE.B  #'>',D0        ;Prompt with a t>' and
         MOVE.L  A2, TXTUNF     ;update the end pointer
 ST4     MOVE.L  A4, D0         ;calculate the length of new line
         SUB.L   A0, D0 
-        CMP.L   03,D0          ;is it just a line no. i CR? 
+        CMP.L   #3,D0          ;is it just a line no. i CR? 
         BEQ     ST3            ;if so, it was just a delete 
         MOVE.L  TXTUNF, A3     ;compute new end
         MOVE.L  A3,A6 
-        ADD.L   D0,A3 
+        ADDA.L  D0,A3           ; changed from ADD to ADDA 
         MOVE.L  VARBGN, D0     ;see if there's enough room
         CMP.L   A3, D0 
         BLS     QSORRY         ;If not, say so
@@ -343,56 +344,58 @@ GOTO    BSR     EXPR                   ;evaluate the following expression
 * however, no <CR LF> is generated.
 *
 
-LIST    BSR     TSTNUM                 ;see if there's a line no.
-        BSR     ENDCHK                 ;if not, we get a zero
-        BSR     FNDLN                  ;find this or next line
-LS1     BCS     WSTART                 ;warm start if we passed the end
-        BSR     PRTLN                  ;print the line
-        BSR     CHKIO                  ;check for listing halt request
+LIST    BSR     TSTNUM          ;see if there's a line no.
+        BSR     ENDCHK          ;if not, we get a zero
+        BSR     FNDLN           ;find this or next line
+LS1     BCS     WSTART          ;warm start if we passed the end
+        BSR     PRTLN           ;print the line
+        BSR     CHKIO           ;check for listing halt request
         BEQ     LS3
-        CMP.B   #CTRLS,D0              ;pause the listing?
-        BNE    LS3
-LS2     BSR    CHKIO           ;if so. wait for another keypress
-        BEQ    LS2
-LS3     BSR    FNDLNP          ;find the next line
-        BRA    LS1
+        CMP.B   #CTRLS,D0       ;pause the listing?
+        BNE     LS3
+LS2     BSR     CHKIO           ;if so. wait for another keypress
+        BEQ     LS2
+LS3     BSR     FNDLNP          ;find the next line
+        BRA     LS1
 
-PRINT   MOVE   #11,04          ;D4 - number of print spaces
-        BSR    TSTC            ;if null list and ":"
-        DC.B   ':',PR2-*
-        BSR    CRLF            ;give CR-LF and continue
-        BRA    RUNSML          ;execution on the same line
-PR2     BSR    TSTC            ;if null list and <CR>
-        DC.B   CR,PR0-*
-        BSR    CRLF            ;also give CR-LF and
-        BRA    RUNNXL          ;execute the next line
-PR0     BSR    TSTC            ;else 13 it a format? 
-        DC.B   '#',PR1-*
-        BSR    EXPR            ;yes, evaluate expression
-        MOVE   D0,D4           ;and save it as print width
-        BRA    PR3             ;look for more to print
-PR1     BSR    TSTC            ;Is character expression? (MRL)
-        DC.B   '5',PR4-*
-        BSR    EXPR            ;yep. Evaluate expression (MRL)
-        BSR    GOOUT           ;print low byte IMRL)
-        BRA    PR3             ;look for more. iMRLI
-PR4     BSR    QTSTG           ;is it a string?
-        BRA    PR8             ;if not, must be an expression
-PR3     BSR    TSTC            ;If ",", go find next 
-        DC.B   ',',PR6-*
-        BSR    FIN             ;in the list.
-        BRA    PR0
-PR6     BSR    CRLF            ;list ends here
-        BRA    FINISH
-PR8     MOVE   D4,-(SP)        ;save the width value
-        BSR    EXPR            ;evaluate the expression
-        MOVE   (SP)+,D4        ;restore the width
-        MOVE.L D0,01
-        BSR    PRTNUM          ;print its value
-        BRA    PR3             ;more to print?
+PRINT   TRAP    #0
+        MOVE    #11,D4          ;D4 - number of print spaces
+        BSR     TSTC            ;if null list and ":"
+        DC.B    ':',PR2-*
+        BSR     CRLF            ;give CR-LF and continue
+        BRA     RUNSML          ;execution on the same line
+PR2     BSR     TSTC            ;if null list and <CR>
+        DC.B    CR,PR0-*
+        BSR     CRLF            ;also give CR-LF and
+        BRA     RUNNXL          ;execute the next line
+PR0     BSR     TSTC            ;else is it a format? 
+        DC.B    '#',PR1-*
+        BSR     EXPR            ;yes, evaluate expression
+        MOVE    D0,D4           ;and save it as print width
+        BRA     PR3             ;look for more to print
+PR1     BSR     TSTC            ;Is character expression? (MRL)
+        DC.B    '$',PR4-*
+        BSR     EXPR            ;yep. Evaluate expression (MRL)
+        BSR     GOOUT           ;print low byte (MRL)
+        BRA     PR3             ;look for more. (MRL)
+PR4     BSR     QTSTG           ;is it a string?
+        BRA     PR8             ;if not, must be an expression
+PR3     BSR     TSTC            ;if ",", go find next 
+        DC.B    ',',PR6-*
+        BSR     FIN             ;in the list.
+        BRA     PR0
+PR6     BSR     CRLF            ;list ends here
+        BRA     FINISH
+PR8     TRAP    #0
+        MOVE    D4,-(SP)        ;save the width value
+        BSR     EXPR            ;evaluate the expression
+        MOVE    (SP)+,D4        ;restore the width
+        MOVE.L  D0,D1
+        BSR     PRTNUM          ;print its value
+        BRA     PR3             ;more to print?
 
-FINISH  BSR    FIN             ;Check end of command
-        BRA    QWHAT           ;print "What?" if wrong
+FINISH  BSR     FIN             ;Check end of command
+        BRA     QWHAT           ;print "What?" if wrong
 
 *
 ********************************************************************
@@ -655,7 +658,7 @@ LODEND MOVE.L A0,TXTUNF      ;set end-of program pointer
        BRA     WSTART        ;back to direct mode
 
 GBYTE  MOVEQ   #1,D2         ;get two hex characters from auxiliary
-       CLR     D1            ;and store them as a byte in DI
+       CLR     D1            ;and store them as a byte in D1
 GBYTE1 BSR     GOAUXI        ;get a char.
        BEQ     GBYTE1
        CMP.B   #'A',D0
@@ -696,7 +699,7 @@ SAVEND MOVE.B  #'@',D0        ;send end-of-program indicator
        BSR     GOAUXO
        BRA     WSTART        ;then go do a warm start
 
-PBYTE  MOVEQ   #1,D2         ;send two hex characters from DI's low byte
+PBYTE  MOVEQ   #1,D2         ;send two hex characters from D1's low byte
 PBYTE1 ROL.B   #4,D1         ;get the next nybble
        MOVE.B  D1,D0
        AND.B   #$F,D0        ;strip off garbage
@@ -758,14 +761,15 @@ CALL    BSR     EXPR           ;get the subroutine's address
 * as an index, functions can have an <EXPR> as arguments, and
 * <EXPR4> can be an <EXPR> in parenthesis.
 *
-EXPR    BSR     EXPR2
+EXPR    TRAP    #0
+        BSR     EXPR2
         MOVE.L  D0,-(SP)       ;save <EXPR2> value
         LEA     TAB8,A1        ;look up a relational operator
         LEA     TAB8_1,A2
         BRA     EXEC           ;go do it
 
 XP11    BSR     XP18           ;is it *>"?
-        BLT     XPRT0          ;no, return 00-0
+        BLT     XPRT0          ;no, return D0-0
         BRA     XPRT1          ;else return Deal
 XP12    BSR    XP18             ;is it "<>"?
         BEQ    XPRT0            ;no, return D0=O
@@ -789,16 +793,16 @@ XP16    BSR    XP18             ;is it "<"?
         BRA    XPRT1            ;else return D0-1
 XP16RT  RTS
 
-XPRT0   CLR.L  D0               ;return D0-0 (false)
+XPRT0   CLR.L  D0               ;return D0=0 (false)
         RTS
 
-XPRT1   MOVEQ  #1,D0            ;return D0-1 (true)
+XPRT1   MOVEQ  #1,D0            ;return D0=1 (true)
         RTS
 
 XP17    MOVE.L (SP)+,D0         ;it's not a rel. operator
         RTS                     ;return D0-<EXPR2>
 
-XP18    MOVE.L (SP)+,00         ;reverse the top two stack items
+XP18    MOVE.L (SP)+,D0         ;reverse the top two stack items
         MOVE.L (SP)+,D1
         MOVE.L D0,-(SP)
         MOVE.L D1,-(SP)
@@ -807,7 +811,8 @@ XP18    MOVE.L (SP)+,00         ;reverse the top two stack items
         CMP.L  D0,D1            ;compare with the first result 
         RTS                     ;return the result
 
-EXPR2   BSR    TSTC             ;negative sign?
+EXPR2   TRAP    #0
+        BSR    TSTC             ;negative sign?
         DC.B   '-',XP21-*
         CLR.L  D0               ;yes, fake '0-'
         BRA    XP26
@@ -830,7 +835,7 @@ XP26    MOVE.L D0,-(SP)         ;yes, save the result of 1st <EXPR3>
         JMP    XP24             ;and do an addition
 EXPR3   BSR    EXPR4        ;get first <EXPR4> 
 XP31    BSR    TSTC         ;multiply?
-        DC.B   ',',XP34-*
+        DC.B   '*',XP34-*
         MOVE.L D0,-(SP)     ;yes, save that first result 
         BSR    EXPR4        ;get second <EXPR4>
         MOVE.L (SP)+,D1
@@ -848,13 +853,16 @@ XP34    BSR    TSTC         ;divide?
 EXPR4   LEA    TAB4,A1      ;find possible function
         LEA    TAB4_1,A2
         BRA    EXEC
-XP40    BSR    TSTV         ;nope, not a function 
+XP40    TRAP    #0
+        BSR    TSTV         ;nope, not a function
+        TRAP    #0
         BCS    XP41         ;nor a variable
         MOVE.L D0,A1
         CLR.L  D0
         MOVE.L (A1),D0      ;if a variable, return its value in D0 
 EXP4RT  RTS
-XP41    BSR    TSTNUM       ;or is it a number?
+XP41    TRAP    #0
+        BSR    TSTNUM       ;or is it a number?
         MOVE.L D1,D0
         TST    D2           ;(if not, V of digits will be zero) 
         BNE    EXP4RT       ;if so, return it in D0
@@ -867,14 +875,15 @@ XP42    RTS
 XP43    BRA    QWHAT        ;else say "What?"
 
 *
-* ===== Test for a valid variable name. Returns Carry-I if not 
+* ===== Test for a valid variable name. Returns Carry=1 if not 
 *       found, else returns Carry=O and the address of the 
 *       variable in D0.
 
-TSTV    BSR    IGNBLK
+TSTV    TRAP #0
+        BSR    IGNBLK
         CLR.L  D0
         MOVE.B (A0),D0      ;look at the program text
-        SUB.B  #'0',D0
+        SUB.B  #'@',D0
         BCS    TSTVRT       ;C=1: not a variable
         BNE    TV1          ;branch if not "s" array
         ADDQ   #1,A0        ;If it is, it should be
@@ -891,14 +900,14 @@ TSTV    BSR    IGNBLK
         MOVE.L VARBGN,D0  ;put address of array element...
         SUB.L D1,D0       ;into D0
         RTS
-TV1     CMP.B #27,D0      ;if not e, is it A through 2?
+TV1     CMP.B #27,D0      ;if not @, is it A through Z?
         EORI  #1,CCR
         BCS   TSTVRT      ;if not, set Carry and return
         ADDQ  #1,A0       ;else bump the text pointer
         ADD   D0,D0        ;compute the variable's address
         ADD   D0,D0
         MOVE.L VARBGN,D1
-        ADD   D1,D0       ;and return it in D0 with Carry*O
+        ADD   D1,D0       ;and return it in D0 with Carry=O
 TSTVRT  RTS
 
 *
@@ -939,7 +948,7 @@ MLTRET  RTS
 *
 DIV32   TST.L D1          ;check for divide-by-zero
         BEQ   QHOW       ;if so, say "How?"
-        MOVE.L 01,D2 
+        MOVE.L D1,D2 
         MOVE.L D1,D4
         EOR.L D0,D4       ;see if the signs are the same
         TST.L D0          ;take absolute value of D0
@@ -1125,52 +1134,51 @@ AHOW    LEA      HOWMSG,A6
 * 'FNDNXT' will bump Al by 2, find a CR and then start search.
 * 'FNDSKP' uses Al to find a CR, and then starts the search.
 *
-GETLN   BSR      GOOUT            ;display the prompt
-        MOVE.B   #' ',D0          ;and a space
-        BSR      GOOUT
-        LEA      BUFFER,A0        ;A0 is the buffer pointer
-GL1     BSR      CHKIO            ;check keyboard
-        BEQ      GL1              ;wait for a char. to come in
-        CMP.B    #CTRLH,D0        ;delete last character?
-        BEQ    GL3            ;if so
-        CMP.B  #CTRLX,D0      ;delete the whole line?
-        BEQ    GL4            ;if so
-        CMP.B  #CR, D0        ;accept a CR
-        BEQ    GL2
-        CMP.B  #' ',D0          ;if other control char., discard it
-        BCS    GL1
-GL2     MOVE.B D0,(A0)+       ;save the char.
-        BSR    GOOUT          ;echo the char back out
-        CMP.B  #CR,D0         ;if it's a CR, end the line
-        BEQ    GL7
-*****        CMP.L  #(BUFFER+BUFLEN-1),A0 ;any more room?
-        CMPA.L  #BUFFER,A0     ;TODO fixi it
-        BCS    GL1            ;yes: get some more, else delete last char.
-GL3     MOVE.B #CTRLH,D0      ;delete a char. if possible
-        BSR    GOOUT
-        MOVE.B #' ',D0
-        BSR    GOOUT
-        CMPA.L  #BUFFER,A0    ;any char.'s left?
-        BLS    GL1            ;if not
-        MOVE.B #CTRLH,D0      ;if so, finish the BS-space-BS sequence
-        BSR    GOOUT
-        SUBQ.L #1,A0          ;decrement the text pointer
-        BRA    GL1            ;back for more
-GL4     MOVE.L A0,D1          ;delete the whole line
-        SUB.L  #BUFFER,D1     ;figure out how many backspaces we need
-        BEQ    GL6            ;if none needed, branch
-        SUBQ   #1,D1          ;adjust for DBRA
-GL5     MOVE.B #CTRLH,D0      ;and display BS-space-BS sequences
-        BSR    GOOUT
-        MOVE.B #' ',D0
-        BSR    GOOUT
-        MOVE.B #CTRLH,D0
-        BSR    GOOUT
-        DBRA   D1,GL5
-GL6     LEA    BUFFER,A0      ;reinitialize the text pointer
-        BRA    GL1            ;and go back for more
-GL7     MOVE.B #LF,D0          ;echo a LF for the CR
-        BSR    GOOUT
+GETLN   BSR     GOOUT           ;display the prompt
+        MOVE.B  #' ',D0         ;and a space
+        BSR     GOOUT
+        LEA     BUFFER,A0       ;A0 is the buffer pointer
+GL1     BSR     CHKIO           ;check keyboard
+        BEQ     GL1             ;wait for a char. to come in
+        CMP.B   #CTRLH,D0       ;delete last character?
+        BEQ     GL3             ;if so
+        CMP.B   #CTRLX,D0       ;delete the whole line?
+        BEQ     GL4             ;if so
+        CMP.B   #CR, D0         ;accept a CR
+        BEQ     GL2
+        CMP.B   #' ',D0         ;if other control char., discard it
+        BCS     GL1
+GL2     MOVE.B  D0,(A0)+        ;save the char.
+        BSR     GOOUT           ;echo the char back out
+        CMP.B   #CR,D0          ;if it's a CR, end the line
+        BEQ     GL7
+        CMPA.L  #BUFEND,A0      ;any more room?
+        BCS     GL1             ;yes: get some more, else delete last char.
+GL3     MOVE.B  #CTRLH,D0       ;delete a char. if possible
+        BSR     GOOUT
+        MOVE.B  #' ',D0
+        BSR     GOOUT
+        CMPA.L  #BUFFER,A0      ;any char.'s left?
+        BLS     GL1             ;if not
+        MOVE.B  #CTRLH,D0       ;if so, finish the BS-space-BS sequence
+        BSR     GOOUT
+        SUBQ.L  #1,A0           ;decrement the text pointer
+        BRA     GL1             ;back for more
+GL4     MOVE.L  A0,D1           ;delete the whole line
+        SUB.L   #BUFFER,D1      ;figure out how many backspaces we need
+        BEQ     GL6             ;if none needed, branch
+        SUBQ    #1,D1           ;adjust for DBRA
+GL5     MOVE.B  #CTRLH,D0       ;and display BS-space-BS sequences
+        BSR     GOOUT
+        MOVE.B  #' ',D0
+        BSR     GOOUT
+        MOVE.B  #CTRLH,D0
+        BSR     GOOUT
+        DBRA    D1,GL5
+GL6     LEA     BUFFER,A0       ;reinitialize the text pointer
+        BRA     GL1             ;and go back for more
+GL7     MOVE.B  #LF,D0          ;echo a LF for the CR
+        BSR     GOOUT
         RTS
 
 FNDLN   CMP.L  #$FFFF,D1      ;line no. must be < 65535
@@ -1260,7 +1268,7 @@ PU1      MOVE.L     D1,-(SP)
 * end quote. After the printing, the next 2 bytes of the caller are
 * skipped over (usually a short branch instruction).
 *
-* 'PRTNUM' prints the 32 bit number in DI, leading blanks are added if
+* 'PRTNUM' prints the 32 bit number in D1, leading blanks are added if
 * needed to pad the number of spaces to the number in D4.
 * However, if the number of digits is larger than the no. in
 * D4, all digits are printed anyway. Negative sign is also
@@ -1303,62 +1311,63 @@ QT4     BSR    TSTC            ;is it an underline?
         BRA    QT2
 QT5     RTS                    ;none of the above
 
-PRTNUM MOVE.L  D1,D3           ;save the number for later
-        MOVE   D4,-(SP)        ;save the width value
-        MOVE.B #$FF,-(SP)      ;flag for end of digit string 
-        TST.L  D1              ;is it negative?
-        BPL    PN1             ;if not
-        NEG.L  D1              ;else make it positive 
-        SUBQ   #1,D4           ;one less for width count
-PN1     DIVU   #10, D1         ;get the next digit 
-        BVS    PNOV            ;overflow flag set?
-        MOVE.L D1, D0          ;if not, save remainder 
-        AND.L  #$FFFF,D1      ;strip the remainder 
-        BRA    TOASCII         ;skip the overflow stuff
-PNOV    MOVE   D1,D0           ;prepare for long word division
-       CLR.W  D1           ;zero out low word
-       SWAP   D1           ;high word into low
-       DIVU   #10,D1       ;divide high word
-       MOVE   D1,D2        ;save quotient
-       MOVE   D0,D1        ;low word into low
-       DIVU   #10,D1       ;divide low word
-       MOVE.L D1,D0        ;D0 = remainder
-       SWAP   D1           ;R/Q becomes Q/R
-       MOVE   D2,D1        ;D1 is low/high
-       SWAP   D1           ;Dl is finally high/low
-TOASCII SWAP  D0           ;get remainder
-       MOVE.B D0,-(SP)     ;stack it as a digit
-       SWAP   D0
-       SUBQ   #1,D4        ;decrement width count
-       TST.L  D1           ;if quotient is zero, we're done
-       BNE    PN1
-       SUBQ   #1,D4        ;adjust padding count for DBRA
-       BMI    PN4          ;skip padding if not needed
-PN3    MOVE.B #' ',D0      ;display the required leading spaces
-       BSR    GOOUT
-       DBRA   D4,PN3
-PN4    TST.L  D3           ;is number negative?
-       BPL    PN5
-       MOVE.B #'-',D0      ;if so, display the sign
-       BSR    GOOUT
-PN5    MOVE.B (SP)+,D0     ;now unatack the digits and display
-       BMI    PNRET        ;until the flag code is reached
-       ADD.B  #'0',D0      ;make into ASCII
-       BSR    GOOUT
-       BRA    PN5
-PNRET  MOVE   (SP)+,D4     ;restore width value
-       RTS
+PRTNUM  TRAP    #0
+        MOVE.L  D1,D3           ;save the number for later
+        MOVE    D4,-(SP)        ;save the width value
+        MOVE.B  #$FF,-(SP)      ;flag for end of digit string 
+        TST.L   D1              ;is it negative?
+        BPL     PN1             ;if not
+        NEG.L   D1              ;else make it positive 
+        SUBQ    #1,D4           ;one less for width count
+PN1     DIVU    #10, D1         ;get the next digit 
+        BVS     PNOV            ;overflow flag set?
+        MOVE.L  D1, D0          ;if not, save remainder 
+        AND.L   #$FFFF,D1       ;strip the remainder 
+        BRA     TOASCII         ;skip the overflow stuff
+PNOV    MOVE    D1,D0           ;prepare for long word division
+        CLR.W   D1              ;zero out low word
+        SWAP    D1              ;high word into low
+        DIVU    #10,D1          ;divide high word
+        MOVE    D1,D2           ;save quotient
+        MOVE    D0,D1           ;low word into low
+        DIVU    #10,D1          ;divide low word
+        MOVE.L  D1,D0           ;D0 = remainder
+        SWAP    D1              ;R/Q becomes Q/R
+        MOVE    D2,D1           ;D1 is low/high
+        SWAP    D1              ;Dl is finally high/low
+TOASCII SWAP    D0              ;get remainder
+        MOVE.B  D0,-(SP)        ;stack it as a digit
+        SWAP    D0
+        SUBQ    #1,D4           ;decrement width count
+        TST.L   D1              ;if quotient is zero, we're done
+        BNE     PN1
+        SUBQ    #1,D4           ;adjust padding count for DBRA
+        BMI     PN4             ;skip padding if not needed
+PN3     MOVE.B  #' ',D0         ;display the required leading spaces
+        BSR     GOOUT
+        DBRA    D4,PN3
+PN4     TST.L   D3              ;is number negative?
+        BPL     PN5
+        MOVE.B  #'-',D0         ;if so, display the sign
+        BSR     GOOUT
+PN5     MOVE.B  (SP)+,D0        ;now unatack the digits and display
+        BMI     PNRET           ;until the flag code is reached
+        ADD.B   #'0',D0         ;make into ASCII
+        BSR     GOOUT
+        BRA     PN5
+PNRET   MOVE    (SP)+,D4        ;restore width value
+        RTS
 
-PRTLN  CLR.L  D1
-       MOVE.B (A1)+,D1     ;get the binary line number 
-       LSL    #8,D1
-       MOVE.B (A1)+,D1
-       MOVEQ  #5,D4        ;display a S digit line no. 
-       BSR    PRTNUM
-       MOVE.B #' ',D0      ;followed by a blank
-       BSR    GOOUT
-       CLR    D0           ;stop char. is a zero
-       BRA    PRTSTG       ;display the rest of the line
+PRTLN  CLR.L    D1
+       MOVE.B   (A1)+,D1        ;get the binary line number 
+       LSL      #8,D1
+       MOVE.B   (A1)+,D1
+       MOVEQ    #5,D4           ;display a S digit line no. 
+       BSR      PRTNUM
+       MOVE.B   #' ',D0         ;followed by a blank
+       BSR      GOOUT
+       CLR      D0              ;stop char. is a zero
+       BRA      PRTSTG          ;display the rest of the line
 
 *
 * ===== Test text byte following the call to this subroutine. If it
@@ -1366,25 +1375,26 @@ PRTLN  CLR.L  D1
 *        the call. If they are not equal, branch to the point
 *        indicated by the offset byte following the text byte. 
 *
-TSTC   BSR    IGNBLK       ;ignore leading blanks
-       MOVE.L (SP)+,A1     ;get the return address
-       MOVE.B (A1)+,D1     ;get the byte to compare
-       CMP.B  (A0),D1      ;is it = to what AO points to?
-       BEQ    TC1          ;if so
-       CLR.L  D1           ;If not, add the second
-       MOVE.B (A1),D1      ;byte following the call to
-       ADD.L  D1,A1        ;the return address.
-       JMP    (A1)         ;jump to the routine
-TC1    ADDQ.L #1,A0        ;if equal, bump text pointer
-       ADDQ.L #1,A1        ;Skip the 2 bytes following
-       JMP    (A1)          ;the call and continue.
+TSTC   BSR    IGNBLK            ;ignore leading blanks
+       MOVE.L   (SP)+,A1        ;get the return address
+       MOVE.B   (A1)+,D1        ;get the byte to compare
+       CMP.B    (A0),D1         ;is it = to what AO points to?
+       BEQ      TC1             ;if so
+       CLR.L    D1              ;If not, add the second
+       MOVE.B   (A1),D1         ;byte following the call to
+       ADDA.L   D1,A1           ;the return address.
+       JMP      (A1)            ;jump to the routine
+TC1    ADDQ.L   #1,A0           ;if equal, bump text pointer
+       ADDQ.L   #1,A1           ;Skip the 2 bytes following
+       JMP      (A1)            ;the call and continue.
 
 *
 * ===== See if the text pointed to by AO is a number. If so, 
 *        return the number in D1 and the number of digits in D2, 
 *        else return zero in D1 and D2.
 
-TSTNUM CLR.L  D1            ;initialize return parameters
+TSTNUM  TRAP    #0
+        CLR.L  D1            ;initialize return parameters
        CLR    D2
        BSR    IGNBLK        ;skip over blanks
 TN1    CMPI.B  #'0', (A0)   ;is it less than zero?
@@ -1509,6 +1519,7 @@ INC     MOVE.L  D1,-(SP)        ; preserve D1
         TRAP    #15             ; 
         MOVE.L  D1,D0           ;
         MOVE.L (SP)+, D1        ; restore D1
+        TST.B   D0              ; reflect status from the TRAP result
 INCRET  RTS
 
 *
@@ -1547,19 +1558,19 @@ LSTROM  EQU       *                  ;end of possible ROM area
 *
 * Internal variables follow: 
 *
-RANPNT DC.L       START               ;random number pointer 
-CURRNT DS.L       1                   ;Current line pointer
-STKGOS DS.L       1                   ;Saves stack pointer in 'GOSUB' 
-STKINP DS.L       1                    ;Saves stack pointer during 'INPUT' 
-LOPVAR DS.L       1                   ;'FOR' loop save area
-LOPINC DS.L       1                   ;increment
-LOPLMT DS.L       1                   ;limit
-LOPLN  DS.L     1                   ;line number
-LOPPT  DS.L     1                   ;text pointer
-TXTUNF DS.L       1                    ;points to unfilled text area 
-VARBGN DS.L       1                   ;points to variable area
-STKLMT DS.L       1                   ;holds lower limit for stack growth 
-BUFFER DS.B       BUFLEN              ;Keyboard input buffer
-TXT    EQU      *                   ;Beginning of program area
-       END START
+RANPNT  DC.L    START          ;random number pointer 
+CURRNT  DS.L    1              ;Current line pointer
+STKGOS  DS.L    1              ;Saves stack pointer in 'GOSUB' 
+STKINP  DS.L    1              ;Saves stack pointer during 'INPUT' 
+LOPVAR  DS.L    1              ;'FOR' loop save area
+LOPINC  DS.L    1              ;increment
+LOPLMT  DS.L    1              ;limit
+LOPLN   DS.L    1              ;line number
+LOPPT   DS.L    1              ;text pointer
+TXTUNF  DS.L    1              ;points to unfilled text area 
+VARBGN  DS.L    1              ;points to variable area
+STKLMT  DS.L    1              ;holds lower limit for stack growth 
+BUFFER  DS.B    BUFLEN         ;Keyboard input buffer
+TXT     EQU     *              ;Beginning of program area
+        END     START
        

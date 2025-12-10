@@ -12,6 +12,7 @@ class visitor : public parser68000BaseVisitor
 public: 
     visitor(asmResult& code68000)
       : codeBlocks(code68000.code), start(code68000.start),
+        memoryStart(code68000.memoryStart), memoryEnd(code68000.memoryEnd),
         labels(code68000.labels), symbols(code68000.symbols), errorList(code68000.errors)
     {
     }
@@ -20,8 +21,10 @@ public:
 
 private:
     vector<codeBlock>& codeBlocks;                          // the assembly code as a results of the parsing
-    uint32_t& start;
-    map<string, uint32_t>& labels;                          // the labels found in the code label -> index
+    uint32_t& start;                                        // the start address of the program
+    uint32_t& memoryStart;                                  // the begining of the address space
+    uint32_t& memoryEnd;                                    // the end of teh address space
+map<string, uint32_t>& labels;                              // the labels found in the code label -> index
     map<string, any>& symbols;                              // the symbol table (from the EQU directive)
     mc68000::errors& errorList;                             // the list of errors found during the parsing
 
@@ -150,6 +153,7 @@ private:
     virtual any visitDleStar(parser68000::DleStarContext* ctx) override;
     virtual any visitDleExpression(parser68000::DleExpressionContext* ctx) override;
 	virtual any visitOrg(parser68000::OrgContext* ctx) override;
+    virtual any visitMemory(parser68000::MemoryContext* ctx) override;
     // ====================================================================================================
     // Register list
     // ====================================================================================================

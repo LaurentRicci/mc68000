@@ -356,7 +356,19 @@ BOOST_AUTO_TEST_CASE(cmpa)
     verifyDisassembly(0xb2fc, 0x1234, "cmpa.w #$1234,a1");
     verifyDisassembly(0xb5fc, 0x0045, 0x6789, "cmpa.l #$456789,a2");
 }
+BOOST_AUTO_TEST_CASE(cmpa_165f)
+{
+    // Arrange
+    DisAsm d;
+    unsigned short memory[3] = { 0xb1fc, 0x0000, 0x165f };
 
+    // Act
+    std::string actual = d.disassemble(memory);
+
+    // Assert
+    BOOST_CHECK_EQUAL("cmpa.l #$165f,a0", actual);
+    BOOST_CHECK_EQUAL(3, d.getPc());
+}
 BOOST_AUTO_TEST_CASE(cmpi)
 {
     verifyDisassembly(0x0c00, 0x0005, "cmpi.b #$5,d0");

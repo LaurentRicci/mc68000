@@ -149,7 +149,29 @@ BOOST_AUTO_TEST_CASE(cmpa)
 	BOOST_CHECK_EQUAL(0, cpu.sr.z);
 	BOOST_CHECK_EQUAL(1, cpu.sr.n);
 	BOOST_CHECK_EQUAL(1, cpu.sr.v);
+}
 
+BOOST_AUTO_TEST_CASE(cmpa_165f)
+{
+    // The purpose of this test was to validate that the instruction update pc correctly.
+    // if not, the PC would point to 165f and throw an exception.
+    unsigned char code[] = {
+        0xb1, 0xfc,  0x00, 0x00, 0x16, 0x5f,    // cmpa.l #$165f,a0
+        0xff, 0xff };
+
+    // Arrange
+    Memory memory(256, 100, code, sizeof(code));
+    Cpu cpu(memory);
+
+    // Act
+    cpu.reset();
+    cpu.start(100);
+
+    // Assert
+    BOOST_CHECK_EQUAL(1, cpu.sr.c);
+    BOOST_CHECK_EQUAL(0, cpu.sr.z);
+    BOOST_CHECK_EQUAL(1, cpu.sr.n);
+    BOOST_CHECK_EQUAL(0, cpu.sr.v);
 }
 
 BOOST_AUTO_TEST_CASE(cmpm_b)

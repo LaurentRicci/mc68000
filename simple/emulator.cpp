@@ -23,10 +23,11 @@ Emulator::Emulator() :
     bios->registerTrapHandlers(&cpu);
 }
 
-Emulator::Emulator(const char* binaryFile) :
+Emulator::Emulator(const char* binaryFile, const char* symbolsFilename) :
     memory(binaryFile),
     cpu(memory),
-    bios(new SimpleBios())
+    bios(new SimpleBios()),
+    symbolsFile(symbolsFilename)
 {
     bios->registerTrapHandlers(&cpu);
 }
@@ -54,7 +55,7 @@ void Emulator::run()
 
     if (debugMode)
     {
-        cpu.debug(base, base + size, base + size);
+        cpu.debug(base, base + size, base + size, symbolsFile);
 	}
     else
     {
@@ -70,7 +71,7 @@ void Emulator::run(uint32_t startPc, uint32_t startSP, uint32_t startUSP)
     uint16_t size = memoryInfo.second;
     if (debugMode)
     {
-        cpu.debug(base, base + size, base + size);
+        cpu.debug(base, base + size, base + size, symbolsFile);
     }
     else
     {

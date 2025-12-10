@@ -169,7 +169,35 @@ namespace parserTest
 			BOOST_CHECK_EQUAL(result.code.front().code[i], loadedCode.code.front().code[i]);
 		}
 	}
+    BOOST_AUTO_TEST_CASE(code_memory)
+    {
+        asmparser parser;
+        parser.parseText(" memory $100,$300\n org $120\nstart: nop\n lea $4242,a0\n end start\n");
+        validate_noErrors(parser);
+        const asmResult& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(0x120, result.start);
+        BOOST_CHECK_EQUAL(0x100, result.memoryStart);
+        BOOST_CHECK_EQUAL(0x300, result.memoryEnd);
+        BOOST_CHECK_EQUAL(0x120, result.code.front().origin);
+        BOOST_CHECK_EQUAL(3, result.code.front().code.size());
 
+        bool saved = result.saveBinary("test.bin");
+        BOOST_CHECK(saved);
+
+        asmResult loadedCode;
+        bool loaded = loadedCode.loadBinary("test.bin");
+        BOOST_CHECK(loaded);
+        BOOST_CHECK_EQUAL(result.start, loadedCode.start);
+        BOOST_CHECK_EQUAL(result.memoryStart, loadedCode.memoryStart);
+        BOOST_CHECK_EQUAL(result.memoryEnd, loadedCode.memoryEnd);
+        BOOST_CHECK_EQUAL(result.code.front().origin, loadedCode.code.front().origin);
+        BOOST_CHECK_EQUAL(result.code.size(), loadedCode.code.size());
+        for (size_t i = 0; i < result.code.front().code.size(); ++i)
+        {
+            BOOST_CHECK_EQUAL(result.code.front().code[i], loadedCode.code.front().code[i]);
+		}
+	}
+	
     BOOST_AUTO_TEST_CASE(symbol_save)
     {
         asmparser parser;

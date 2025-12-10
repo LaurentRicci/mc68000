@@ -384,6 +384,84 @@
                         <Property Name="DisplayName" Value="org_multi" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_block" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_block" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_badOrder" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_badOrder" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_ok" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_ok" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_orgOutside" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_orgOutside" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_empty" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_empty" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_multiple" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_multiple" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_negative" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_negative" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/memory_id" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="memory_id" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_3exprs" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_3exprs" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_complex_not_ordered" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_complex_not_ordered" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_complex_ordered" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_complex_ordered" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/equ_simple_not_ordered" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="equ_simple_not_ordered" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="directiveTest/dcw_label" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="dcw_label" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>

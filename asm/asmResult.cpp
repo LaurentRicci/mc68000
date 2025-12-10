@@ -12,7 +12,10 @@ bool asmResult::saveBinary(const char* filename) const
 	// Save the header first
 	const uint32_t magicNumber = 0x69344059;
 	outputFile.write(reinterpret_cast<const char*>(&magicNumber), sizeof(uint32_t)); // Magic number
-	outputFile.write(reinterpret_cast<const char*>(&start), sizeof(uint32_t));       // Start
+    outputFile.write(reinterpret_cast<const char*>(&start), sizeof(uint32_t));       // Start of execution
+    outputFile.write(reinterpret_cast<const char*>(&memoryStart), sizeof(uint32_t)); // Lowest memory address
+    outputFile.write(reinterpret_cast<const char*>(&memoryEnd), sizeof(uint32_t));   // Highest memory address
+
 	uint32_t blocksCount = code.size();
 	outputFile.write(reinterpret_cast<const char*>(&blocksCount), sizeof(uint32_t)); // Number of blocks
 
@@ -86,6 +89,8 @@ bool asmResult::loadBinary(const char* filename)
 		return false;
 	}
 	inputFile.read(reinterpret_cast<char*>(&start), sizeof(uint32_t));
+    inputFile.read(reinterpret_cast<char*>(&memoryStart), sizeof(uint32_t)); // Lowest memory address
+    inputFile.read(reinterpret_cast<char*>(&memoryEnd), sizeof(uint32_t));   // Highest memory address
 
 	uint32_t blocksCount;
 	inputFile.read(reinterpret_cast<char*>(&blocksCount), sizeof(uint32_t));

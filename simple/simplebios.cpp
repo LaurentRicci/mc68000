@@ -16,7 +16,12 @@ Cpu* SimpleBios::cpu = nullptr;
 void SimpleBios::registerTrapHandlers(Cpu* cpu)
 {
     this->cpu = cpu;
+    cpu->registerTrapHandler(0, trap0);
     cpu->registerTrapHandler(15, trap15);
+}
+
+void SimpleBios::trap0(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
+{
 }
 
 void SimpleBios::trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)

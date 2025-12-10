@@ -199,7 +199,18 @@ namespace directiveTest
 		BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
 	}
 
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(dcw_label)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" org $1000\n bra label\n dc.w label\nlabel: nop\n");
+
+        const auto& code = validate_codeSize(parser, 4);
+        BOOST_CHECK_EQUAL(0x6000, code[0]); // bra label
+        BOOST_CHECK_EQUAL(0x0004, code[1]); // 
+        BOOST_CHECK_EQUAL(0x1006, code[2]); // dc.w label
+        BOOST_CHECK_EQUAL(0x4e71, code[3]); // nop
+    }
+    // ====================================================================================================
 	// DC.L
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcl_byte)
@@ -341,7 +352,62 @@ namespace directiveTest
 
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(equ_complex_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFFER EQU $1000\nBUFLEN EQU 80\nBUFEND  EQU BUFFER + BUFLEN - 1\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(3, symbols.size());
+
+        auto buffer = std::any_cast<int32_t>(symbols.find("BUFFER")->second);
+        auto buflen = std::any_cast<int32_t>(symbols.find("BUFLEN")->second);
+        auto bufend = std::any_cast<int32_t>(symbols.find("BUFEND")->second);
+
+        BOOST_CHECK_EQUAL(0x1000, buffer);
+        BOOST_CHECK_EQUAL(80, buflen);
+        BOOST_CHECK_EQUAL(buffer + buflen - 1, bufend);
+    }
+
+    BOOST_AUTO_TEST_CASE(equ_complex_not_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFLEN EQU 80\nBUFEND  EQU BUFFER + BUFLEN - 1\nBUFFER EQU $1000\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(3, symbols.size());
+
+        auto buffer = std::any_cast<int32_t>(symbols.find("BUFFER")->second);
+        auto buflen = std::any_cast<int32_t>(symbols.find("BUFLEN")->second);
+        auto bufend = std::any_cast<int32_t>(symbols.find("BUFEND")->second);
+
+        BOOST_CHECK_EQUAL(0x1000, buffer);
+        BOOST_CHECK_EQUAL(80, buflen);
+        BOOST_CHECK_EQUAL(buffer + buflen - 1, bufend);
+    }
+
+    BOOST_AUTO_TEST_CASE(equ_simple_not_ordered)
+    {
+        asmparser parser;
+        parser.parseText("BUFPOS EQU BUFFER\n nop\nBUFFER nop\n");
+        validate_noErrors(parser);
+
+        auto& symbols = parser.getSymbols();
+        BOOST_CHECK_EQUAL(1, symbols.size());
+
+        auto& labels = parser.getLabels();
+        BOOST_CHECK_EQUAL(1, labels.size());
+
+        auto buffer = std::any_cast<uint32_t>(labels.find("BUFFER")->second);
+        auto bufpos = std::any_cast<int32_t>(symbols.find("BUFPOS")->second);
+
+        BOOST_CHECK_EQUAL(2, buffer);
+        BOOST_CHECK_EQUAL(2, bufpos);
+    }
+
+    // ====================================================================================================
 	// DS
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dsb)
@@ -535,7 +601,70 @@ namespace directiveTest
 
 		validate_errorsCount(parser, 1);
 	}
-	// ====================================================================================================
+    // ====================================================================================================
+    // MEMORY
+    // ====================================================================================================
+    BOOST_AUTO_TEST_CASE(memory_ok)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $100,$110\n");
+
+        validate_noErrors(parser);
+
+        const auto& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(0x100, result.memoryStart);
+        BOOST_CHECK_EQUAL(0x110, result.memoryEnd);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_badOrder)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$100\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_multiple)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$100\n MEMORY $300,$400\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_empty)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $200,$200\n");
+
+        validate_errorsCount(parser, 1);
+    }
+
+    BOOST_AUTO_TEST_CASE(memory_orgOutside)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY $100,$200\n org $300\n");
+
+        validate_errorsCount(parser, 1);
+    }
+    BOOST_AUTO_TEST_CASE(memory_negative)
+    {
+        asmparser parser;
+        parser.parseText(" MEMORY -1000,$200\n");
+
+        validate_errorsCount(parser, 1);
+    }
+    BOOST_AUTO_TEST_CASE(memory_id)
+    {
+        asmparser parser;
+        parser.parseText("low equ $100\nhigh equ $200\n MEMORY low,high\n");
+
+        validate_noErrors(parser);
+        const auto& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(0x100, result.memoryStart);
+        BOOST_CHECK_EQUAL(0x200, result.memoryEnd);
+    }
+    // ====================================================================================================
 	// Expression
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(dcb_expression)

@@ -242,7 +242,7 @@ namespace mc68000
 		void reset();
 		void reset(const Memory& memory);
 		void start(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
-		void debug(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0);
+		void debug(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0, const char* symbolsFile = nullptr);
 		void setARegister(int reg, uint32_t value);
 		void setDRegister(int reg, uint32_t value);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);

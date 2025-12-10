@@ -12,10 +12,11 @@ namespace mc68000
 		IBios* bios;
 
         bool debugMode = false;
+        const char* symbolsFile = nullptr;
 
     public:
         Emulator();
-	    Emulator(const char* binaryFile);
+	    Emulator(const char* binaryFile, const char* symbolsFilename);
 	    Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize);
 
 	    bool debug(bool enable);

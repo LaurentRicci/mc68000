@@ -1,7 +1,7 @@
 # CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.31)
+cmake_minimum_required (VERSION 3.28)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_BUILD_TYPE debug)
 project ("mc68000")
@@ -26,3 +26,4 @@ add_subdirectory("coretest")
 add_subdirectory("dasmtest")
 add_subdirectory("cputest")
 add_subdirectory("simple")
+add_subdirectory("dasmconsole")

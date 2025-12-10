@@ -5,7 +5,6 @@
 #include "instructions.h"
 #include "cpu.h"
 #include "exceptions.h"
-#include "disasm.h"
 
 namespace mc68000
 {
@@ -76,28 +75,6 @@ namespace mc68000
 		while (!done)
 		{
 			uint16_t x = localMemory.getWord(pc);
-			pc += 2;
-			(this->*handlers[x])(x);
-		}
-	}
-
-	void Cpu::debug(uint32_t startPc, uint32_t startSP, uint32_t startSSP)
-	{
-		done = false;
-		pc = startPc;
-		aRegisters[7] = startSP;
-		usp = startSP;
-		ssp = startSSP;
-
-		uint16_t* memory = static_cast<uint16_t*>(localMemory.get<void*>(startPc));
-        auto memoryInfo = localMemory.getMemoryRange();
-		DisAsm disAsm(memory, memoryInfo.first);
-
-		while (!done)
-		{
-			uint16_t x = localMemory.getWord(pc);
-			auto s = disAsm.disassembleInstruction(pc);
-			std::cout << std::hex << x << " - " << s << std::endl;
 			pc += 2;
 			(this->*handlers[x])(x);
 		}
@@ -801,7 +778,7 @@ namespace mc68000
 		uint16_t sourceEffectiveAddress = opcode & 0b111'111; 
 		uint16_t destinationEffectiveAdress = ((opcode >> 9) & 0b111) | 0b1'000;
 
-		uint16_t size = (opcode >> 6) & 0b11;
+		uint16_t size = (opcode >> 6) & 0b111;
 		switch (size)
 		{
 		case 3:

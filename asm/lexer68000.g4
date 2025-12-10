@@ -211,7 +211,8 @@ STRING
     : '\'' ( ~['\r\n] | '\'\'' )* '\''
     ;
 
-COMMENT     : ';' ~[\r\n]* -> mode(NORMAL);
+COMMENT
+    : ';' ~[\r\n]* -> mode(NORMAL);
 
 //
 // Punctuation

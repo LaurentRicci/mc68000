@@ -146,6 +146,10 @@ any visitor::visitAdd_from_dRegister(parser68000::Add_from_dRegisterContext* ctx
 	}
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg])) & 0b111;
 	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg+2]));
+    if (!isValidAddressingMode(effectiveAddress, 0b001111'111000))
+    {
+        addError("Invalid addressing mode: ", ctx->children[arg + 2]);
+    }
 
 	uint16_t opcode = (0b0000'000'100'000'000 | (code << 12) | (dReg << 9) | (size << 6) | effectiveAddress);
 	return finalize_instruction(opcode);

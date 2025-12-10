@@ -17,7 +17,8 @@ public:
 
 	const std::vector<codeBlock>& getCodeBlocks() const { return result.code; }
 	const std::map<std::string, uint32_t>& getLabels() const { return result.labels; }
-	const mc68000::errors& getErrors() const { return result.errors; }
+    const std::map<std::string, std::any>& getSymbols() const { return result.symbols; }
+    const mc68000::errors& getErrors() const { return result.errors; }
 	const asmResult& getCode68000() const { return result; }
 private:
 	asmResult result;
