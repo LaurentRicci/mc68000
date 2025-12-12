@@ -103,10 +103,10 @@ int32_t SimpleBios::getTime()
 
 void SimpleBios::putCharacter(uint32_t c)
 {
-    std::cout << static_cast<char>(c & 0xff);
+    std::cout << static_cast<char>(c & 0xff) << std::flush;
 }
 void SimpleBios::displayString(uint32_t address)
 {
     char* str = static_cast<char*>(cpu->mem.get<void*>(address));
-    std::cout << str;
+    std::cout << str << std::flush;
 }

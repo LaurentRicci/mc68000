@@ -4,3 +4,5 @@
 *.jar
 _deps/
 generated/
+asm68000/asm68000
+asm68000test/asm68000test

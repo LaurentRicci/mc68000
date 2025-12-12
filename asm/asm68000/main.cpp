@@ -18,7 +18,6 @@ int main(int argc, const char * argv[])
 	{
 		if (argv[i][0] == '-')
 		{
-			std::cout << "Option " << i << ": " << argv[i] << std::endl;
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
 				std::cout << "Usage: asm68000 [options] <sourcefile>" << std::endl;

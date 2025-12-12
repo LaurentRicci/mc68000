@@ -26,6 +26,9 @@ cmake --build .
 To run the tests
 ```
 coretest/coretest -p                (on linux)
+cputest/cputest -p
+dasmtest/dasmtest -p
+
 coretest\Debug\coretest.exe -p      (on windows)
 ```
 
