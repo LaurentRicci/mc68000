@@ -5,9 +5,14 @@ using namespace mc68000;
 
 any visitor::visitLine_directiveSection(parser68000::Line_directiveSectionContext* ctx)
 {
+    listing.startLine();
+
 	size = 1;
 	labelCtx = ctx->labelSection();
 	any result = visit(ctx->directiveSection());
+
+    listing.endLine();
+
 	return result;
 }
 
@@ -50,6 +55,14 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 	}
 	return code().back();
 }
+any visitor::visitDirectiveSection(parser68000::DirectiveSectionContext* ctx)
+{
+    listing.setAddress(currentAddress);
+    listing.setInstruction(listing.sourceText(ctx));
+
+    return parser68000BaseVisitor::visitDirectiveSection(ctx);
+}
+
 any visitor::visitEqu(parser68000::EquContext* ctx)
 {
 	if (labelCtx->value.empty())
@@ -57,6 +70,7 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
 		addError("Missing label in EQU directive", ctx);
         return any();
 	}
+    listing.setLabel(labelCtx->value);
 	any value = visit(ctx->expression());
 	if (pass == 0)
 	{
@@ -72,6 +86,13 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
         }
 	}
     symbols[labelCtx->value] = value;
+    if (value.type() == typeid(int))
+    {
+        uint32_t val = any_cast<int>(value);
+        uint16_t opcode = val >> 16;
+        vector<uint16_t> extensions{ uint16_t(val & 0xffff) };
+        listing.setBinary(opcode, extensions);
+    }
 
 	return any();
 }
@@ -187,6 +208,7 @@ any visitor::visitMemory(parser68000::MemoryContext* ctx)
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)
 {
+    size_t insertionStart = code().size(); // the index where the data will be inserted
 	size_t n = ctx->children.size();
 	switch (size)
 	{
@@ -214,6 +236,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				dcBytes.push_back(byte);
 			}
 		}
+        listing.setBinary(dcBytes.begin(), dcBytes.end());
 		return dcBytes.size();
 		break;
 	case 1: // word
@@ -252,6 +275,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				currentAddress += 2;
 			}
 		}
+        listing.setBinary(code().begin() + insertionStart, code().end(), size);
 		return 0;
 		break;
 	case 2: // long
@@ -291,7 +315,8 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				currentAddress += 4;
 			}
 		}
-		return 0;
+        listing.setBinary(code().begin() + insertionStart, code().end(), size);
+        return 0;
 		break;
 	}
 	return dcBytes.size();

@@ -10,9 +10,11 @@ int main(int argc, const char * argv[])
 	bool showTree = false;
 	bool saveBinary = false;
     bool saveSymbols = false;
-	const char* filename = "test.68k";
+    bool saveListing = false;
+	const char* filename = nullptr;
 	const char* binaryFilename = nullptr;
     const char* symbolsFilename = nullptr;
+    const char* listingFilename = nullptr;
 
 	for (int i=1; i<argc; i++)
 	{
@@ -26,6 +28,7 @@ int main(int argc, const char * argv[])
 				std::cout << "  -t, --tree    Show parse tree" << std::endl;
 				std::cout << "  -o, --output  <binary file>  Save binary output" << std::endl;
                 std::cout << "  -s, --symbols <symbols file> Save the symbol table" << std::endl;
+                std::cout << "  -l, --listing <listing file> Save the assembly listing" << std::endl;
                 return 0;
 			}
 			else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tree") == 0)
@@ -61,20 +64,42 @@ int main(int argc, const char * argv[])
                 }
                 continue;
             }
+            else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--listing") == 0)
+            {
+                if (i + 1 < argc)
+                {
+                    saveListing = true;
+                    listingFilename = argv[i + 1];
+                    i++;
+                }
+                else
+                {
+                    std::cerr << "Missing listing filename following " << argv[i] << std::endl;
+                }
+                continue;
+            }
             else
 			{
 				std::cerr << "Unknown option: " << argv[i] << std::endl;
 				return 1;
 			}
 		}
-		else
+        else if (filename == nullptr)
 		{
 			filename = argv[i];
-			break;
 		}
+        else
+        {
+            std::cerr << "Unexpected argument: " << argv[i] << std::endl;
+            return 1;
+        }
 	}
 
 	asmparser parser;
+    if (saveListing)
+    {
+        parser.listingFileName(listingFilename);
+    }
 	bool result = parser.parseFile(filename, showTree);
 	if (!result)
 	{

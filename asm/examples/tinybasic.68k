@@ -1290,14 +1290,14 @@ PRTRET RTS                     ;then return
 
 QTSTG   BSR    TSTC            ;*** OTSTG ***
         DC.B   '"',QT3-* 
-        MOVE.B #'"',D0         ;it is a"
+        MOVE.B #'"',D0         ;it is a "
 QT1     MOVE.L A0,A1 
         BSR    PRTSTG          ;print until another
         MOVE.L A1,A0 
         MOVE.L (SP)+,A1        ;pop return address 
         CMP.B  #LF,D0          ;was last one a CR? 
         BEQ    RUNNXL          ;if so, run next line
-QT2     ADDQ.L #2,A1           ;skip 2 bytes on return 
+QT2     ADDQ.L #4,A1           ;skip 4 bytes on return 
         JMP    (A1)            ;return
 QT3     BSR    TSTC            ;is it a single quote?
         DC.B   '''',QT4-* 

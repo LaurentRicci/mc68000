@@ -1,20 +1,8 @@
+#include <iomanip>
 #include "visitor.h"
 
 using namespace std;
 using namespace mc68000;
-
-uint16_t visitor::finalize_instruction(uint16_t opcode)
-{
-	code().push_back(opcode);
-	currentAddress += 2;
-	if (!extensionsList.empty())
-	{
-		code().insert(code().end(), extensionsList.begin(), extensionsList.end());
-	}
-	currentAddress += 2 * (uint32_t) extensionsList.size();
-	extensionsList.clear();
-	return opcode;
-}
 
 any visitor::generateCode(tree::ParseTree* tree)
 {
@@ -26,6 +14,7 @@ any visitor::generateCode(tree::ParseTree* tree)
 	incompleteBinary = false;
 
 	pass = 1;
+    listing.enable();
 	auto result = tree->accept(this);
 
 	return result;
@@ -52,12 +41,26 @@ any visitor::visitLine_instructionSection(parser68000::Line_instructionSectionCo
 		currentAddress += 1;
 		incompleteBinary = false;
 	}
+    listing.startLine();
 	any result;
 	for (auto child : ctx->children)
 	{
 		result = visit(child);
 	}
-	return result;
+
+    if (ctx->COMMENT()) listing.setComment(ctx->COMMENT()->getText());
+    listing.endLine();
+
+    return result;
+}
+
+any visitor::visitLine_labelSection(parser68000::Line_labelSectionContext* ctx)
+{
+    listing.startLine();
+    listing.setAddress(currentAddress);
+    visit(ctx->labelSection());
+    listing.endLine();
+    return any();
 }
 
 any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
@@ -77,7 +80,34 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 			addPass0Error("Duplicate label: " + ctx->value, ctx);
 		}
 	}
-	return any();
+    listing.setLabel(ctx->value);
+    return any();
+}
+any visitor::visitInstructionSection(parser68000::InstructionSectionContext* ctx)
+{
+    listing.setInstruction(listing.sourceText(ctx));
+    return parser68000BaseVisitor::visitInstructionSection(ctx);
+}
+
+/// <summary>
+/// Finalizes the generated code by merging opcode and potential extensions
+/// </summary>
+/// <param name="opcode">The 16-bit opcode to finalize and append to the internal code buffer.</param>
+/// <returns>The same opcode value passed to the function.</returns>
+uint16_t visitor::finalize_instruction(uint16_t opcode)
+{
+    listing.setAddress(currentAddress);
+    listing.setBinary(opcode, extensionsList);
+
+    code().push_back(opcode);
+    currentAddress += 2;
+    if (!extensionsList.empty())
+    {
+        code().insert(code().end(), extensionsList.begin(), extensionsList.end());
+    }
+    currentAddress += 2 * (uint32_t)extensionsList.size();
+    extensionsList.clear();
+    return opcode;
 }
 
 /// <summary>

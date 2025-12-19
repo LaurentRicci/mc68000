@@ -3,6 +3,7 @@
 #include <tree/ParseTree.h>
 #include "asmResult.h"
 #include "errors.h"
+#include "listingGenerator.h"
 
 using namespace antlr4;
 using namespace std;
@@ -10,10 +11,11 @@ using namespace std;
 class visitor : public parser68000BaseVisitor
 {
 public: 
-    visitor(asmResult& code68000)
+    visitor(asmResult& code68000, const char* filename)
       : codeBlocks(code68000.code), start(code68000.start),
         memoryStart(code68000.memoryStart), memoryEnd(code68000.memoryEnd),
-        labels(code68000.labels), symbols(code68000.symbols), errorList(code68000.errors)
+        labels(code68000.labels), symbols(code68000.symbols), errorList(code68000.errors),
+        listing(filename)
     {
     }
     ~visitor() override = default;
@@ -42,11 +44,15 @@ map<string, uint32_t>& labels;                              // the labels found 
 	bool incompleteBinary = false;                          // true if the last instruction was a dc.b with an odd number of bytes
     parser68000::LabelSectionContext* labelCtx = nullptr;   // the current label section
 
+    listingGenerator listing;                                        // the listing file generator
 private:
     any visitProg(parser68000::ProgContext* ctx) override;
     any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx) override;
     any visitLine_directiveSection(parser68000::Line_directiveSectionContext* ctx) override;
+    any visitLine_labelSection(parser68000::Line_labelSectionContext* ctx) override;
     any visitLabelSection(parser68000::LabelSectionContext* ctx) override;
+    any visitInstructionSection(parser68000::InstructionSectionContext* ctx) override;
+    any visitDirectiveSection(parser68000::DirectiveSectionContext* ctx) override;
 
     // Instructions
     virtual any visitAbcdSbcd_dRegister(parser68000::AbcdSbcd_dRegisterContext* ctx) override;
@@ -296,5 +302,4 @@ private:
     uint32_t getAddressValue(parser68000::BlockAddressContext* ctx);
     int32_t  getIntegerValue(parser68000::AddressContext* ctx);
     int32_t  getDisplacementValue(tree::ParseTree* pDisplacement);
-
 };

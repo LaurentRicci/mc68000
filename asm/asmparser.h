@@ -14,6 +14,7 @@ public:
 	size_t checkSyntax(const char* text);
     bool saveBinary(const char* filename);
     bool saveSymbols(const char* filename);
+    void listingFileName(const char* filename);
 
 	const std::vector<codeBlock>& getCodeBlocks() const { return result.code; }
 	const std::map<std::string, uint32_t>& getLabels() const { return result.labels; }
@@ -22,4 +23,5 @@ public:
 	const asmResult& getCode68000() const { return result; }
 private:
 	asmResult result;
+    const char* listingFile = nullptr;
 };

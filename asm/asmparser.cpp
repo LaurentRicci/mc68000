@@ -31,8 +31,8 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 		auto s = tree->toStringTree(&parser);
 		std::cout << "Parse Tree: " << s << std::endl;
 	}
-	visitor v(result);
-	auto res = v.generateCode(tree);
+	visitor v(result, listingFile);
+    auto res = v.generateCode(tree);
 
 	auto errs = result.errors.get();
 	if (!errs.empty())
@@ -63,7 +63,7 @@ std::any asmparser::parseText(const char* text)
 	auto errors = parser.getNumberOfSyntaxErrors();
 	if (errors == 0)
 	{
-		visitor v(result);
+		visitor v(result, nullptr);
 		auto result = v.generateCode(tree);
 		return result;
 	}
@@ -95,4 +95,9 @@ bool asmparser::saveBinary(const char* filename)
 bool asmparser::saveSymbols(const char* filename)
 {
     return result.saveSymbols(filename);
+}
+
+void asmparser::listingFileName(const char* filename)
+{
+    listingFile = filename;
 }
