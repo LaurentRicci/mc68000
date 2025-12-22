@@ -63,7 +63,11 @@ void SimpleBios::trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
 int32_t SimpleBios::getCharacter()
 {
 #ifdef _WIN32
-    return _getch();  // Windows: no Enter required
+    int ch = _getch();  // Windows: no Enter required
+    if (ch == '\n')
+    {
+        ch = '\r';    // Convert newline to carriage return
+    }
 #else
     struct termios oldt, newt;
     char ch;
@@ -71,8 +75,15 @@ int32_t SimpleBios::getCharacter()
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);        // Disable canonical mode and echo
     tcsetattr(STDIN_FILENO, TCSANOW, &newt); // Apply new settings
-    read(STDIN_FILENO, &ch, 1);              // Read one char
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restore old settings
+    read(STDIN_FILENO, &ch, 1);              // Read one char    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restore old settings
+    if (ch == '\n')
+    {
+        ch = '\r';                          // Convert newline to carriage return
+    }
+    else if (ch == 127)
+    {
+        ch = 8;                             // convert backspace
+    }
     return ch;
 #endif
 }

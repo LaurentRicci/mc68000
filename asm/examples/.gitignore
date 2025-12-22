@@ -2,3 +2,4 @@
 *.S68
 *.X68
 *.symbols
+*.lst
