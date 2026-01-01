@@ -49,8 +49,8 @@ GOAUXI  BRA   AUXIN     ; Jump to auxiliary-in routine
 GOBYE   BRA   BYEBYE    ; Jump to monitor, DOS, etc.
 *	
 * Modifiable system constants:
-TXTBGN DC.L	TXT         ; beginning of program memory
-ENDMEM DC.L	TXT+1024       ; end of available memory
+TXTBGN DC.L	TXT     ; beginning of program memory
+ENDMEM DC.L	$8000   ; end of available memory
 
 * The main interpreter starts here: 
 *

@@ -84,8 +84,8 @@ int32_t SimpleBios::getCharacter()
     {
         ch = 8;                             // convert backspace
     }
-    return ch;
 #endif
+    return ch;
 }
 
 int32_t SimpleBios::getInteger()
