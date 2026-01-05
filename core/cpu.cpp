@@ -90,6 +90,10 @@ namespace mc68000
 		dRegisters[reg] = value;
 	}
 
+    void Cpu::setCCR(uint8_t ccr)
+    {
+        statusRegister = ccr;
+    }
 	void Cpu::registerTrapHandler(int trapNumber, trapHandler_t trapHandler)
 	{
 		if (trapNumber < 0 || trapNumber > 15)

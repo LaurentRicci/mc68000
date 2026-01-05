@@ -245,6 +245,7 @@ namespace mc68000
 		void debug(uint32_t startPc, uint32_t startSP = 0, uint32_t startUSP = 0, const char* symbolsFile = nullptr);
 		void setARegister(int reg, uint32_t value);
 		void setDRegister(int reg, uint32_t value);
+        void setCCR(uint8_t ccr);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
 		void setSupervisorMode(bool super);
 

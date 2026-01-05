@@ -16,13 +16,23 @@ CHKIO       BSR     INC
 
 PART2       LEA     MSG2,A6
             BSR     PRMESG
+
+PART3       LEA     MSG3,A6
+            BSR     PRMESG
+LOOP        MOVE    '.',D0
+            BSR     OUTC
+            BSR     KEYP
+            BEQ     LOOP
+
+
             DC.W    $FFFF
 
 CR          EQU     13
 LF          EQU     10
 
 MSG1        DC.B    'enter your name ending with z', CR, LF, 0
-MSG2        DC.B    'thank you',CR, LF, 0
+MSG2        DC.B    CR,LF,'thank you',CR, LF, 0
+MSG3        DC.B    'press a key to stop',CR,LF
 
 *
 * ===== Display a zero-ended string pointed to by register A6
@@ -51,4 +61,11 @@ INC     MOVE.L  D1,-(SP)        ; preserve D1
         TRAP    #15             ; 
         MOVE.L  D1,D0           ;
         MOVE.L (SP)+, D1        ; restore D1
+        RTS
+*
+* =====  Check for a key press 
+*
+KEYP    MOVEQ   #2,D0
+        TRAP    #15
+        MOVE.L  D1,D0
         RTS

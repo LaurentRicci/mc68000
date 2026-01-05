@@ -30,7 +30,7 @@ set(ANTLR_TAG 4.13.1) # to specify the GitHub tag for the jar too
 set(DISABLE_WARNINGS ON) # Antlr gives a few deprecation warnings for me
 set(ANTLR_BUILD_CPP_TESTS OFF) # to avoid creating dist folder
 
-set(ANTLR_EXECUTABLE "./antlr-${ANTLR_TAG}-complete.jar") # a local path for antlr.jar
+set(ANTLR_EXECUTABLE "${CMAKE_BINARY_DIR}/antlr-${ANTLR_TAG}-complete.jar")
 if(NOT EXISTS "${ANTLR_EXECUTABLE}")
     file(
         DOWNLOAD
@@ -38,6 +38,7 @@ if(NOT EXISTS "${ANTLR_EXECUTABLE}")
         "${ANTLR_EXECUTABLE}"
     )
 endif()
+
 include(FetchContent)
 FetchContent_Declare(
     antlr
@@ -48,10 +49,25 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(antlr) # populates antlr_SOURCE_DIR
 include(${antlr_SOURCE_DIR}/runtime/Cpp/cmake/FindANTLR.cmake) # populates ANTLR_TARGET
 
-antlr_target(lexer  lexer68000.g4 OUTPUT_DIRECTORY generated LEXER)
-antlr_target(parser parser68000.g4 OUTPUT_DIRECTORY generated DEPENDS ${ANTLR_lexer_OUTPUTS} PARSER LISTENER VISITOR)
+# --- Generate ANTLR files into the build directory ---
+set(ANTLR_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-# add generated grammar to demo binary target
+antlr_target(
+    lexer
+    lexer68000.g4
+    OUTPUT_DIRECTORY ${ANTLR_GEN_DIR}
+    LEXER
+)
+
+antlr_target(
+    parser
+    parser68000.g4
+    OUTPUT_DIRECTORY ${ANTLR_GEN_DIR}
+    DEPENDS ${ANTLR_lexer_OUTPUTS}
+    PARSER LISTENER VISITOR
+)
+
+# --- Library using generated sources ---
 add_library(asm68000lib
     asmparser.cpp
     asmparser.h
@@ -66,10 +82,15 @@ add_library(asm68000lib
     listingGenerator.cpp
     ${ANTLR_lexer_CXX_OUTPUTS}
     ${ANTLR_parser_CXX_OUTPUTS}
-    )
+)
 
 target_link_libraries(asm68000lib PRIVATE antlr4_static)
-target_include_directories(asm68000lib PRIVATE "${antlr_SOURCE_DIR}/runtime/Cpp/runtime/src" ${ANTLR_parser68000_OUTPUT_DIR} generated)
+
+target_include_directories(asm68000lib PRIVATE
+    "${antlr_SOURCE_DIR}/runtime/Cpp/runtime/src"
+    ${ANTLR_GEN_DIR}
+)
+
 target_compile_features(asm68000lib PRIVATE cxx_std_20)
 
 # if you want to copy them to a different location and haven't specified

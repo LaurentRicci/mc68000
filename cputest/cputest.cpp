@@ -45,6 +45,15 @@ BOOST_AUTO_TEST_CASE(cpu_reset_sr)
 	BOOST_CHECK_EQUAL(0, cpu.sr.c);
 
 }
+BOOST_AUTO_TEST_CASE(cpu_set_ccr)
+{
+    Memory memory;
+    Cpu cpu(memory);
+
+    BOOST_CHECK_EQUAL(0, cpu.sr.z);
+    cpu.setCCR(0b0000'0101); // set Z and C
+    BOOST_CHECK_EQUAL(1, cpu.sr.z);
+}
 
 BOOST_AUTO_TEST_CASE(statusRegister_init)
 {

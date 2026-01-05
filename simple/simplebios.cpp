@@ -6,6 +6,7 @@
 #else
 #include <termios.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #endif
 
 #include "simplebios.h"
@@ -32,6 +33,13 @@ void SimpleBios::trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
         {
             int32_t d1 = getCharacter() & 0xff;
             cpu->setDRegister(1, d1);
+            break;
+        }
+        case 2:
+        {
+            int32_t d1 = keyPressed() & 0xff;
+            cpu->setDRegister(1, d1);
+            cpu->setCCR(d1 ? 0 : 4); // set Z flag
             break;
         }
         case 4:
@@ -86,6 +94,36 @@ int32_t SimpleBios::getCharacter()
     }
 #endif
     return ch;
+}
+
+int32_t SimpleBios::keyPressed()
+{
+#ifdef _WIN32
+    if(_kbhit())
+    {
+        int ch = _getch();
+        return ch;
+    }
+    return 0;
+#else
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);          // Get current terminal settings
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);        // Disable canonical mode and echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // Apply new settings
+
+    int bytesWaiting;
+    ioctl(STDIN_FILENO, FIONREAD, &bytesWaiting);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restore old settings
+    if (bytesWaiting > 0)
+    {
+        char ch;
+        read(STDIN_FILENO, &ch, 1);          // Read one char
+        return ch;
+    }
+    return 0;
+#endif
+
 }
 
 int32_t SimpleBios::getInteger()

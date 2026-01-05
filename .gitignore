@@ -379,3 +379,9 @@ build/
 
 # linux specific
 *.a
+
+# ################
+# project related
+# ################
+build-vs2022/
+build-vs2026/
