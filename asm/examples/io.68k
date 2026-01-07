@@ -63,9 +63,12 @@ INC     MOVE.L  D1,-(SP)        ; preserve D1
         MOVE.L (SP)+, D1        ; restore D1
         RTS
 *
-* =====  Check for a key press 
+* =====  Check for a key press. If available return it in D0 else set Z to 1
 *
-KEYP    MOVEQ   #2,D0
+KEYP    MOVE.L  D1,-(SP)
+        MOVEQ   #2,D0
         TRAP    #15
         MOVE.L  D1,D0
+        MOVE.L (SP)+,D1
+        TST.B   D0
         RTS

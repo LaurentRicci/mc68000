@@ -13,9 +13,10 @@
 *                                                               *
 * This version is for MEX68KECB Educational Computer Board I/0. *
 *                                                               *
-* Copyright (C) 1984 by Gordon Brandly. This program may be	*
-* freely distributed for personal use only. All commercial      *
-* rights are reserved.                                          *
+*****************************************************************
+*   Copyright (C) 1984 by Gordon Brandly. This program may be   *
+*   freely distributed for personal use only. All commercial    *
+*                     rights are reserved.                      *
 *****************************************************************
 
 * Vers. 1.0	1984/7/17	- Original version by Gordon. Brandly
@@ -24,94 +25,96 @@
 
 *        OPT FRS,BRS ;forward ref.'s c branches default to short
     
-CR      EQU $0d  ;ASCII equates
-LF      EQU $0A
-TAB     EQU $09
-CTRLC   EQU $03
-CTRLH   EQU $08
-CTRLS   EQU $13
-CTRLX   EQU $18
+CR      EQU     $0d             ;ASCII equates
+LF      EQU     $0A
+TAB     EQU     $09
+CTRLC   EQU     $03
+CTRLH   EQU     $08
+CTRLS   EQU     $13
+CTRLX   EQU     $18
 
-BUFLEN  EQU 80                  ; length of keyboard input butter
+BUFLEN  EQU     80              ; length of keyboard input buffer
 BUFEND  EQU BUFFER + BUFLEN - 1 ; end of keyboard buffer
-        MEMORY $900,$8000       ; address space
-        ORG $900                ; first free address using Tutor
+        MEMORY  $900,$8000      ; address space
+        ORG     $900            ; first free address using Tutor
 *	
 * Standard jump table. You can change these addresses if you are
 * customizing this interpreter for a different environment.
 *
-START   BRA   CSTART    ; Cold Start entry point
-GOWARM  BRA   WSTART    ; Warm Start entry point
-GOOUT   BRA   OUTC      ; Jump to character-out routine
-GOIN    BRA   INC       ; jump to character-in routine
-GOAUXO  BRA   AUXOUT    ; Jump to auxiliary-out routine
-GOAUXI  BRA   AUXIN     ; Jump to auxiliary-in routine
-GOBYE   BRA   BYEBYE    ; Jump to monitor, DOS, etc.
+START   BRA     CSTART          ; Cold Start entry point
+GOWARM  BRA     WSTART          ; Warm Start entry point
+GOOUT   BRA     OUTC            ; Jump to character-out routine
+GOIN    BRA     INC             ; jump to character-in routine
+GOKEYP  BRA     KEYP            ; jump to key press check
+GOAUXO  BRA     AUXOUT          ; Jump to auxiliary-out routine
+GOAUXI  BRA     AUXIN           ; Jump to auxiliary-in routine
+GOBYE   BRA     BYEBYE          ; Jump to monitor, DOS, etc.
 *	
 * Modifiable system constants:
-TXTBGN DC.L	TXT     ; beginning of program memory
-ENDMEM DC.L	$8000   ; end of available memory
-
+*
+TXTBGN  DC.L    TXT             ; beginning of program memory
+ENDMEM  DC.L    $8000           ; end of available memory
+*
 * The main interpreter starts here: 
 *
-CSTART MOVE.L   ENDMEM,A7      ;initialize stack pointer 
-        LEA     INITMSG, A6    ;tell who we are
+CSTART MOVE.L   ENDMEM,A7       ;initialize stack pointer 
+        LEA     INITMSG, A6     ;tell who we are
         BSR     PRMESG
-        MOVE.L  TXTBGN, TXTUNF ;init. end-of-program pointer 
-        MOVE.L  ENDMEM,D0      ;get address of end of memory 
+        MOVE.L  TXTBGN, TXTUNF  ;init. end-of-program pointer 
+        MOVE.L  ENDMEM,D0       ;get address of end of memory 
         SUB.L   #2048,D0       ;reserve 2K for the stack
         MOVE.L  D0, STKLMT 
         SUB.L   #108,D0        ;reserve variable area (27 long words) 
         MOVE.L  D0,VARBGN
-WSTART  CLR.L    D0             ;Initialize internal variables
+WSTART  CLR.L   D0              ;Initialize internal variables
         MOVE.L  D0, LOPVAR
         MOVE.L  D0, STKGOS
-        MOVE.L  D0, CURRNT     ;current line number pointer - 0 
-        MOVE.L  ENDMEM,SP      ;init S.P. again, just in case 
-        LEA     OKMSG,A6       ;display "OK"
+        MOVE.L  D0, CURRNT      ;current line number pointer - 0 
+        MOVE.L  ENDMEM,SP       ;init S.P. again, just in case 
+        LEA     OKMSG,A6        ;display "OK"
         BSR     PRMESG
-ST3     MOVE.B  #'>',D0        ;Prompt with a '>' and 
-        BSR     GETLN          ;read a line.
-        BSR     TOUPBUF        ;convert to upper case
-        MOVE.L  A0, A4         ;save pointer to end of line 
-        LEA     BUFFER, A0     ;point to the beginning of line
-        BSR     TSTNUM         ;is there a number there? 
-        BSR     IGNBLK         ;skip trailing blanks
-        TST     D1             ;does line no. exist? (or nonzero?) 
-        BEQ     DIRECT         ;If not, its a direct statement
-        CMP.L   #$FFFF,D1      ;see if line no. is <- 16 bits 
-        BCC     QHOW           ;if not, we've overflowed 
-        MOVE.B  D1,-(A0)       ;store the binary line no. 
-        ROR     #8, D1         ;(Kludge to store a word on a 
-        MOVE.B  D1,-(A0)       ;possible byte boundary)
+ST3     MOVE.B  #'>',D0         ;Prompt with a '>' and 
+        BSR     GETLN           ;read a line.
+        BSR     TOUPBUF         ;convert to upper case
+        MOVE.L  A0, A4          ;save pointer to end of line 
+        LEA     BUFFER, A0      ;point to the beginning of line
+        BSR     TSTNUM          ;is there a number there? 
+        BSR     IGNBLK          ;skip trailing blanks
+        TST     D1              ;does line no. exist? (or nonzero?) 
+        BEQ     DIRECT          ;If not, its a direct statement
+        CMP.L   #$FFFF,D1       ;see if line no. is <- 16 bits 
+        BCC     QHOW            ;if not, we've overflowed 
+        MOVE.B  D1,-(A0)        ;store the binary line no. 
+        ROR     #8, D1          ;(Kludge to store a word on a 
+        MOVE.B  D1,-(A0)        ;possible byte boundary)
         ROL     #8,D1 
-        BSR     FNDLN          ;find this line in save area 
-        MOVE.L  A1,A5          ;save possible line pointer 
-        BNE     ST4            ;if not found, insert
-        BSR     FNDNXT         ;find the next line (into A1) 
-        MOVE.L  A5,A2          ;pointer to line to be deleted 
-        MOVE.L  TXTUNF, A3     ;points to top of save area 
-        BSR     MVUP           ;move up to delete
-        MOVE.L  A2, TXTUNF     ;update the end pointer
-ST4     MOVE.L  A4, D0         ;calculate the length of new line
+        BSR     FNDLN           ;find this line in save area 
+        MOVE.L  A1,A5           ;save possible line pointer 
+        BNE     ST4             ;if not found, insert
+        BSR     FNDNXT          ;find the next line (into A1) 
+        MOVE.L  A5,A2           ;pointer to line to be deleted 
+        MOVE.L  TXTUNF, A3      ;points to top of save area 
+        BSR     MVUP            ;move up to delete
+        MOVE.L  A2, TXTUNF      ;update the end pointer
+ST4     MOVE.L  A4, D0          ;calculate the length of new line
         SUB.L   A0, D0 
-        CMP.L   #3,D0          ;is it just a line no. i CR? 
-        BEQ     ST3            ;if so, it was just a delete 
-        MOVE.L  TXTUNF, A3     ;compute new end
+        CMP.L   #3,D0           ;is it just a line no. i CR? 
+        BEQ     ST3             ;if so, it was just a delete 
+        MOVE.L  TXTUNF, A3      ;compute new end
         MOVE.L  A3,A6 
         ADDA.L  D0,A3           ; changed from ADD to ADDA 
-        MOVE.L  VARBGN, D0     ;see if there's enough room
+        MOVE.L  VARBGN, D0      ;see if there's enough room
         CMP.L   A3, D0 
-        BLS     QSORRY         ;If not, say so
-        MOVE.L  A3, TXTUNF     ;if so, store new end position 
-        MOVE.L  A6,A1          ;points to old unfilled area 
-        MOVE.L  A5,A2          ;points to beginning of move area 
-        BSR     MVDOWN         ;move things out of the way
-        MOVE.L  A0,A1          ;set up to do the insertion
+        BLS     QSORRY          ;If not, say so
+        MOVE.L  A3, TXTUNF      ;if so, store new end position 
+        MOVE.L  A6,A1           ;points to old unfilled area 
+        MOVE.L  A5,A2           ;points to beginning of move area 
+        BSR     MVDOWN          ;move things out of the way
+        MOVE.L  A0,A1           ;set up to do the insertion
         MOVE.L  A5,A2
         MOVE.L  A4, A3 
-        BSR     MVUP           ;do It
-        BRA     ST3            ;go back and get another line
+        BSR     MVUP            ;do It
+        BRA     ST3             ;go back and get another line
 *
 *******************************************************************
 * *** Tables *** DIRECT *** EXEC ***
@@ -252,10 +255,10 @@ EXG0    LEA     0,A3                 ;execute the appropriate routine
 * What follows is the code to execute direct and statement
 * commands. Control is transferred to these points via the command
 * table lookup code of 'DIRECT' and 'EXEC' in the last section.
-* After the COMMand is executed, control is transferred to other
+* After the command is executed, control is transferred to other
 * sections as follows:
 *
-* For 'L:ST', 'NEW', and 'STOP': go back to the warm start point.
+* For 'LIST', 'NEW', and 'STOP': go back to the warm start point.
 * For 'RUN': go execute the first stored line if any; else go
 * back to the warm start point.
 * For 'GOTO' and 'GOSUB': go execute the target line.
@@ -265,19 +268,19 @@ EXG0    LEA     0,A3                 ;execute the appropriate routine
 *
 ********************************************************************
 *
-* "4 NEW *** STOP *** RUN       friends) "" GOTO ***
+* *** NEW *** STOP *** RUN (& friends) "" GOTO ***
 *
-* 'NEW<CR,' sets TXTUNF to point to TXTBGN
+* 'NEW<CR>' sets TXTUNF to point to TXTBGN
 *
-* ISTOP<CR>s goes back to WSTART
+* 'STOP<CR>' goes back to WSTART
 *
 * 'RUN<CR>' finds the first stored line, stores its address
 * in CURRNT, and starts executing it. Note that only those
 * commands in TAB? are legal for a stored program.
 *
 * There are 3 more entries in 'RUN':
-* 'RUt'NXL' finds next line, stores it's address and executes it.
-* 'RUNTS1... stores the address of this line and executes it.
+* 'RUNNXL' finds next line, stores it's address and executes it.
+* 'RUNTSL. stores the address of this line and executes it.
 * 'RUNSML' continues the execution on same line.
 *
 * 'GOTO expr<CR>' evaluates the expression, finds the target
@@ -318,16 +321,16 @@ GOTO    BSR     EXPR                   ;evaluate the following expression
 *
 ********************************************************************
 *
-* *** LIST 0* PRINT ***
+* *** LIST *** PRINT ***
 *
 * LIST has two forms:
 * 'LIST<CR>' lists all saved lines
-* 'LIST *<CR>I starts listing at the line II
+* 'LIST #<CR>I starts listing at the line #
 * Control-S pauses the listing, control-C stops it.
 *
-* PRINT command is 'PRINT              or 'PRINT ....<CR>'
+* PRINT command is 'PRINT ....:' or 'PRINT ....<CR>'
 * where '....' is a list of expressions, formats, back-arrows,
-* and strings. These Items a separated by commas.
+* and strings. These items a separated by commas.
 *
 * A format is a pound sign followed by a number. It controls
 * the number of spaces the value of an expression is going to
@@ -400,7 +403,7 @@ FINISH  BSR     FIN             ;Check end of command
 *
 ********************************************************************
 *
-* ** GOSUB *** 4 RETURN **
+* ** GOSUB *** & RETURN ***
 *
 * 'GOSUB expr:' or 'GOSUB expr<CR>' is like the 'GOTO' command,
 * except that the current text pointer, stack pointer, etc. are
@@ -408,7 +411,7 @@ FINISH  BSR     FIN             ;Check end of command
 * 'RETURN's. In order that 'GOSUB' can be nested (and even
 * recursive), the save area must be stacked. The stack pointer
 * is saved in 'STKGOS'. The old 'STEWS' is saved on the stack.
-* If we are in the rain routine, 'STKGOS' is zero (this was done
+* If we are in the main routine, 'STKGOS' is zero (this was done
 * in the initialization section of the interpreter), but we still
 * save it as a flag for no further 'RETURN's.
 *
@@ -1138,8 +1141,7 @@ GETLN   BSR     GOOUT           ;display the prompt
         MOVE.B  #' ',D0         ;and a space
         BSR     GOOUT
         LEA     BUFFER,A0       ;A0 is the buffer pointer
-GL1     BSR     CHKIO           ;check keyboard
-        BEQ     GL1             ;wait for a char. to come in
+GL1     BSR     GETC            ;get next char
         CMP.B   #CTRLH,D0       ;delete last character?
         BEQ     GL3             ;if so
         CMP.B   #CTRLX,D0       ;delete the whole line?
@@ -1466,31 +1468,41 @@ TOUPRET RTS
 
 *
 * 'CHKIO' checks the input. If there's no input, it will return
-* to the caller with the 2 flag set. If there is input, the 2
+* to the caller with the Z flag set. If there is input, the Z
 * flag is cleared and the input byte is in D0. However, if a
 * control-C is read, 'CHKIO' will warm-start BASIC and will not
 * return to the caller.
 *
-CHKIO    BSR      GOIN              ;get input if possible
-         BEQ      CHKRET            ;if Zero, no input
-         CMP.B    #CTRLC,D0         ;is it control-C?
-         BNE      CHKRET            ;if not
-         BRA      WSTART            ;if so, do a warm start
-CHKRET RTS
+CHKIO   BSR      GOKEYP            ;get input if possible
+        BEQ      CHKRET            ;if Zero, no input
+        CMP.B    #CTRLC,D0         ;is it control-C?
+        BNE      CHKRET            ;if not
+        BRA      WSTART            ;if so, do a warm start
+CHKRET  RTS
 
+*
+* 'GETC' gets a char from the keyboard and return it in D0
+* However, if a control-C is read, 'GETC' will warm-start BASIC 
+* and will not return to the caller.
+*
+GETC    BSR      GOIN           ;get input
+        CMP.B    #CTRLC,D0      ;is it control-C?
+        BNE      GETRET         ;if not
+        BRA      WSTART         ;if so, do a warm start
+GETRET  RTS
 *
 * ===== Display a CR-LF sequence
 *
-CRLF     LEA      CLMSG,A6
+CRLF    LEA      CLMSG,A6
 
 *
 * ===== Display a zero-ended string pointed to by register A6
 *
-PRMESG MOVE.B     (A6)+,D0        ;get the char.
-         BEQ      PRMRET            ;if it's zero, we're done
-         BSR      GOOUT             ;else display it
-         BRA      PRMESG
-PRMRET RTS
+PRMESG  MOVE.B     (A6)+,D0        ;get the char.
+        BEQ      PRMRET            ;if it's zero, we're done
+        BSR      GOOUT             ;else display it
+        BRA      PRMESG
+PRMRET  RTS
 
 
 ******************************************************
@@ -1511,8 +1523,7 @@ OUTC    MOVE.L  D1,-(SP)        ; preserve D1
         RTS
 
 *
-* =====  Input a character from the console into register D0 (or
-*          return Zero status if there's no character available).
+* =====  Input a character from the console into register D0 
 *
 INC     MOVE.L  D1,-(SP)        ; preserve D1
         MOVEQ   #1,D0           ; getCharacter
@@ -1520,7 +1531,18 @@ INC     MOVE.L  D1,-(SP)        ; preserve D1
         MOVE.L  D1,D0           ;
         MOVE.L (SP)+, D1        ; restore D1
         TST.B   D0              ; reflect status from the TRAP result
-INCRET  RTS
+        RTS
+
+*
+* =====  Check for a key press. If available return it in D0 else set Z to 1
+*
+KEYP    MOVE.L  D1,-(SP)
+        MOVEQ   #2,D0
+        TRAP    #15
+        MOVE.L  D1,D0
+        MOVE.L (SP)+,D1
+        TST.B   D0
+        RTS
 
 *
 * ===== Output character to the host (Port 2) from register DO 
