@@ -1,6 +1,7 @@
 // from https://github.com/antlr/antlr4/blob/master/runtime/Cpp/demo/Windows/antlr4-cpp-demo/main.cpp
 #include <iostream>
 #include <cstring>
+#include <filesystem>
 #include "asmparser.h"
 
 #pragma execution_character_set("utf-8")
@@ -11,12 +12,27 @@ int main(int argc, const char * argv[])
 	bool saveBinary = false;
     bool saveSymbols = false;
     bool saveListing = false;
-	const char* filename = nullptr;
-	const char* binaryFilename = nullptr;
-    const char* symbolsFilename = nullptr;
-    const char* listingFilename = nullptr;
+    std::string filename;
+    std::string binaryFilename;
+    std::string symbolsFilename;
+    std::string listingFilename;
 
-	for (int i=1; i<argc; i++)
+    if (argc < 2)
+    {
+        std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
+        return 1;
+    }
+    const char* lastArgument = argv[argc - 1];
+    if (lastArgument[0] == '-')
+    {
+        std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
+        return 1;
+    }
+    filename = lastArgument;
+    std::filesystem::path sourceFilename(filename);
+    std::string basename = sourceFilename.replace_extension().string();
+
+	for (int i=1; i<argc-1; i++)
 	{
 		if (argv[i][0] == '-')
 		{
@@ -38,43 +54,46 @@ int main(int argc, const char * argv[])
 			}
 			else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0)
 			{
-				if (i + 1 < argc)
+                saveBinary = true;
+				if ((i + 1 < argc - 1) && (argv[i + 1][0] != '-'))
 				{
-					saveBinary = true;
-					binaryFilename = argv[i + 1];
-					i++;
+                    binaryFilename = argv[i + 1];
+                    i++;
 				}
 				else
 				{
-					std::cerr << "Missing binary filename following " << argv[i] << std::endl;
+                    binaryFilename = (basename + ".bin");
+					std::cerr << "using default binary filename: " << binaryFilename << std::endl;
 				}
 				continue;
 			}
             else if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--symbols") == 0)
             {
-                if (i + 1 < argc)
+                saveSymbols = true;
+                if ((i + 1 < argc - 1) && (argv[i + 1][0] != '-'))
                 {
-                    saveSymbols = true;
                     symbolsFilename = argv[i + 1];
                     i++;
                 }
                 else
                 {
-                    std::cerr << "Missing symbols filename following " << argv[i] << std::endl;
+                    symbolsFilename = (basename + ".sym");
+                    std::cerr << "using default symbols filename: " << symbolsFilename << std::endl;
                 }
                 continue;
             }
             else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--listing") == 0)
             {
-                if (i + 1 < argc)
+                saveListing = true;
+                if ((i + 1 < argc - 1) && (argv[i + 1][0] != '-'))
                 {
-                    saveListing = true;
                     listingFilename = argv[i + 1];
                     i++;
                 }
                 else
                 {
-                    std::cerr << "Missing listing filename following " << argv[i] << std::endl;
+                    listingFilename = (basename + ".lst");
+                    std::cerr << "using default listing filename: " << listingFilename << std::endl;
                 }
                 continue;
             }
@@ -84,34 +103,36 @@ int main(int argc, const char * argv[])
 				return 1;
 			}
 		}
-        else if (filename == nullptr)
-		{
-			filename = argv[i];
-		}
         else
         {
             std::cerr << "Unexpected argument: " << argv[i] << std::endl;
             return 1;
         }
 	}
+    if (filename.empty())
+    {
+        std::cerr << "No source file specified." << std::endl;
+        return 1;
+    }
+
 
 	asmparser parser;
     if (saveListing)
     {
-        parser.listingFileName(listingFilename);
+        parser.listingFileName(listingFilename.c_str());
     }
-	bool result = parser.parseFile(filename, showTree);
+	bool result = parser.parseFile(filename.c_str(), showTree);
 	if (!result)
 	{
 		std::cout << "Failed to parse file: " << filename << std::endl;
 		return 1;
 	}
-	if (saveBinary && !parser.saveBinary(binaryFilename))
+	if (saveBinary && !parser.saveBinary(binaryFilename.c_str()))
 	{
 		std::cerr << "error saving binary file: " << binaryFilename << std::endl;
 		return 1;
 	}
-    if (saveSymbols && !parser.saveSymbols(symbolsFilename))
+    if (saveSymbols && !parser.saveSymbols(symbolsFilename.c_str()))
     {
         std::cerr << "error saving symbols file: " << symbolsFilename << std::endl;
         return 1;
