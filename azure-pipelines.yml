@@ -64,4 +64,4 @@ steps:
   inputs:
     targetType: 'inline'
     script: './asm68000test'
-    workingDirectory: 'asm/bin'
+    workingDirectory: 'bin'
