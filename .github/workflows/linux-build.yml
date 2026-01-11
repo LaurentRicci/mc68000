@@ -40,17 +40,17 @@ jobs:
         cmake --build .
 
     - name: Run coretest
-      working-directory: coretest
+      working-directory: bin
       run: ./coretest
 
     - name: Run cputest
-      working-directory: cputest
+      working-directory: bin
       run: ./cputest
 
     - name: Run dasmtest
-      working-directory: dasmtest
+      working-directory: bin
       run: ./dasmtest
 
     - name: Run asm68000test
-      working-directory: asm/asm68000test
+      working-directory: bin
       run: ./asm68000test
