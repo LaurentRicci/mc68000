@@ -36,19 +36,19 @@ steps:
   inputs:
     targetType: 'inline'
     script: './coretest'
-    workingDirectory: 'coretest'
+    workingDirectory: 'bin'
 - task: Bash@3
   displayName: Cpu tests
   inputs:
     targetType: 'inline'
     script: './cputest'
-    workingDirectory: 'cputest'
+    workingDirectory: 'bin'
 - task: Bash@3
   displayName: Dasm tests
   inputs:
     targetType: 'inline'
     script: './dasmtest'
-    workingDirectory: 'dasmtest'
+    workingDirectory: 'bin'
 - task: CMake@1
   displayName: Preparing asm makefile
   inputs:
@@ -64,4 +64,4 @@ steps:
   inputs:
     targetType: 'inline'
     script: './asm68000test'
-    workingDirectory: 'asm/asm68000test'
+    workingDirectory: 'bin'
