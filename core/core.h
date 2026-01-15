@@ -56,7 +56,12 @@ namespace mc68000
 						handlers[0xb000 + (reg << 9) + (opmode << 6) + ea] = &T::eor;
 						handlers[0x8000 + (reg << 9) + (opmode << 6) + ea] = &T::or_;
 					}
-				}
+                    if (isValidAddressingMode(ea, 0b100000000000u))
+                    {
+                        handlers[0xb000 + (reg << 9) + (opmode << 6) + ea] = &T::eor;
+                    }
+                }
+
 			}
 			for (int ea = 0; ea <= 0x3f; ea++)
 			{

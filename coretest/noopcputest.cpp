@@ -28,7 +28,7 @@ namespace noopcputest
 
     BOOST_AUTO_TEST_CASE(add)
     {
-        validateDecode(0b1101000000000000u, instructions::ADD, L"ADD");
+        validateDecode(0b1101'000'000'000'000u, instructions::ADD, L"ADD"); // ADD.B D0, D0
     }
 
     BOOST_AUTO_TEST_CASE(adda)
@@ -244,6 +244,11 @@ namespace noopcputest
     BOOST_AUTO_TEST_CASE(eor)
     {
         validateDecode(0b1011'010'101'010'010u, instructions::EOR, L"EOR"); // EOR.W D2, (A2)
+    }
+
+    BOOST_AUTO_TEST_CASE(eor_dd)
+    {
+        validateDecode(0b1011'000'110'000'100u, instructions::EOR, L"EOR"); // EOR.L D0, D4
     }
 
     BOOST_AUTO_TEST_CASE(eori)

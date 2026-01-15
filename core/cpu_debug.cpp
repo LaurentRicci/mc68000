@@ -47,7 +47,7 @@ namespace mc68000
         uint32_t len = GetModuleFileNameA(NULL, buf, MAX_PATH);
         char* p = strrchr(buf, '\\');
         *(p+1) = 0;
-        strcat(buf, "..\\..\\dasmconsole\\debug\\dasmconsole.exe");
+        strcat(buf, "dasmconsole.exe");
 
         BOOL success = CreateProcessA(
             buf, NULL, NULL, NULL, TRUE,
