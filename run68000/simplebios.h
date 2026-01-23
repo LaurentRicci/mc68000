@@ -17,7 +17,11 @@ namespace mc68000
         static int32_t getTime();
         static void putCharacter(uint32_t c);
         static void displayString(uint32_t address);
+        static void writeCharacterToDisk(uint8_t value);
+        static int32_t readCharacterFromDisk();
+
         static Cpu* cpu;
+        static FILE* diskFile;
     };
 };
 

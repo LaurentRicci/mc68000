@@ -13,6 +13,7 @@
 
 using namespace mc68000;
 Cpu* SimpleBios::cpu = nullptr;
+FILE* SimpleBios::diskFile = nullptr;
 
 void SimpleBios::registerTrapHandlers(Cpu* cpu)
 {
@@ -62,6 +63,17 @@ void SimpleBios::trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
         case 14:
         {
             displayString(a1);
+            break;
+        }
+        case 20:
+        {
+            writeCharacterToDisk(d1 & 0xffff);
+            break;
+        }
+        case 21:
+        {
+            int32_t d1 = readCharacterFromDisk();
+            cpu->setDRegister(1, d1);
             break;
         }
         default:
@@ -158,4 +170,49 @@ void SimpleBios::displayString(uint32_t address)
 {
     char* str = static_cast<char*>(cpu->mem.get<void*>(address));
     std::cout << str << std::flush;
+}
+const int32_t CTRL_Z = 0x1a;
+
+void SimpleBios::writeCharacterToDisk(uint8_t ch)
+{
+    if (diskFile == nullptr)
+    {
+        diskFile = fopen("basic.bas", "wb");
+        if (diskFile == nullptr)
+        {
+            std::cerr << "Cannot open diskfile.bin for writing" << std::endl;
+            return;
+        }
+    }
+    if (ch != CTRL_Z)
+    {
+        fwrite(&ch, sizeof(uint8_t), 1, diskFile);
+    }
+    else
+    {
+        // CTRL-Z indicates end of file
+        fflush(diskFile);
+        fclose(diskFile);
+        diskFile = nullptr;
+    }
+}
+int32_t SimpleBios::readCharacterFromDisk()
+{
+    if (diskFile == nullptr)
+    {
+        diskFile = fopen("basic.bas", "rb");
+        if (diskFile == nullptr)
+        {
+            std::cerr << "Cannot open diskfile.bin for reading" << std::endl;
+            return 0;
+        }
+    }
+    int ch = fgetc(diskFile);
+    if (ch == EOF)
+    {
+        fclose(diskFile);
+        diskFile = nullptr;
+        return CTRL_Z;
+    }
+    return static_cast<uint8_t>(ch);
 }

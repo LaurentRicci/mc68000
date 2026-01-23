@@ -634,85 +634,77 @@ LT1     BRA     FINISH         ;until we are finished.
 * device such as a cassette, another computer, etc. The program
 * is converted to an easily-stored format: each line starts with
 * a colon, the line no. as 4 hex digits, and the rest of the line.
-* At the end, a line starting with an '9' sign is sent. This
+* At the end, a line starting with an '@' sign is sent. This
 * format can be read back with a minimum of processing time by
 * the 68000.
 *
-LOAD    MOVE.L TXTBGN, A0      ;set pointer to start of proq. area
-        MOVE.B  #CR, D0        ;For a CP/M host, tell it we're ready...
-        BSR     GOAUXO          ;by sending a CR to finish PIP command.
-LOD1    BSR     GOAUXI         ;look for start of line
+LOAD    MOVE.L  TXTBGN, A0      ;set pointer to start of proq. area
+LOD1    BSR     GOAUXI          ;look for start of line
         BEQ     LOD1
-        CMP.B   #'@',D0        ;end of program?
+        CMP.B   #$1A,D0         ;end of program? (a control-Z marks the end of the file)
         BEQ     LODEND
-        CMP.B   #';',D0        ;if not, is it start of line?
-        BNE     LOD1           ;if not, wait for it
-        BSR     GBYTE          ;get first byte of line no.
-        MOVE.B  D1,(A0)+       ;store it
-        BSR     GBYTE          ;get 2nd bye of line no.
-        MOVE.B  D1,(A0)+       ;store that, too
-LOD2    BSR     GOAUXI         ;get another text char.
+        CMP.B   #':',D0         ;if not, is it start of line?
+        BNE     LOD1            ;if not, wait for it
+        BSR     GBYTE           ;get first byte of line no.
+        MOVE.B  D1,(A0)+        ;store it
+        BSR     GBYTE           ;get 2nd byte of line no.
+        MOVE.B  D1,(A0)+        ;store that, too
+LOD2    BSR     GOAUXI          ;get another text char.
         BEQ     LOD2
-        MOVE.B  D0,(A0)+      ;Store It
-        CMP.B   #CR, D0        ;Is it the end of the line?
-        BNE     LOD2           ;if not, go back for more
-        BRA     LOD1           ;if so, start a new line
-LODEND MOVE.L A0,TXTUNF      ;set end-of program pointer
-       BRA     WSTART        ;back to direct mode
+        MOVE.B  D0,(A0)+        ;Store It
+        CMP.B   #CR,D0          ;Is it the end of the line?
+        BNE     LOD2            ;if not, go back for more
+        BRA     LOD1            ;if so, start a new line
+LODEND  MOVE.L  A0,TXTUNF       ;set end-of program pointer
+        BRA     WSTART          ;back to direct mode
 
-GBYTE  MOVEQ   #1,D2         ;get two hex characters from auxiliary
-       CLR     D1            ;and store them as a byte in D1
-GBYTE1 BSR     GOAUXI        ;get a char.
-       BEQ     GBYTE1
-       CMP.B   #'A',D0
-       BCS     GBYTE2
-       SUBQ.B  #7,D0         ;if greater than 9, adjust
-GBYTE2 AND.B   #$F,D0        ;strip ASCII
-       LSL.B   #4,D1              ;put nybble into the result
-       OR.B    D0,D1
-       DBRA    D2,GBYTE1     ;get another char.
-       RTS
+GBYTE   MOVEQ   #1,D2           ;get two hex characters from auxiliary
+        CLR     D1              ;and store them as a byte in D1
+GBYTE1  BSR     GOAUXI          ;get a char.
+        BEQ     GBYTE1
+        CMP.B   #'A',D0
+        BCS     GBYTE2
+        SUBQ.B  #7,D0           ;if greater than 9, adjust
+GBYTE2  AND.B   #$F,D0          ;strip ASCII
+        LSL.B   #4,D1           ;put nybble into the result
+        OR.B    D0,D1
+        DBRA    D2,GBYTE1       ;get another char.
+        RTS
 
-SAVE   MOVE.L TXTBGN,A0      ;set pointer to start of prog. area
-       MOVE.L TXTUNF,A1      ;set pointer to end of prog. area
-SAVE1  MOVE.B  #CR,D0        ;send out a CR 6 LF (CP/M likes this)
-       BSR     GOAUXO
-       MOVE.B  #LF,D0
-       BSR     GOAUXO
-       CMPA.L  A0,A1         ;are we finished?
-       BLS     SAVEND
-       MOVE.B  #':',D0       ;if not, start a line
-       BSR     GOAUXO
-       MOVE.B  (A0)+,D1      ;send first half of line no.
-       BSR     PBYTE
-       MOVE.B  (A0)+,D1    ;and send 2nd half
-       BSR     PBYTE
-SAVE2  MOVE.B  (A0)+,D0      ;get a text char.
-       CMP.B   #CR,D0        ;is it the end of the line?
-       BEQ     SAVE1         ;if so, send CR 6 LF and start new line
-       BSR     GOAUXO        ;send it out
-       BRA     SAVE2         ;go back for more text
-SAVEND MOVE.B  #'@',D0        ;send end-of-program indicator
-       BSR     GOAUXO
-       MOVE.B  #CR,D0         ;followed by a CR 6 LF
-       BSR     GOAUXO
-       MOVE.B  #LF,D0
-       BSR     GOAUXO
-       MOVE.B  #$1A,D0        ;and a control-2 to end the CP/M file
-       BSR     GOAUXO
-       BRA     WSTART        ;then go do a warm start
+SAVE    MOVE.L  TXTBGN,A0       ;set pointer to start of prog. area
+        MOVE.L  TXTUNF,A1       ;set pointer to end of prog. area
+SAVE1   MOVE.B  #CR,D0          ;send out a CR & LF (CP/M likes this)
+        BSR     GOAUXO
+        MOVE.B  #LF,D0
+        BSR     GOAUXO
+        CMPA.L  A0,A1           ;are we finished?
+        BLS     SAVEND
+        MOVE.B  #':',D0         ;if not, start a line
+        BSR     GOAUXO
+        MOVE.B  (A0)+,D1        ;send first half of line no.
+        BSR     PBYTE
+        MOVE.B  (A0)+,D1        ;and send 2nd half
+        BSR     PBYTE
+SAVE2   MOVE.B  (A0)+,D0        ;get a text char.
+        CMP.B   #CR,D0          ;is it the end of the line?
+        BEQ     SAVE1           ;if so, send CR & LF and start new line
+        BSR     GOAUXO          ;send it out
+        BRA     SAVE2           ;go back for more text
+SAVEND  MOVE.B  #$1A,D0         ;send end-of-program indicator (a control-Z to end the file)
+        BSR     GOAUXO
+        BRA     WSTART          ;then go do a warm start
 
-PBYTE  MOVEQ   #1,D2         ;send two hex characters from D1's low byte
-PBYTE1 ROL.B   #4,D1         ;get the next nybble
-       MOVE.B  D1,D0
-       AND.B   #$F,D0        ;strip off garbage
-       ADD.B   #'0',D0       ;make it into ASCII
-       CMP.B   #'9',D0
-       BLS     PBYTE2
-       ADDQ.B  #7,D0          ;adjust if greater than 9
-PBYTE2 BSR     GOAUXO        ;send it out
-       DBRA    D2,PBYTE1     ;then send the next nybble
-       RTS
+PBYTE   MOVEQ   #1,D2           ;send two hex characters from D1's low byte
+PBYTE1  ROL.B   #4,D1           ;get the next nybble
+        MOVE.B  D1,D0
+        AND.B   #$F,D0          ;strip off garbage
+        ADD.B   #'0',D0         ;make it into ASCII
+        CMP.B   #'9',D0
+        BLS     PBYTE2
+        ADDQ.B  #7,D0           ;adjust if greater than 9
+PBYTE2  BSR     GOAUXO          ;send it out
+        DBRA    D2,PBYTE1       ;then send the next nybble
+        RTS
 *
 ********************************************************************
 *
@@ -1548,19 +1540,24 @@ KEYP    MOVE.L  D1,-(SP)
 * ===== Output character to the host (Port 2) from register DO 
 *        (Preserves all registers.)
 *
-AUXOUT  BTST      #1,$10041           ;is port 2 ready for a character?
-        BEQ       AUXOUT              ;if not, wait for it
-        MOVE.B    D0,$10043           ;out it goes.
+AUXOUT  MOVE.L  D1,-(SP)        ; preserve D1
+        MOVE.L  D0,D1           ; D1 contains the character to be displayed
+        MOVEQ   #20, D0         ; writeCharacter
+        TRAP    #15             ;
+        MOVE.L  D1,D0           ; restore D0 to its initial value
+        MOVE.L (SP)+, D1        ; restore D1
         RTS
 
 *
 * ===== Input a character from  the host into register DO (or 
-*        return Zero status if   there's no character available).
+*        return Zero status if there's no character available).
 *
-AUXIN   BTST      #0,$10041           ;is character ready?
-        BEQ       AXIRET              ;if not, return Zero status 
-        MOVE.B    $10043,D0              ;else get the character 
-        AND.B     #$7F,D0             ;zero out the high bit
+AUXIN   MOVE.L  D1,-(SP)        ; preserve D1
+        MOVEQ   #21,D0          ; getCharacter
+        TRAP    #15             ; 
+        MOVE.L  D1,D0           ;
+        MOVE.L (SP)+, D1        ; restore D1
+        TST.B   D0              ; reflect status from the TRAP result
 AXIRET  RTS
 
 *

@@ -5,13 +5,14 @@
 extern void game(bool);
 extern void game(const char*, bool);
 
-void usage()
+int usage()
 {
-    std::cout << "Usage: simple [options] [binaryFile]" << std::endl;
+    std::cout << "Usage: run68000 [options] [binaryFile]" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -h, --help                   Show this help message" << std::endl;
     std::cout << "  -d, --debug                  Debug mode" << std::endl;
     std::cout << "  -s, --symbols <symbols file> Load the symbols from the file" << std::endl;
+    return 0;
 }
 
 int main(int argc, const char* argv[])
@@ -32,8 +33,7 @@ int main(int argc, const char* argv[])
     const char* lastArgument = argv[argc - 1];
     if (strcmp(lastArgument, "-h") == 0 || strcmp(lastArgument, "--help") == 0)
     {
-        usage();
-        return 0;
+        return usage();
     }
     if (lastArgument[0] == '-')
     {
@@ -50,8 +50,7 @@ int main(int argc, const char* argv[])
         {
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             {
-                usage();
-                return 0;
+                return usage();
             }
             else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0)
             {

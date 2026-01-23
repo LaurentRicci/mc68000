@@ -6,6 +6,18 @@
 
 #pragma execution_character_set("utf-8")
 
+int usage()
+{
+    std::cout << "Usage: asm68000 [options] <sourcefile>" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  -h, --help    Show this help message" << std::endl;
+    std::cout << "  -t, --tree    Show parse tree" << std::endl;
+    std::cout << "  -o, --output  <binary file>  Save binary output" << std::endl;
+    std::cout << "  -s, --symbols <symbols file> Save the symbol table" << std::endl;
+    std::cout << "  -l, --listing <listing file> Save the assembly listing" << std::endl;
+    return 0;
+}
+
 int main(int argc, const char * argv[]) 
 {
 	bool showTree = false;
@@ -22,7 +34,12 @@ int main(int argc, const char * argv[])
         std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
         return 1;
     }
+
     const char* lastArgument = argv[argc - 1];
+    if (strcmp(lastArgument, "-h") == 0 || strcmp(lastArgument, "--help") == 0)
+    {
+        return usage();
+    }
     if (lastArgument[0] == '-')
     {
         std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
@@ -38,14 +55,7 @@ int main(int argc, const char * argv[])
 		{
 			if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 			{
-				std::cout << "Usage: asm68000 [options] <sourcefile>" << std::endl;
-				std::cout << "Options:" << std::endl;
-				std::cout << "  -h, --help    Show this help message" << std::endl;
-				std::cout << "  -t, --tree    Show parse tree" << std::endl;
-				std::cout << "  -o, --output  <binary file>  Save binary output" << std::endl;
-                std::cout << "  -s, --symbols <symbols file> Save the symbol table" << std::endl;
-                std::cout << "  -l, --listing <listing file> Save the assembly listing" << std::endl;
-                return 0;
+                return usage();
 			}
 			else if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--tree") == 0)
 			{
@@ -99,13 +109,15 @@ int main(int argc, const char * argv[])
             }
             else
 			{
-				std::cerr << "Unknown option: " << argv[i] << std::endl;
-				return 1;
-			}
+                std::cerr << "Unknown option: " << argv[i] << std::endl;
+                std::cerr << "Use -h or --help to see available options" << std::endl;
+                return 1;
+            }
 		}
         else
         {
             std::cerr << "Unexpected argument: " << argv[i] << std::endl;
+            std::cerr << "Use -h or --help to see available options" << std::endl;
             return 1;
         }
 	}
