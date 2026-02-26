@@ -12,6 +12,7 @@ int usage()
     std::cout << "  -h, --help                   Show this help message" << std::endl;
     std::cout << "  -d, --debug                  Debug mode" << std::endl;
     std::cout << "  -s, --symbols <symbols file> Load the symbols from the file" << std::endl;
+    std::cout << "  -b, --bios <bios name> " << std::endl;
     return 0;
 }
 
@@ -19,6 +20,7 @@ int main(int argc, const char* argv[])
 {
 	bool debugMode = false;
     std::string symbolsFilename;
+    std::string biosName = "simple";
 
     if (argc < 2)
     {
@@ -64,6 +66,14 @@ int main(int argc, const char* argv[])
                     i++;
                 }
             }
+            else if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "--bios") == 0)
+            {
+                if ((i + 1 < argc - 1) && (argv[i + 1][0] != '-'))
+                {
+                    biosName = argv[i + 1];
+                    i++;
+                }
+            }
             else
             {
                 std::cerr << "Unknown option: " << argv[i] << std::endl;
@@ -92,10 +102,13 @@ int main(int argc, const char* argv[])
             std::cerr << "no symbols file found, symbols won't be used for debugging" << std::endl;
             symbolsFilename.clear();
         }
-
     }
 
     mc68000::Emulator emulator(binaryFilename.c_str(), symbolsFilename.c_str());
+    if (!biosName.empty())
+    {
+        emulator.setBios(biosName);
+    }
     emulator.debug(debugMode);
     emulator.run(0, 1024, 1024);
     return 0;

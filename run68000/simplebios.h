@@ -8,19 +8,18 @@ namespace mc68000
     public:
         void registerTrapHandlers(Cpu* cpu) override;
     private:
-        static void trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1);
-        static void trap0(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1);
+        static void trap15(Cpu*);
+        static void trap0(Cpu*);
 
         static int32_t getCharacter();
         static int32_t keyPressed();
         static int32_t getInteger();
         static int32_t getTime();
         static void putCharacter(uint32_t c);
-        static void displayString(uint32_t address);
+        static void displayString(Cpu* cpu, uint32_t address);
         static void writeCharacterToDisk(uint8_t value);
         static int32_t readCharacterFromDisk();
 
-        static Cpu* cpu;
         static FILE* diskFile;
     };
 };

@@ -2,6 +2,7 @@
 #include <chrono>
 #include "emulator.h"
 #include "simplebios.h"
+#include "ataribios.h"
 
 using namespace mc68000;
 
@@ -17,27 +18,21 @@ const uint8_t code[] = {
 const uint32_t base = 0x001000;
 Emulator::Emulator() :
     memory(1024, base, code, sizeof(code)),
-    cpu(memory),
-    bios(new SimpleBios())
+    cpu(memory)
 {
-    bios->registerTrapHandlers(&cpu);
 }
 
 Emulator::Emulator(const char* binaryFile, const char* symbolsFilename) :
     memory(binaryFile),
     cpu(memory),
-    bios(new SimpleBios()),
     symbolsFile(symbolsFilename)
 {
-    bios->registerTrapHandlers(&cpu);
 }
 
 Emulator::Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize) :
 	memory(memorySize, base, code, codeSize),
-	cpu(memory),
-    bios(new SimpleBios())
+	cpu(memory)
 {
-	bios->registerTrapHandlers(&cpu);
 }
 
 bool Emulator::debug(bool enable)
@@ -49,6 +44,11 @@ bool Emulator::debug(bool enable)
 void Emulator::run()
 {
     cpu.reset();
+    if (bios == nullptr)
+    {
+        throw "bios not set";
+    }
+    bios->registerTrapHandlers(&cpu);
     auto memoryInfo = memory.getMemoryRange();
     uint32_t base = memoryInfo.first;
     uint16_t size = memoryInfo.second;
@@ -66,16 +66,40 @@ void Emulator::run()
 void Emulator::run(uint32_t startPc, uint32_t startSP, uint32_t startUSP)
 {
     cpu.reset();
+    if (bios == nullptr)
+    {
+        assert(!"bios not set");
+        throw "bios not set";
+    }
+    bios->registerTrapHandlers(&cpu);
     auto memoryInfo = memory.getMemoryRange();
     uint32_t base = memoryInfo.first;
     uint16_t size = memoryInfo.second;
+    uint16_t uspOffset = (size > 4096) ? 1024 : size / 4;
+    uint16_t sspOffset = 0;
+
     if (debugMode)
     {
-        cpu.debug(base, base + size, base + size, symbolsFile);
+        cpu.debug(base, base + size - uspOffset, base + size - sspOffset, symbolsFile);
     }
     else
     {
-        cpu.start(base, base + size, base + size);
+        cpu.start(base, base + size - uspOffset, base + size - sspOffset);
     }
 }
 
+void Emulator::setBios(const std::string& biosName)
+{
+    if (biosName == "simple")
+    {
+        bios = new SimpleBios();
+    }
+    else if (biosName == "atari")
+    {
+        bios = new AtariBios();
+    }
+    else
+    {
+        throw "unknown bios name";
+    }
+}

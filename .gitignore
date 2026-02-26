@@ -385,3 +385,5 @@ build/
 # ################
 build-vs2022/
 build-vs2026/
+hardware/
+basic.bas

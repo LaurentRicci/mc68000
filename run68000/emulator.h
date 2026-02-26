@@ -9,7 +9,7 @@ namespace mc68000
     private:
         Memory memory;
         Cpu cpu;
-		IBios* bios;
+		IBios* bios = nullptr;
 
         bool debugMode = false;
         const char* symbolsFile = nullptr;
@@ -18,6 +18,7 @@ namespace mc68000
         Emulator();
 	    Emulator(const char* binaryFile, const char* symbolsFilename);
 	    Emulator(uint32_t memorySize, uint32_t base, const uint8_t* code, size_t codeSize);
+        void setBios(const std::string& biosName);
 
 	    bool debug(bool enable);
         void run();

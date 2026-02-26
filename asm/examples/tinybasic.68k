@@ -53,7 +53,7 @@ GOBYE   BRA     BYEBYE          ; Jump to monitor, DOS, etc.
 * Modifiable system constants:
 *
 TXTBGN  DC.L    TXT             ; beginning of program memory
-ENDMEM  DC.L    $8000           ; end of available memory
+ENDMEM  DC.L    $7F00           ; end of available memory (256 reserved for ssp)
 *
 * The main interpreter starts here: 
 *
@@ -1506,57 +1506,47 @@ PRMRET  RTS
 * ===== Output character to the console (Port 1) from register D0
 *        (Preserves all registers.)
 *
-OUTC    MOVE.L  D1,-(SP)        ; preserve D1
-        MOVE.L  D0,D1           ; D1 contains the character to be displayed
-        MOVEQ   #10, D0         ; putCharacter
-        TRAP    #15             ;
-        MOVE.L  D1,D0           ; restore D0 to its initial value
-        MOVE.L (SP)+, D1        ; restore D1
+OUTC    MOVE.W  D0,-(SP)        ; D0 contains the character to be displayed
+        MOVE.W  #10,-(SP)       ; putCharacter
+        TRAP    #15
+        ADDQ.L  #4,SP
         RTS
 
 *
 * =====  Input a character from the console into register D0 
 *
-INC     MOVE.L  D1,-(SP)        ; preserve D1
-        MOVEQ   #1,D0           ; getCharacter
-        TRAP    #15             ; 
-        MOVE.L  D1,D0           ;
-        MOVE.L (SP)+, D1        ; restore D1
+INC     MOVE.W  #1,-(SP)        ; getCharacter
+        TRAP    #15
+        ADDQ.L  #2,SP
         TST.B   D0              ; reflect status from the TRAP result
         RTS
 
 *
 * =====  Check for a key press. If available return it in D0 else set Z to 1
 *
-KEYP    MOVE.L  D1,-(SP)
-        MOVEQ   #2,D0
+KEYP    MOVE.W  #2,-(SP)        ; keyPressed
         TRAP    #15
-        MOVE.L  D1,D0
-        MOVE.L (SP)+,D1
-        TST.B   D0
+        ADDQ.L  #2,SP
+        TST.B   D0              ; reflect status from the TRAP result
         RTS
 
 *
 * ===== Output character to the host (Port 2) from register DO 
 *        (Preserves all registers.)
 *
-AUXOUT  MOVE.L  D1,-(SP)        ; preserve D1
-        MOVE.L  D0,D1           ; D1 contains the character to be displayed
-        MOVEQ   #20, D0         ; writeCharacter
-        TRAP    #15             ;
-        MOVE.L  D1,D0           ; restore D0 to its initial value
-        MOVE.L (SP)+, D1        ; restore D1
+AUXOUT  MOVE.W  D0,-(SP)        ; D0 contains the character to be displayed
+        MOVE.W  #20,-(SP)       ; writeCharacterToDisk
+        TRAP    #15
+        ADDQ.L  #4,SP
         RTS
 
 *
 * ===== Input a character from  the host into register DO (or 
 *        return Zero status if there's no character available).
 *
-AUXIN   MOVE.L  D1,-(SP)        ; preserve D1
-        MOVEQ   #21,D0          ; getCharacter
-        TRAP    #15             ; 
-        MOVE.L  D1,D0           ;
-        MOVE.L (SP)+, D1        ; restore D1
+AUXIN   MOVE.W  #21,-(SP)       ; readCharacterFromDisk
+        TRAP    #15
+        ADDQ.L  #2,SP
         TST.B   D0              ; reflect status from the TRAP result
 AXIRET  RTS
 

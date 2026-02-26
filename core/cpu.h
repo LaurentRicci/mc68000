@@ -163,7 +163,7 @@ namespace mc68000
 		// trap handlers
 		// 
 	private:
-		using trapHandler_t = void (*)(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1);
+		using trapHandler_t = void (*)(Cpu*);
 		trapHandler_t trapHandlers[16];
 		trapHandler_t chkHandlers;
 		//
@@ -248,6 +248,7 @@ namespace mc68000
         void setCCR(uint8_t ccr);
 		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
 		void setSupervisorMode(bool super);
+        template <typename T> T getFromStack(bool isSuper, int16_t offset);
 
 		//
 		// public fields

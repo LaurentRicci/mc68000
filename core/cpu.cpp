@@ -59,11 +59,6 @@ namespace mc68000
 		localMemory = memory;
 	}
 
-	void Cpu::setSupervisorMode(bool super)
-	{
-		statusRegister.s = super ? 1 : 0;
-	}
-
 	void Cpu::start(uint32_t startPc, uint32_t startSP, uint32_t startSSP)
 	{
 		done = false;
@@ -102,7 +97,25 @@ namespace mc68000
 		}
 		trapHandlers[trapNumber] = trapHandler;
 	}
-	// =================================================================================================
+
+    void Cpu::setSupervisorMode(bool super)
+    {
+        statusRegister.s = super ? 1 : 0;
+    }
+
+    template<> uint16_t Cpu::getFromStack<uint16_t>(bool isSuper, int16_t offset)
+    {
+        uint32_t sp = isSuper ? ssp : usp;
+        return localMemory.get<uint16_t>(sp + offset);
+    }
+
+    template<> uint32_t Cpu::getFromStack<uint32_t>(bool isSuper, int16_t offset)
+    {
+        uint32_t sp = isSuper ? ssp : usp;
+        return localMemory.get<uint32_t>(sp + offset);
+    }
+
+    // =================================================================================================
 	// cpu instruction handlers
 	// =================================================================================================
 
@@ -706,7 +719,7 @@ namespace mc68000
 			statusRegister.n = (value < 0) ? 1 : 0;
 			if (chkHandlers != nullptr)
 			{
-				chkHandlers(value, upperBound, 0, 0);
+				chkHandlers(this);
 			}
 			else
 			{

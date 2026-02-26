@@ -12,68 +12,100 @@
 #include "simplebios.h"
 
 using namespace mc68000;
-Cpu* SimpleBios::cpu = nullptr;
+//Cpu* SimpleBios::cpu = nullptr;
 FILE* SimpleBios::diskFile = nullptr;
 
 void SimpleBios::registerTrapHandlers(Cpu* cpu)
 {
-    this->cpu = cpu;
     cpu->registerTrapHandler(0, trap0);
     cpu->registerTrapHandler(15, trap15);
 }
 
-void SimpleBios::trap0(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
+void SimpleBios::trap0(Cpu* cpu)
 {
 }
 
-void SimpleBios::trap15(uint32_t d0, uint32_t d1, uint32_t a0, uint32_t a1)
+void SimpleBios::trap15(Cpu* cpu)
 {
-    switch (d0)
+    uint32_t sp = cpu->a7; // A7 = SSP on entry to TRAP
+    uint16_t savedSR = cpu->getFromStack<uint16_t>(true, 0); // Read saved SR from top of supervisor stack
+    bool callerIsSupervisor = (savedSR & 0x2000) != 0; // Check S bit (bit 13)
+
+    // Determine base of argument list: either sp+8 (supervisor) or usp+2 (user)
+    uint32_t argBase;
+    if (callerIsSupervisor)
+    {
+        argBase = 6;
+    }
+    else
+    {
+        argBase = 0;
+    }
+
+    // helpers to retrieve arguments from the stack.
+    // The stack can have a mix of word and long arguments so the indexing is done in words.
+    // argWord(0) is function number, argWord(1) is first argument word, etc.
+    // argLong(1) reads a long starting at word index 1 (i.e., words 1 and 2)
+    // argLong(n) reads two words starting at word index n to make a long
+    //
+    auto argWord = [&](unsigned index) -> uint16_t {
+        return cpu->getFromStack<uint16_t>(callerIsSupervisor, argBase + index * 2);
+        };
+    auto argLong = [&](unsigned wordIndex) -> uint32_t {
+        return cpu->getFromStack<uint32_t>(callerIsSupervisor, argBase + wordIndex * 2);
+        };
+
+    uint16_t func = argWord(0);
+
+    switch (func)
     {
         case 1:
         {
-            int32_t d1 = getCharacter() & 0xff;
-            cpu->setDRegister(1, d1);
+            int32_t d0 = getCharacter() & 0xff;
+            cpu->setDRegister(0, d0);
             break;
         }
         case 2:
         {
-            int32_t d1 = keyPressed() & 0xff;
-            cpu->setDRegister(1, d1);
-            cpu->setCCR(d1 ? 0 : 4); // set Z flag
+            int32_t d0 = keyPressed() & 0xff;
+            cpu->setDRegister(0, d0);
+            cpu->setCCR(d0 ? 0 : 4); // set Z flag
             break;
         }
         case 4:
         {
-            int32_t d1 = getInteger();
-            cpu->setDRegister(1, d1);
+            int32_t d0 = getInteger();
+            cpu->setDRegister(0, d0);
             break;
         }
         case 8:
         {
-            int32_t d1 = getTime();
-            cpu->setDRegister(1, d1);
+            int32_t d0 = getTime();
+            cpu->setDRegister(0, d0);
             break;
         }
         case 10:
         {
-            putCharacter(d1 & 0xff);
+            uint16_t chr = argWord(1);
+            putCharacter(chr & 0xff);
             break;
         }
         case 14:
         {
-            displayString(a1);
+            uint32_t address = argLong(1);
+            displayString(cpu, address);
             break;
         }
         case 20:
         {
-            writeCharacterToDisk(d1 & 0xffff);
+            uint16_t chr = argWord(1);
+            writeCharacterToDisk(chr & 0xff);
             break;
         }
         case 21:
         {
-            int32_t d1 = readCharacterFromDisk();
-            cpu->setDRegister(1, d1);
+            int32_t d0 = readCharacterFromDisk();
+            cpu->setDRegister(0, d0);
             break;
         }
         default:
@@ -166,7 +198,7 @@ void SimpleBios::putCharacter(uint32_t c)
 {
     std::cout << static_cast<char>(c & 0xff) << std::flush;
 }
-void SimpleBios::displayString(uint32_t address)
+void SimpleBios::displayString(Cpu* cpu, uint32_t address)
 {
     char* str = static_cast<char*>(cpu->mem.get<void*>(address));
     std::cout << str << std::flush;

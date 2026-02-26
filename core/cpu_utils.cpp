@@ -1129,36 +1129,42 @@ namespace mc68000
 	// ==========
 	void Cpu::handleException(uint16_t vector)
 	{
-		if (vector == Exceptions::RESET)
-		{
-			// Reset
-			done = true;
-			return;
-		}
-		else if (vector >= Exceptions::TRAP && vector <= Exceptions::TRAP + 15)
-		{
-			// Trap
-			if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
-			{
-				// external handler exists so call it
-				trapHandlers[vector - Exceptions::TRAP](d0, d1, a0, a1);
-				return;
-			}
-		}
-
 		try
 		{
-			uint32_t handler = vector *4;
-			uint32_t newPc = localMemory.get<uint32_t>(handler);
-
-			localMemory.set<uint16_t>(ssp, sr);
-			ssp -= 2;
-			localMemory.set<uint32_t>(ssp, pc);
-			ssp -= 4;
+            ssp -= 2;
+            localMemory.set<uint16_t>(ssp, sr);
+            ssp -= 4;
+            localMemory.set<uint32_t>(ssp, pc);
 			statusRegister.t = 0;
 			statusRegister.s = 1;
 			usp = aRegisters[7];
 			aRegisters[7] = ssp;
+
+            if (vector == Exceptions::RESET)
+            {
+                // Reset
+                done = true;
+                return;
+            }
+            else if (vector >= Exceptions::TRAP && vector <= Exceptions::TRAP + 15)
+            {
+                // externaly managed Trap
+                if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
+                {
+                    // external handler exists so call it
+                    trapHandlers[vector - Exceptions::TRAP](this);
+                    // then return to the instruction after the TRAP
+                    pc = localMemory.get<uint32_t>(ssp);
+                    ssp += 4;
+                    statusRegister = localMemory.get<uint16_t>(ssp);
+                    ssp += 2;
+                    aRegisters[7] = usp;
+                    return;
+                }
+            }
+            // other exceptions and traps not handled externally
+            uint32_t handler = vector * 4;
+            uint32_t newPc = localMemory.get<uint32_t>(handler);
 			pc = newPc;
 			return;
 		}
