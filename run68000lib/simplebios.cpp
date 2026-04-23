@@ -12,13 +12,17 @@
 #include "simplebios.h"
 
 using namespace mc68000;
-//Cpu* SimpleBios::cpu = nullptr;
 FILE* SimpleBios::diskFile = nullptr;
+
+void SimpleBios::setup()
+{
+    // no setup needed for now
+}
 
 void SimpleBios::registerTrapHandlers(Cpu* cpu)
 {
-    cpu->registerTrapHandler(0, trap0);
-    cpu->registerTrapHandler(15, trap15);
+    cpu->registerTrapHandler(0, this);
+    cpu->registerTrapHandler(15, this);
 }
 
 void SimpleBios::trap0(Cpu* cpu)
@@ -106,6 +110,27 @@ void SimpleBios::trap15(Cpu* cpu)
         {
             int32_t d0 = readCharacterFromDisk();
             cpu->setDRegister(0, d0);
+            break;
+        }
+        case 101: // For testing trap with 1 word argument
+        {
+            uint16_t arg1 = argWord(1);
+            cpu->setDRegister(0, arg1);
+            break;
+        }
+        case 102: // For testing trap with 1 long argument
+        {
+            uint32_t arg1 = argLong(1);
+            cpu->setDRegister(0, arg1);
+            break;
+        }
+        case 103: // For testing trap with 1 word 1 long 1 word arguments
+        {
+            uint16_t arg1 = argWord(1);
+            uint32_t arg2 = argLong(2);
+            uint16_t arg3 = argWord(4);
+            uint32_t res = arg1 + arg2 + arg3;
+            cpu->setDRegister(0, res);
             break;
         }
         default:

@@ -1152,7 +1152,7 @@ namespace mc68000
                 if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
                 {
                     // external handler exists so call it
-                    trapHandlers[vector - Exceptions::TRAP](this);
+                    trapHandlers[vector - Exceptions::TRAP]->handle(*this, vector - Exceptions::TRAP);
                     // then return to the instruction after the TRAP
                     pc = localMemory.get<uint32_t>(ssp);
                     ssp += 4;

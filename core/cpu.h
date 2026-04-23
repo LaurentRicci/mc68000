@@ -2,6 +2,7 @@
 #include "core.h"
 #include "memory.h"
 #include "statusregister.h"
+#include "traphandler.h"
 
 namespace mc68000
 {
@@ -163,9 +164,8 @@ namespace mc68000
 		// trap handlers
 		// 
 	private:
-		using trapHandler_t = void (*)(Cpu*);
-		trapHandler_t trapHandlers[16];
-		trapHandler_t chkHandlers;
+		TrapHandler* trapHandlers[16];
+		TrapHandler* chkHandlers;
 		//
 		// internal datastructures
 		// 
@@ -246,7 +246,7 @@ namespace mc68000
 		void setARegister(int reg, uint32_t value);
 		void setDRegister(int reg, uint32_t value);
         void setCCR(uint8_t ccr);
-		void registerTrapHandler(int trapNumber, trapHandler_t traphandler);
+		void registerTrapHandler(int trapNumber, TrapHandler* traphandler);
 		void setSupervisorMode(bool super);
         template <typename T> T getFromStack(bool isSuper, int16_t offset);
 

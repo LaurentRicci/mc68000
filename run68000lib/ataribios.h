@@ -1,11 +1,34 @@
 #pragma once
 #include "ibios.h"
+#include <unordered_map>
+
 namespace mc68000
 {
-    class AtariBios : public IBios
+    class AtariBios : public IBios, public TrapHandler
     {
     public:
+        void setup() override;
         void registerTrapHandlers(Cpu* cpu) override;
+        void handle(Cpu& cpu, uint16_t vector) override
+        {
+            switch (vector)
+            {
+            case 1:
+                bios(&cpu);
+                break;
+            case 13:
+                xbios(&cpu);
+                break;
+            case 14:
+                gemdos(&cpu);
+                break;
+            default:
+                throw "AtariBios: unhandled trap vector";
+            }
+        }
+        void getConfig(const char* configFile, std::unordered_map<std::string, std::string>& configs);
+    private:
+        std::unordered_map<std::string, std::string> settings;
     private:
         static void bios(Cpu* cpu);
         static void xbios(Cpu* cpu);

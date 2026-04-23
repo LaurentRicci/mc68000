@@ -6,14 +6,72 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #endif
+#include <string>
+#include <algorithm>
 
 using namespace mc68000;
 
+static inline void trim(std::string& s)
+{
+    s.erase(
+        s.begin(),
+        std::find_if_not(
+            s.begin(),
+            s.end(),
+            [](unsigned char c) { return std::isspace(c); }
+        )
+    );
+    s.erase(
+        std::find_if_not(
+            s.rbegin(),
+            s.rend(),
+            [](unsigned char c) { return std::isspace(c); }
+        ).base(),
+        s.end()
+    );
+}
+void AtariBios::setup()
+{
+    getConfig("ataribios.conf", settings);
+}
+
+void AtariBios::getConfig(const char* configFile, std::unordered_map<std::string, std::string>& configs)
+{
+    std::ifstream sourceFile(configFile);
+    if (sourceFile)
+    {
+        std::string line;
+        while (std::getline(sourceFile, line))
+        {
+            // strip comments starting with # or ;
+            auto posc = line.find_first_of("#;");
+            if (posc != std::string::npos)
+            {
+                line.resize(posc);
+            }
+            trim(line);
+            //if (line.empty()) continue;
+            auto pos = line.find('=');
+            if (pos != std::string::npos)
+            {
+                std::string key = line.substr(0, pos);
+                std::string val = line.substr(pos + 1);
+                trim(key);
+                trim(val);
+                if (!key.empty())
+                {
+                    configs.emplace(std::move(key), std::move(val));
+                }
+            }
+        }
+    }
+}
+
 void AtariBios::registerTrapHandlers(Cpu* cpu)
 {
-    cpu->registerTrapHandler(1, gemdos);
-    cpu->registerTrapHandler(13, bios);
-    cpu->registerTrapHandler(14, xbios);
+    cpu->registerTrapHandler(1, this);
+    cpu->registerTrapHandler(13, this);
+    cpu->registerTrapHandler(14, this);
 }
 
 void AtariBios::bios(Cpu* cpu)

@@ -51,6 +51,10 @@ jobs:
       working-directory: bin
       run: ./dasmtest
 
+    - name: Run emulatortest
+      working-directory: bin
+      run: ./run68000test
+
     - name: Run asm68000test
       working-directory: bin
       run: ./asm68000test

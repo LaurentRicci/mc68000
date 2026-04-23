@@ -49,6 +49,12 @@ steps:
     targetType: 'inline'
     script: './dasmtest'
     workingDirectory: 'bin'
+- task: Bash@3
+  displayName: Emulator tests
+  inputs:
+    targetType: 'inline'
+    script: './run68000test'
+    workingDirectory: 'bin'
 - task: CMake@1
   displayName: Preparing asm makefile
   inputs:

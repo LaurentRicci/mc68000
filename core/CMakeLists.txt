@@ -10,8 +10,8 @@ add_library (core
 	"noopcpu.cpp" "instructions.cpp" "disasm.cpp" "setup.cpp" "cpu_utils.cpp" 
 	"disasm_utils.cpp" "cpu_debug.cpp"
 	"core.h" "noopcpu.h" "statusregister.h" "instructions.h" "disasm.h" 
-	"exceptions.h")
+	"exceptions.h" "traphandler.h")
 target_sources(core PRIVATE "cpu.cpp" "memory.cpp")
-target_sources(core PUBLIC "cpu.h" "memory.h" "statusregister.h" "exceptions.h")
-
+target_sources(core PUBLIC "cpu.h" "memory.h" "statusregister.h" "exceptions.h" "traphandler.h")
+target_include_directories(core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # TODO: Add tests and install targets if needed.

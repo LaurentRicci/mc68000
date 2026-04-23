@@ -3,10 +3,25 @@
 
 namespace mc68000
 {
-    class SimpleBios : public IBios
+    class SimpleBios : public IBios, public TrapHandler
     {
     public:
+        void setup() override;
         void registerTrapHandlers(Cpu* cpu) override;
+        void handle(Cpu& cpu, uint16_t vector) override
+        {
+            switch (vector)
+            {
+            case 0:
+                trap0(&cpu);
+                break;
+            case 15:
+                trap15(&cpu);
+                break;
+            default:
+                throw "SimpleBios: unhandled trap vector";
+            }
+        }
     private:
         static void trap15(Cpu*);
         static void trap0(Cpu*);

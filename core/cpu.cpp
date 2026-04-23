@@ -89,7 +89,7 @@ namespace mc68000
     {
         statusRegister = ccr;
     }
-	void Cpu::registerTrapHandler(int trapNumber, trapHandler_t trapHandler)
+	void Cpu::registerTrapHandler(int trapNumber, TrapHandler* trapHandler)
 	{
 		if (trapNumber < 0 || trapNumber > 15)
 		{
@@ -719,7 +719,7 @@ namespace mc68000
 			statusRegister.n = (value < 0) ? 1 : 0;
 			if (chkHandlers != nullptr)
 			{
-				chkHandlers(this);
+                chkHandlers->handle(*this, 0); // TODO : the vector should be passed as an argument to the instruction
 			}
 			else
 			{
