@@ -1,6 +1,6 @@
 #pragma once
-#include "ibios.h"
 #include <unordered_map>
+#include "ibios.h"
 
 namespace mc68000
 {
@@ -14,25 +14,24 @@ namespace mc68000
             switch (vector)
             {
             case 1:
-                bios(&cpu);
+                bios(cpu);
                 break;
             case 13:
-                xbios(&cpu);
+                xbios(cpu);
                 break;
             case 14:
-                gemdos(&cpu);
+                gemdos(cpu);
                 break;
             default:
                 throw "AtariBios: unhandled trap vector";
             }
         }
-        void getConfig(const char* configFile, std::unordered_map<std::string, std::string>& configs);
     private:
         std::unordered_map<std::string, std::string> settings;
     private:
-        static void bios(Cpu* cpu);
-        static void xbios(Cpu* cpu);
-        static void gemdos(Cpu* cpu);
+        static void bios(Cpu& cpu);
+        static void xbios(Cpu& cpu);
+        static void gemdos(Cpu& cpu);
 
         // BIOS methods
         static void getmpb(uint32_t buffer);

@@ -10,6 +10,7 @@
 #endif
 
 #include "simplebios.h"
+#include "trapargs.h"
 
 using namespace mc68000;
 FILE* SimpleBios::diskFile = nullptr;
@@ -25,112 +26,85 @@ void SimpleBios::registerTrapHandlers(Cpu* cpu)
     cpu->registerTrapHandler(15, this);
 }
 
-void SimpleBios::trap0(Cpu* cpu)
+void SimpleBios::trap0(Cpu& cpu)
 {
 }
 
-void SimpleBios::trap15(Cpu* cpu)
+void SimpleBios::trap15(Cpu& cpu)
 {
-    uint32_t sp = cpu->a7; // A7 = SSP on entry to TRAP
-    uint16_t savedSR = cpu->getFromStack<uint16_t>(true, 0); // Read saved SR from top of supervisor stack
-    bool callerIsSupervisor = (savedSR & 0x2000) != 0; // Check S bit (bit 13)
-
-    // Determine base of argument list: either sp+8 (supervisor) or usp+2 (user)
-    uint32_t argBase;
-    if (callerIsSupervisor)
-    {
-        argBase = 6;
-    }
-    else
-    {
-        argBase = 0;
-    }
-
-    // helpers to retrieve arguments from the stack.
-    // The stack can have a mix of word and long arguments so the indexing is done in words.
-    // argWord(0) is function number, argWord(1) is first argument word, etc.
-    // argLong(1) reads a long starting at word index 1 (i.e., words 1 and 2)
-    // argLong(n) reads two words starting at word index n to make a long
-    //
-    auto argWord = [&](unsigned index) -> uint16_t {
-        return cpu->getFromStack<uint16_t>(callerIsSupervisor, argBase + index * 2);
-        };
-    auto argLong = [&](unsigned wordIndex) -> uint32_t {
-        return cpu->getFromStack<uint32_t>(callerIsSupervisor, argBase + wordIndex * 2);
-        };
-
-    uint16_t func = argWord(0);
+    bool isSupervisor = callerIsSupervisor(cpu);
+    uint16_t func = argWord(cpu, isSupervisor, 0);
 
     switch (func)
     {
         case 1:
         {
             int32_t d0 = getCharacter() & 0xff;
-            cpu->setDRegister(0, d0);
+            cpu.setDRegister(0, d0);
             break;
         }
         case 2:
         {
             int32_t d0 = keyPressed() & 0xff;
-            cpu->setDRegister(0, d0);
-            cpu->setCCR(d0 ? 0 : 4); // set Z flag
+            cpu.setDRegister(0, d0);
+            cpu.setCCR(d0 ? 0 : 4); // set Z flag
             break;
         }
         case 4:
         {
             int32_t d0 = getInteger();
-            cpu->setDRegister(0, d0);
+            cpu.setDRegister(0, d0);
             break;
         }
         case 8:
         {
             int32_t d0 = getTime();
-            cpu->setDRegister(0, d0);
+            cpu.setDRegister(0, d0);
             break;
         }
         case 10:
         {
-            uint16_t chr = argWord(1);
+            uint16_t chr = argWord(cpu, isSupervisor, 1);
             putCharacter(chr & 0xff);
             break;
         }
         case 14:
         {
-            uint32_t address = argLong(1);
+            uint32_t address = argLong(cpu, isSupervisor, 1);
             displayString(cpu, address);
             break;
         }
         case 20:
         {
-            uint16_t chr = argWord(1);
+            uint16_t chr = argWord(cpu, isSupervisor, 1);
             writeCharacterToDisk(chr & 0xff);
             break;
         }
         case 21:
         {
             int32_t d0 = readCharacterFromDisk();
-            cpu->setDRegister(0, d0);
+            cpu.setDRegister(0, d0);
             break;
         }
         case 101: // For testing trap with 1 word argument
         {
-            uint16_t arg1 = argWord(1);
-            cpu->setDRegister(0, arg1);
+            uint16_t arg1 = argWord(cpu, isSupervisor, 1);
+            cpu.setDRegister(0, arg1);
             break;
         }
         case 102: // For testing trap with 1 long argument
         {
-            uint32_t arg1 = argLong(1);
-            cpu->setDRegister(0, arg1);
+            uint32_t arg1 = argLong(cpu, isSupervisor, 1);
+            cpu.setDRegister(0, arg1);
             break;
         }
         case 103: // For testing trap with 1 word 1 long 1 word arguments
         {
-            uint16_t arg1 = argWord(1);
-            uint32_t arg2 = argLong(2);
-            uint16_t arg3 = argWord(4);
+            uint16_t arg1 = argWord(cpu, isSupervisor, 1);
+            uint32_t arg2 = argLong(cpu, isSupervisor, 2);
+            uint16_t arg3 = argWord(cpu, isSupervisor, 4);
             uint32_t res = arg1 + arg2 + arg3;
-            cpu->setDRegister(0, res);
+            cpu.setDRegister(0, res);
             break;
         }
         default:
@@ -223,9 +197,9 @@ void SimpleBios::putCharacter(uint32_t c)
 {
     std::cout << static_cast<char>(c & 0xff) << std::flush;
 }
-void SimpleBios::displayString(Cpu* cpu, uint32_t address)
+void SimpleBios::displayString(Cpu& cpu, uint32_t address)
 {
-    char* str = static_cast<char*>(cpu->mem.get<void*>(address));
+    char* str = static_cast<char*>(cpu.mem.get<void*>(address));
     std::cout << str << std::flush;
 }
 const int32_t CTRL_Z = 0x1a;

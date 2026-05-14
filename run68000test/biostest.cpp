@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "simplebios.h"
 #include "ataribios.h"
+#include "trapargs.h"
 
 using namespace mc68000;
 
@@ -22,6 +23,7 @@ BOOST_AUTO_TEST_CASE(bios_arg_1word)
     Memory memory(256, 0, code, sizeof(code));
     Cpu cpu(memory);
     SimpleBios bios;
+    bios.setup();
     bios.registerTrapHandlers(&cpu);
 
     // Act
@@ -48,6 +50,7 @@ BOOST_AUTO_TEST_CASE(bios_arg_1long)
     Memory memory(256, 0, code, sizeof(code));
     Cpu cpu(memory);
     SimpleBios bios;
+    bios.setup();
     bios.registerTrapHandlers(&cpu);
 
     // Act
@@ -76,6 +79,7 @@ BOOST_AUTO_TEST_CASE(bios_arg_1w_1l_1w)
     Memory memory(256, 0, code, sizeof(code));
     Cpu cpu(memory);
     SimpleBios bios;
+    bios.setup();
     bios.registerTrapHandlers(&cpu);
 
     // Act
@@ -104,6 +108,7 @@ BOOST_AUTO_TEST_CASE(bios_arg_multiple)
     Memory memory(256, 0, code, sizeof(code));
     Cpu cpu(memory);
     SimpleBios bios;
+    bios.setup();
     bios.registerTrapHandlers(&cpu);
 
     // Act
@@ -125,7 +130,7 @@ BOOST_AUTO_TEST_CASE(settings_one)
     AtariBios bios;
 
     // Act
-    bios.getConfig("ataribios.conf", settings);
+    getConfig("ataribios.conf", settings);
 
     // Assert
     BOOST_CHECK_EQUAL(settings.size(), 1);
@@ -141,10 +146,9 @@ BOOST_AUTO_TEST_CASE(settings_empty_line)
     configFile << "key2 = value2" << std::endl;
 
     std::unordered_map<std::string, std::string> settings;
-    AtariBios bios;
 
     // Act
-    bios.getConfig("ataribios.conf", settings);
+    getConfig("ataribios.conf", settings);
 
     // Assert
     BOOST_CHECK_EQUAL(settings.size(), 2);
@@ -163,10 +167,9 @@ BOOST_AUTO_TEST_CASE(settings_comment_lines)
     configFile << "     key4 = 4" << std::endl;
 
     std::unordered_map<std::string, std::string> settings;
-    AtariBios bios;
 
     // Act
-    bios.getConfig("ataribios.conf", settings);
+    getConfig("ataribios.conf", settings);
 
     // Assert
     BOOST_CHECK_EQUAL(settings.size(), 3);

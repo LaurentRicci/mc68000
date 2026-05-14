@@ -3,7 +3,8 @@
 cmake_minimum_required (VERSION 3.28)
 
 # Add source to this project's executable.
-add_executable (run68000test "module.cpp" "biostest.cpp"
+add_executable (run68000test 
+	"module.cpp" "biostest.cpp" "osbiostest.cpp"
  )
 
 target_include_directories(run68000test PUBLIC ${Boost_INCLUDE_DIRS}) 

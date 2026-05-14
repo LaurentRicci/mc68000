@@ -48,6 +48,7 @@ void Emulator::run()
     {
         throw "bios not set";
     }
+    bios->setup();
     bios->registerTrapHandlers(&cpu);
     auto memoryInfo = memory.getMemoryRange();
     uint32_t base = memoryInfo.first;
@@ -71,6 +72,7 @@ void Emulator::run(uint32_t startPc, uint32_t startSP, uint32_t startUSP)
         assert(!"bios not set");
         throw "bios not set";
     }
+    bios->setup();
     bios->registerTrapHandlers(&cpu);
     auto memoryInfo = memory.getMemoryRange();
     uint32_t base = memoryInfo.first;

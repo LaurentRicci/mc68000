@@ -1,8 +1,9 @@
 #include "ataribios.h"
+#include "trapargs.h"
 
 using namespace mc68000;
 
-void AtariBios::gemdos(Cpu* cpu)
+void AtariBios::gemdos(Cpu& cpu)
 {
     //cf https://freemint.github.io/tos.hyp/en/gemdos_functions.html
     enum GemDos {
@@ -59,35 +60,8 @@ void AtariBios::gemdos(Cpu* cpu)
         GEMDOS_FDATIME = 87
     };
 
-    uint32_t sp = cpu->a7; // A7 = SSP on entry to TRAP
-    uint16_t savedSR = cpu->getFromStack<uint16_t>(true, 0); // Read saved SR from top of supervisor stack
-    bool callerIsSupervisor = (savedSR & 0x2000) != 0; // Check S bit (bit 13)
-
-    // Determine base of argument list: either sp+8 (supervisor) or usp+2 (user)
-    uint32_t argBase;
-    if (callerIsSupervisor)
-    {
-        argBase = 6;
-    }
-    else
-    {
-        argBase = 0;
-    }
-
-    // helpers to retrieve arguments from the stack.
-    // The stack can have a mix of word and long arguments so the indexing is done in words.
-    // argWord(0) is function number, argWord(1) is first argument word, etc.
-    // argLong(1) reads a long starting at word index 1 (i.e., words 1 and 2)
-    // argLong(n) reads two words starting at word index n to make a long
-    //
-    auto argWord = [&](unsigned index) -> uint16_t {
-        return cpu->getFromStack<uint16_t>(callerIsSupervisor, argBase + index * 2);
-    };
-    auto argLong = [&](unsigned wordIndex) -> uint32_t {
-        return cpu->getFromStack<uint32_t>(callerIsSupervisor, argBase + wordIndex * 2);
-    };
-
-    uint16_t func = argWord(0);
+    bool isSupervisor = callerIsSupervisor(cpu);
+    uint16_t func = argWord(cpu, isSupervisor, 0);
 
     // Dispatch GEMDOS functions
     switch (func)
@@ -101,21 +75,21 @@ void AtariBios::gemdos(Cpu* cpu)
     case GEMDOS_CCONIN: // cconin() -> uint32_t
     {
         uint32_t ret = cconin();
-        cpu->setDRegister(0, ret);
+        cpu.setDRegister(0, ret);
         break;
     }
 
     case GEMDOS_CCONOUT: // cconout(uint16_t c)
     {
-        uint16_t c = argWord(1);
+        uint16_t c = argWord(cpu, isSupervisor, 1);
         cconout(c);
         break;
     }
 
     case GEMDOS_CCONWS: // cconws(const char* str)
     {
-        uint32_t address = argLong(1);
-        char* str = static_cast<char*>(cpu->mem.get<void*>(address));
+        uint32_t address = argLong(cpu, isSupervisor, 1);
+        char* str = static_cast<char*>(cpu.mem.get<void*>(address));
         cconws(str);
         break;
     }
@@ -123,28 +97,28 @@ void AtariBios::gemdos(Cpu* cpu)
     case GEMDOS_CCONIS: // cconis() -> uint16_t
     {
         uint16_t ret = cconis();
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_DSETDRV: // dsetdrv(uint16_t drv) -> uint16_t
     {
-        uint16_t drv = argWord(1);
+        uint16_t drv = argWord(cpu, isSupervisor, 1);
         uint16_t ret = dsetdrv(drv);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_DGETDRV: // dgetdrv() -> uint16_t
     {
         uint16_t ret = dgetdrv();
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FSETDTA: // fsetdta(DTA* dta)
     {
-        DTA* dta = reinterpret_cast<DTA*>(static_cast<uintptr_t>(argLong(1)));
+        DTA* dta = reinterpret_cast<DTA*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         fsetdta(dta);
         break;
     }
@@ -152,189 +126,189 @@ void AtariBios::gemdos(Cpu* cpu)
     case GEMDOS_SVERSION: // sversion() -> uint16_t
     {
         uint16_t ret = sversion();
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_PTERMRES: // ptermres(uint32_t keep, uint16_t rc)
     {
-        uint32_t keep = argLong(1);
-        uint16_t rc = argWord(3);
+        uint32_t keep = argLong(cpu, isSupervisor, 1);
+        uint16_t rc = argWord(cpu, isSupervisor, 3);
         ptermres(keep, rc);
         break;
     }
 
     case GEMDOS_DCREATE: // dcreate(const char* path) -> uint16_t
     {
-        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
+        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         uint16_t ret = dcreate(path);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_DDELETE: // ddelete(const char* path) -> uint16_t
     {
-        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
+        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         uint16_t ret = ddelete(path);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_DSETPATH: // dsetpath(const char* path) -> uint16_t
     {
-        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
+        const char* path = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         uint16_t ret = dsetpath(path);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FCREATE: // fcreate(const char* name, uint16_t attr) -> uint16_t
     {
-        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t attr = argWord(3);
+        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t attr = argWord(cpu, isSupervisor, 3);
         uint16_t ret = fcreate(name, attr);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FOPEN: // fopen(const char* name, uint16_t mode) -> uint16_t
     {
-        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t mode = argWord(3);
+        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t mode = argWord(cpu, isSupervisor, 3);
         uint16_t ret = fopen(name, mode);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FCLOSE: // fclose(uint16_t handle) -> uint16_t
     {
-        uint16_t handle = argWord(1);
+        uint16_t handle = argWord(cpu, isSupervisor, 1);
         uint16_t ret = fclose(handle);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FREAD: // fread(uint16_t handle, uint32_t count, void* buf) -> uint32_t
     {
-        uint16_t handle = argWord(1);
-        uint32_t count = argLong(2);
-        void* buf = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(4)));
+        uint16_t handle = argWord(cpu, isSupervisor, 1);
+        uint32_t count = argLong(cpu, isSupervisor, 2);
+        void* buf = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 4)));
         uint32_t ret = fread(handle, count, buf);
-        cpu->setDRegister(0, ret);
+        cpu.setDRegister(0, ret);
         break;
     }
 
     case GEMDOS_FWRITE: // fwrite(uint16_t handle, uint32_t count, const void* buf) -> uint32_t
     {
-        uint16_t handle = argWord(1);
-        uint32_t count = argLong(2);
-        const void* buf = reinterpret_cast<const void*>(static_cast<uintptr_t>(argLong(4)));
+        uint16_t handle = argWord(cpu, isSupervisor, 1);
+        uint32_t count = argLong(cpu, isSupervisor, 2);
+        const void* buf = reinterpret_cast<const void*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 4)));
         uint32_t ret = fwrite(handle, count, buf);
-        cpu->setDRegister(0, ret);
+        cpu.setDRegister(0, ret);
         break;
     }
 
     case GEMDOS_FDELETE: // fdelete(const char* name) -> uint16_t
     {
-        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
+        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         uint16_t ret = fdelete(name);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FSEEK: // fseek(uint32_t offset, uint16_t handle, uint16_t mode) -> uint32_t
     {
-        uint32_t offset = argLong(1);
-        uint16_t handle = argWord(3);
-        uint16_t mode = argWord(4);
+        uint32_t offset = argLong(cpu, isSupervisor, 1);
+        uint16_t handle = argWord(cpu, isSupervisor, 3);
+        uint16_t mode = argWord(cpu, isSupervisor, 4);
         uint32_t ret = fseek(offset, handle, mode);
-        cpu->setDRegister(0, ret);
+        cpu.setDRegister(0, ret);
         break;
     }
 
     case GEMDOS_FATTRIB: // fattrib(const char* name, uint16_t wflag, uint16_t attrib) -> uint16_t
     {
-        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t wflag = argWord(3);
-        uint16_t attrib = argWord(4);
+        const char* name = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t wflag = argWord(cpu, isSupervisor, 3);
+        uint16_t attrib = argWord(cpu, isSupervisor, 4);
         uint16_t ret = fattrib(name, wflag, attrib);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_DGET_PATH: // dgetpath(char* buf, uint16_t drv) -> uint16_t
     {
-        char* buf = reinterpret_cast<char*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t drv = argWord(3);
+        char* buf = reinterpret_cast<char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t drv = argWord(cpu, isSupervisor, 3);
         uint16_t ret = dgetpath(buf, drv);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_MALLOC: // malloc(uint32_t size) -> void*
     {
-        uint32_t size = argLong(1);
+        uint32_t size = argLong(cpu, isSupervisor, 1);
         void* ptr = malloc(size);
-        cpu->setDRegister(0, static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ptr)));
+        cpu.setDRegister(0, static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ptr)));
         break;
     }
 
     case GEMDOS_MFREE: // mfree(void* ptr) -> uint16_t
     {
-        void* ptr = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(1)));
+        void* ptr = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
         uint16_t ret = mfree(ptr);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_MSHRINK: // mshrink(void* base, uint32_t size) -> uint16_t
     {
-        void* base = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(1)));
-        uint32_t size = argLong(3);
+        void* base = reinterpret_cast<void*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint32_t size = argLong(cpu, isSupervisor, 3);
         uint16_t ret = mshrink(base, size);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FSFIRST: // fsfirst(const char* pattern, uint16_t attr) -> uint16_t
     {
-        const char* pattern = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t attr = argWord(3);
+        const char* pattern = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t attr = argWord(cpu, isSupervisor, 3);
         uint16_t ret = fsfirst(pattern, attr);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FSNEXT: // fsnext() -> uint16_t
     {
         uint16_t ret = fsnext();
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FRENAME: // frename(uint16_t zero, const char* old, const char* neu) -> uint16_t
     {
-        uint16_t zero = argWord(1);
-        const char* oldp = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(2)));
-        const char* neu = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(4)));
+        uint16_t zero = argWord(cpu, isSupervisor, 1);
+        const char* oldp = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 2)));
+        const char* neu = reinterpret_cast<const char*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 4)));
         uint16_t ret = frename(zero, oldp, neu);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     case GEMDOS_FDATIME: // fdatime(uint16_t* time, uint16_t* date, uint16_t handle, uint16_t rwflag) -> uint16_t
     {
-        uint16_t* timep = reinterpret_cast<uint16_t*>(static_cast<uintptr_t>(argLong(1)));
-        uint16_t* datep = reinterpret_cast<uint16_t*>(static_cast<uintptr_t>(argLong(3)));
-        uint16_t handle = argWord(5);
-        uint16_t rwflag = argWord(6);
+        uint16_t* timep = reinterpret_cast<uint16_t*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 1)));
+        uint16_t* datep = reinterpret_cast<uint16_t*>(static_cast<uintptr_t>(argLong(cpu, isSupervisor, 3)));
+        uint16_t handle = argWord(cpu, isSupervisor, 5);
+        uint16_t rwflag = argWord(cpu, isSupervisor, 6);
         uint16_t ret = fdatime(timep, datep, handle, rwflag);
-        cpu->setDRegister(0, static_cast<uint32_t>(ret));
+        cpu.setDRegister(0, static_cast<uint32_t>(ret));
         break;
     }
 
     default:
-        cpu->setDRegister(0, 0);
+        cpu.setDRegister(0, 0);
         break;
     }
 }
