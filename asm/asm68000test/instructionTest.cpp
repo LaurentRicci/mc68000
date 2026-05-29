@@ -817,13 +817,25 @@ namespace instructionTest
 	// ====================================================================================================
 	// CHK instructions
 	// ====================================================================================================
-	BOOST_AUTO_TEST_CASE(chk_ok)
-	{
-		asmparser parser;
-		auto opcode = parser.parseText("  chk (a2),d4\n");
-		validate_hasValue<uint16_t>(0b0100'100'110'010'010, opcode);
-	}
-	BOOST_AUTO_TEST_CASE(chk_failed)
+    BOOST_AUTO_TEST_CASE(chk_ok)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  chk (a2),d4\n");
+        validate_hasValue<uint16_t>(0b0100'100'110'010'010, opcode);
+    }
+    BOOST_AUTO_TEST_CASE(chk_size)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  chk.w (a2),d4\n");
+        validate_hasValue<uint16_t>(0b0100'100'110'010'010, opcode);
+    }
+    BOOST_AUTO_TEST_CASE(chk_size_failed)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  chk.l (a2),d4\n");
+        BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+    }
+    BOOST_AUTO_TEST_CASE(chk_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText("  chk a2,d4\n");
@@ -1072,7 +1084,21 @@ namespace instructionTest
 		validate_hasValue<uint16_t>(0b1000'010'111'011'011, opcode);
 	}
 
-	BOOST_AUTO_TEST_CASE(divs_failed)
+    BOOST_AUTO_TEST_CASE(divs_size)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" divs.w (a3)+,d2\n");
+        validate_hasValue<uint16_t>(0b1000'010'111'011'011, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(divs_size_failed)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" divs.l (a3)+, d2\n");
+        BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+    }
+
+    BOOST_AUTO_TEST_CASE(divs_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" divs a2, d2\n");
@@ -1089,7 +1115,21 @@ namespace instructionTest
 		validate_hasValue<uint16_t>(0b1000'100'011'100'011, opcode);
 	}
 
-	BOOST_AUTO_TEST_CASE(divu_failed)
+    BOOST_AUTO_TEST_CASE(divu_size)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" divu.w -(a3),d4\n");
+        validate_hasValue<uint16_t>(0b1000'100'011'100'011, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(divu_size_failed)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" divu.l -(a3),d4\n");
+        BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+    }
+
+    BOOST_AUTO_TEST_CASE(divu_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" divu a6, d2\n");
@@ -1732,7 +1772,21 @@ namespace instructionTest
 		validate_hasValue<uint16_t>(0b1100'010'111'011'011, opcode);
 	}
 
-	BOOST_AUTO_TEST_CASE(muls_failed)
+    BOOST_AUTO_TEST_CASE(muls_size)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" muls.w (a3)+,d2\n");
+        validate_hasValue<uint16_t>(0b1100'010'111'011'011, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(muls_size_failed)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" muls.l (a3)+,d2\n");
+        BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+    }
+
+    BOOST_AUTO_TEST_CASE(muls_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" muls a2, d2\n");
@@ -1742,14 +1796,28 @@ namespace instructionTest
 	// ====================================================================================================
 	// MULU
 	// ====================================================================================================
-	BOOST_AUTO_TEST_CASE(mulu_ok)
-	{
-		asmparser parser;
-		auto opcode = parser.parseText(" mulu -(a3),d4\n");
-		validate_hasValue<uint16_t>(0b1100'100'011'100'011, opcode);
-	}
+    BOOST_AUTO_TEST_CASE(mulu_ok)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" mulu -(a3),d4\n");
+        validate_hasValue<uint16_t>(0b1100'100'011'100'011, opcode);
+    }
 
-	BOOST_AUTO_TEST_CASE(mulu_failed)
+    BOOST_AUTO_TEST_CASE(mulu_size)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" mulu.w -(a3),d4\n");
+        validate_hasValue<uint16_t>(0b1100'100'011'100'011, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(mulu_size_failed)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" mulu.l -(a3),d4\n");
+        BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+    }
+
+    BOOST_AUTO_TEST_CASE(mulu_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" divu a6, d2\n");

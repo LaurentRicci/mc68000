@@ -97,6 +97,7 @@ add_library(asm68000lib
     asmResult.cpp
     listingGenerator.h
     listingGenerator.cpp
+    errorListener.h
     ${ANTLR_lexer_CXX_OUTPUTS}
     ${ANTLR_parser_CXX_OUTPUTS}
 )

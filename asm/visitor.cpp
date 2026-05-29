@@ -607,17 +607,27 @@ any visitor::visitBit_immediateData(parser68000::Bit_immediateDataContext* ctx)
 	return finalize_instruction(opcode);
 }
 /// <summary>
-/// CHK addressingMode COMMA dRegister
+/// CHK size? addressingMode COMMA dRegister
 /// </summary>
 any visitor::visitChk(parser68000::ChkContext* ctx)
 {
 	size = 1;
-	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	int arg = 1;
+	if (ctx->children.size() == 5) // if there is a size specified
+	{
+		size = any_cast<uint16_t>(visit(ctx->children[1]));
+		arg++; // the optional size is included so there is one extra child
+        if (size != 1)
+        {
+            addError("Invalid size. CHK only support .W", ctx->children[1]);
+        }
+    }
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
 	{
-		addError("Invalid addressing mode: ", ctx->children[1]);
+		addError("Invalid addressing mode: ", ctx->children[arg]);
 	}
-	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3]));
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2]));
 	uint16_t opcode = 0b0100'000'110'000'000 | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
@@ -737,13 +747,23 @@ any visitor::visitDbcc(parser68000::DbccContext* ctx)
 
 any visitor::visitDiv(tree::ParseTree* ctx, bool isSigned)
 {
-	size = 1;
-	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+    int arg = 1;
+    if (ctx->children.size() == 5) // if there is a size specified
+    {
+        size = any_cast<uint16_t>(visit(ctx->children[1]));
+        arg++; // the optional size is included so there is one extra child
+        if (size != 1)
+        {
+            addError("Invalid size. DIVU / DIVS only support .W", ctx->children[1]);
+        }
+    }
+    size = 1;
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
 	{
-		addError("Invalid addressing mode: ", ctx->children[1]);
+		addError("Invalid addressing mode: ", ctx->children[arg]);
 	}
-	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 	uint16_t opcode = (isSigned? 0b1000'000'111'000'000 : 0b1000'000'011'000'000) | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
@@ -795,12 +815,14 @@ any visitor::visitExg(parser68000::ExgContext* ctx)
 {
 	size = 2;
 	auto txt1 = ctx->children[1]->getText();
-	uint16_t reg1 = aRegister(txt1.substr(1));
-	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
+	uint16_t reg1 = registerNumber(txt1);
+    int index1 = txt1[0] == '%' ? 1 : 0; // need to account for optional % prefix
+	bool isDataReg1 = (txt1[index1] == 'D') || (txt1[index1] == 'd'); // testing for d as an ARegister can also be fp or sp
 
 	auto txt2 = ctx->children[3]->getText();
-	uint16_t reg2 = aRegister(txt2.substr(1));
-	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
+	uint16_t reg2 = registerNumber(txt2);
+    int index2 = txt2[0] == '%' ? 1 : 0;
+	bool isDataReg2 = (txt2[index2] == 'D') || (txt2[index2] == 'd');
 
 	uint16_t opmode = 0b10001; // default to one data and one address register
 	if (isDataReg1 && isDataReg2)
@@ -880,13 +902,23 @@ any visitor::visitJsr(parser68000::JsrContext* ctx)
 
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
 {
+    int arg = 1;
+    if (ctx->children.size() == 5) // if there is a size specified
+    {
+        size = any_cast<uint16_t>(visit(ctx->children[1]));
+        arg++; // the optional size is included so there is one extra child
+        if (size != 1)
+        {
+            addError("Invalid size. MULU / MULS only support .W", ctx->children[1]);
+        }
+    }
 	size = 1;
-	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[arg]));
 	if (!isValidAddressingMode(effectiveAddress, 0b101111111111))
 	{
-		addError("Invalid addressing mode: ", ctx->children[1]);
+		addError("Invalid addressing mode: ", ctx->children[arg]);
 	}
-	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[3])) & 0b111;
+	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[arg + 2])) & 0b111;
 	uint16_t opcode = (isSigned ? 0b1100'000'111'000'000 : 0b1100'000'011'000'000) | (dReg << 9) | effectiveAddress;
 	return finalize_instruction(opcode);
 }
@@ -1558,7 +1590,7 @@ any visitor::visitUnlk(parser68000::UnlkContext* ctx)
 // ====================================================================================================
 // Register lists
 // ====================================================================================================
-any visitor::visitRegisterList(parser68000::RegisterListContext* ctx)
+any visitor::visitRegisterListMotorola(parser68000::RegisterListMotorolaContext* ctx)
 {
 	uint16_t regList = 0;
 	for (size_t i = 0; i < ctx->children.size(); i += 2) // skip separators
@@ -1566,6 +1598,17 @@ any visitor::visitRegisterList(parser68000::RegisterListContext* ctx)
 		regList |= any_cast<uint16_t>(visit(ctx->children[i]));
 	}
 	return regList;
+}
+any visitor::visitRegisterListGcc(parser68000::RegisterListGccContext* ctx)
+{
+    uint32_t value = any_cast<uint32_t>(visit(ctx->children[1]));
+    if (value > 0xffff)
+    {
+        addError("Register list value too large: " + std::to_string(value), ctx->children[1]);
+        value &= 0xffff;
+    }
+    uint16_t regList = (uint16_t)value;
+    return regList;
 }
 any visitor::visitRegisterListRegister(parser68000::RegisterListRegisterContext* ctx)
 {
@@ -1588,11 +1631,13 @@ any visitor::visitRegisterListRange(parser68000::RegisterListRangeContext* ctx)
 any visitor::visitRegisterRange(parser68000::RegisterRangeContext* ctx)
 {
 	auto txt1 = ctx->children[0]->getText();
-	uint16_t reg1 = stoi(txt1.substr(1));
+    int index1 = (txt1[0] == '%') ? 2 : 1;
+	uint16_t reg1 = stoi(txt1.substr(index1));
 	bool isDataReg1 = (txt1[0] == 'D') || (txt1[0] == 'd');
 
 	auto txt2 = ctx->children[2]->getText();
-	uint16_t reg2 = stoi(txt2.substr(1));
+	int index2 = (txt2[0] == '%') ? 2 : 1;
+	uint16_t reg2 = stoi(txt2.substr(index2));
 	bool isDataReg2 = (txt2[0] == 'D') || (txt2[0] == 'd');
 
 	if (isDataReg1 != isDataReg2)
@@ -1631,7 +1676,10 @@ any visitor::visitRegisterRange(parser68000::RegisterRangeContext* ctx)
 /// </summary>
 any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 {
-    auto s = ctx->getText().substr(1);
+    auto regText = ctx->getText();
+    int index = (regText[0] == '%') ? 2 : 1;
+
+    auto s = regText.substr(index);
 	auto reg = stoi(s);
     return (uint16_t) (0b000'000 | reg);
 }
@@ -1641,8 +1689,28 @@ any visitor::visitDRegister(parser68000::DRegisterContext* ctx)
 /// </summary>
 any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 {
-    auto reg = aRegister(ctx->getText().substr(1));
-    return (uint16_t)(0b001'000 | reg);
+    auto regText = ctx->getText();
+    char regType = regText[0];
+    int index = 1;
+    if (regType == '%')
+    {
+        regType = regText[1];
+        index = 2;
+    }
+    uint16_t regNumber;
+    if (regType == 'f' || regType == 'F')
+    {
+        regNumber = 6;
+    }
+    else if(regType == 's' || regType == 'S')
+    {
+        regNumber = 7;
+    }
+    else
+    {
+        regNumber = stoi(regText.substr(index));
+    }
+    return (uint16_t)(0b001'000 | regNumber);
 }
 
 /// <summary>
@@ -1650,8 +1718,8 @@ any visitor::visitARegister(parser68000::ARegisterContext* ctx)
 /// </summary>
 any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* context)
 {
-	auto s = context->children[1]->getText().substr(1);
-	auto reg = aRegister(s);
+	auto s = context->children[1]->getText();
+	auto reg = registerNumber(s);
 	return (uint16_t)(0b010'000 | reg);
 }
 
@@ -1660,8 +1728,8 @@ any visitor::visitARegisterIndirect(parser68000::ARegisterIndirectContext* conte
 /// </summary>
 any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectPostIncrementContext* ctx)
 {
-	auto s = ctx->children[1]->getText().substr(1);
-	auto reg = aRegister(s);
+	auto s = ctx->children[1]->getText();
+	auto reg = registerNumber(s);
 	return (uint16_t)(0b011'000 | reg);
 }
 
@@ -1670,8 +1738,8 @@ any visitor::visitARegisterIndirectPostIncrement(parser68000::ARegisterIndirectP
 /// </summary>
 any visitor::visitARegisterIndirectPreDecrement(parser68000::ARegisterIndirectPreDecrementContext* ctx)
 {
-	auto s = ctx->children[2]->getText().substr(1);
-	auto reg = aRegister(s);
+	auto s = ctx->children[2]->getText();
+	auto reg = registerNumber(s);
     return (uint16_t)(0b100'000 | reg);
 }
 
@@ -1689,8 +1757,8 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	}
 	extensionsList.push_back((uint16_t)(displacement & 0xffff));
 
-	auto s = pRegistr->getText().substr(1);
-	auto reg = aRegister(s);
+	auto s = pRegistr->getText();
+	auto reg = registerNumber(s);
 	return (uint16_t)(0b101'000 | reg);
 }
 
@@ -1717,7 +1785,7 @@ any visitor::visitARegisterIndirectDisplacementNew(parser68000::ARegisterIndirec
 /// </summary>
 any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, tree::ParseTree* pRregistr, tree::ParseTree* pIndex)
 {
-	int32_t displacement = getDisplacementValue(pDisplacement);
+	int32_t displacement = pDisplacement ? getDisplacementValue(pDisplacement) : 0;
 	if (displacement > 0x7f || displacement < -0x80)
 	{
 		addError("Displacement doesn't fit on in one byte: " + std::to_string(displacement), pDisplacement);
@@ -1727,8 +1795,8 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 	uint16_t index = any_cast<uint16_t>(visit(pIndex));
 	extensionsList.push_back((index << 11) | displacement8);
 	
-	auto s = pRregistr->getText().substr(1);
-	auto reg = aRegister(s);
+	auto s = pRregistr->getText();
+	auto reg = registerNumber(s);
 	return (uint16_t)(0b110'000 | reg);
 }
 
@@ -1737,6 +1805,11 @@ any visitor::visitARegisterIndirectDisplacement(tree::ParseTree* pDisplacement, 
 /// </summary>
 any visitor::visitARegisterIndirectIndexOld(parser68000::ARegisterIndirectIndexOldContext* ctx)
 {
+    if (ctx->children.size() == 5)
+    {
+        // Old and new syntax when the displacement is omitted: (A0, D1)
+        return visitARegisterIndirectDisplacement(nullptr, ctx->children[1], ctx->children[3]);
+    }
 	return visitARegisterIndirectDisplacement(ctx->children[0], ctx->children[2], ctx->children[4]);
 }
 
@@ -2088,7 +2161,7 @@ any visitor::visitAdRegister(parser68000::AdRegisterContext* ctx)
 	}
 	else
 	{
-		auto reg = aRegister(s.substr(1));
+		auto reg = registerNumber(s);
 		return (uint16_t)(0b1'000'0 | (reg << 1));
 	}
 }

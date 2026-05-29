@@ -163,7 +163,8 @@ private:
     // ====================================================================================================
     // Register list
     // ====================================================================================================
-    virtual any visitRegisterList(parser68000::RegisterListContext* ctx) override;
+    virtual any visitRegisterListMotorola(parser68000::RegisterListMotorolaContext* ctx) override;
+    virtual any visitRegisterListGcc(parser68000::RegisterListGccContext* ctx) override;
     virtual any visitRegisterListRegister(parser68000::RegisterListRegisterContext* ctx) override;
     virtual any visitRegisterListRange(parser68000::RegisterListRangeContext* ctx) override;
     virtual any visitRegisterRange(parser68000::RegisterRangeContext* ctx) override;
@@ -278,14 +279,29 @@ private:
     // ====================================================================================================
     // Utilities
     // ====================================================================================================
-    inline uint16_t aRegister(const string& s)
+    inline uint16_t registerNumber(const string& s)
     {
-        if (s == "p" || s == "P")
+        char regType = s[0];
+        bool hasPrefix = regType == '%';
+        if (hasPrefix)
         {
-            // special case for A7 which is also the stack pointer
+            regType = s[1];
+        }
+        uint16_t regNumber;
+        if (regType == 'f' || regType == 'F')
+        {
+            // special case for FP which is also the frame pointer A6
+            return (uint16_t)6;
+        }
+        else if (regType == 's' || regType == 'S')
+        {
+            // special case for SP which is also the stack pointer A7
             return (uint16_t)7;
         }
-        return (uint16_t)stoi(s);
+        else
+        {
+            return (uint16_t)stoi(s.substr(hasPrefix ? 2 : 1));
+        }
     }
 
     uint16_t finalize_instruction(uint16_t opcode);

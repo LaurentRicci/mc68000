@@ -5,13 +5,14 @@ options
     tokenVocab=lexer68000;
 }
 
-prog : (line (EOL | EOL2))* (SPACES)? EOF ;
+prog : (line (EOL | EOL2 | EOL3))* (SPACES)? EOF ;
 
 line
     : labelSection instructionSection COMMENT?  #line_instructionSection
     | labelSection directiveSection COMMENT?    #line_directiveSection
     | labelSection                              #line_labelSection
     | commentLine                               #line_commentLine
+    | elfLine                                   #line_elfLine
     ;
 
 labelSection returns [std::string value]
@@ -19,6 +20,7 @@ labelSection returns [std::string value]
     | LABEL SEMICOLON      { $value = $LABEL.text; }
     | SPACES ID SEMICOLON  { $value = $ID.text; }
     | SPACES               { $value = ""; }
+    | LOCALLABEL SEMICOLON { $value = $LOCALLABEL.text; }
     ;
 
 commentLine : COMMENTLINE;
@@ -189,7 +191,7 @@ bitInstruction returns [uint16_t value]
     ;
 
 chk
-    : CHK addressingMode COMMA dRegister
+    : CHK size?addressingMode COMMA dRegister
     ;
 
 clr
@@ -232,11 +234,11 @@ dbccInstruction returns [uint16_t value]
     ;
 
 divs
-    : DIVS addressingMode COMMA dRegister
+    : DIVS size? addressingMode COMMA dRegister
     ;
 
 divu
-    : DIVU addressingMode COMMA dRegister
+    : DIVU size? addressingMode COMMA dRegister
     ;
 
 eor
@@ -318,8 +320,8 @@ move2sr
     ;
 
 movem
-    : MOVEM size? registerList COMMA addressingMode     #movem_toMemory
-    | MOVEM size? addressingMode COMMA registerList     #movem_fromMemory
+    : MOVEM size? registerList COMMA addressingModeMovem     #movem_toMemory
+    | MOVEM size? addressingModeMovem COMMA registerList     #movem_fromMemory
     ;
 
 movep
@@ -332,11 +334,11 @@ moveq
     ;
 
 muls
-    : MULS addressingMode COMMA dRegister
+    : MULS size? addressingMode COMMA dRegister
     ;
 
 mulu
-    : MULU addressingMode COMMA dRegister
+    : MULU size? addressingMode COMMA dRegister
     ;
 
 nbcd
@@ -476,7 +478,7 @@ size returns [uint16_t value]
 number returns [std::any value]
     : OCTAL         { $value = (uint32_t) std::strtoul($OCTAL.text.c_str()+1, nullptr, 8);        }
     | DECIMAL       { $value = (int32_t)  std::stol($DECIMAL.text.c_str());                      }
-    | HEXADECIMAL   { $value = (uint32_t) std::strtoul($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
+    | HEXADECIMAL   { $value = (uint32_t) std::strtoul($HEXADECIMAL.text.c_str() + ($HEXADECIMAL.text[0] == '0' ? 2 : 1), nullptr, 16); }
     | CHARACTER     { $value = (uint32_t) $CHARACTER.text[1];                           }
     ;
 
@@ -488,7 +490,8 @@ register
     ;
 
 registerList
-    : registerListElement (SLASH registerListElement)*
+    : registerListElement (SLASH registerListElement)*  #registerListMotorola
+    | HASH number                                       #registerListGcc
     ;
 
 registerListElement
@@ -500,6 +503,7 @@ adRegister
     : AREG
     | DREG
     | SP
+    | FP
     ;
 
 adRegisterSize
@@ -542,18 +546,34 @@ addressingMode
     | pcIndirectIndex
     | immediateData
     ;
+
+// needed to avoid ambiguity between immediate data and binary mask in register list for movem instruction
+addressingModeMovem
+    : dRegister
+    | aRegister
+    | aRegisterIndirect
+    | aRegisterIndirectPostIncrement
+    | aRegisterIndirectPreDecrement
+    | aRegisterIndirectDisplacement
+    | aRegisterIndirectIndex
+    | absolute
+    | absoluteShort
+    | absoluteLong
+    | pcIndirectDisplacement
+    | pcIndirectIndex
+    ;
 dRegister : DREG ;
-aRegister : AREG | SP ;
-aRegisterIndirect : OPENPAREN (AREG | SP) CLOSEPAREN ;
-aRegisterIndirectPostIncrement : OPENPAREN  (AREG | SP)  CLOSEPAREN  PLUS ;
-aRegisterIndirectPreDecrement : DASH  OPENPAREN  (AREG | SP)  CLOSEPAREN ;
-aRegisterIndirectDisplacement
-    : number  OPENPAREN  (AREG | SP)  CLOSEPAREN            #aRegisterIndirectDisplacementOld
-    | OPENPAREN number COMMA (AREG | SP) CLOSEPAREN         #aRegisterIndirectDisplacementNew
+aRegister : AREG | SP | FP ;
+aRegisterIndirect : OPENPAREN (AREG | SP |FP) CLOSEPAREN ;
+aRegisterIndirectPostIncrement : OPENPAREN  (AREG | SP | FP)  CLOSEPAREN  PLUS ;
+aRegisterIndirectPreDecrement : DASH  OPENPAREN  (AREG | SP | FP)  CLOSEPAREN ;
+aRegisterIndirectDisplacement 
+    : number  OPENPAREN  (AREG | SP | FP)  CLOSEPAREN            #aRegisterIndirectDisplacementOld
+    | OPENPAREN number COMMA (AREG | SP | FP) CLOSEPAREN         #aRegisterIndirectDisplacementNew
     ;
 aRegisterIndirectIndex
-    : number  OPENPAREN  (AREG | SP)  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
-    | OPENPAREN number  COMMA (AREG | SP)  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
+    : number?  OPENPAREN  (AREG | SP | FP)  COMMA  adRegisterSize  CLOSEPAREN        #aRegisterIndirectIndexOld
+    | OPENPAREN number  COMMA (AREG | SP | FP)  COMMA  adRegisterSize  CLOSEPAREN   #aRegisterIndirectIndexNew
     ;
 absolute : address ;
 absoluteShort : address SIZEWORD;
@@ -630,4 +650,56 @@ blockAddress returns [std::any value]
     | DECIMAL       { $value = std::stol($DECIMAL.text.c_str(), nullptr, 10);       }
     | HEXADECIMAL   { $value = std::stol($HEXADECIMAL.text.c_str()+1, nullptr, 16); }
     | ID2           { $value = $ID2.text; }
+    ;
+
+// ============================================
+// elf directives
+//=============================================
+elfLine : ELFDIRECTIVE elfDirective ;
+
+elfDirective
+    : FILE STRING3
+    | TEXT
+    | ALIGN number3
+    | P2ALIGN number3
+    | EVEN
+    | GLOBL ID3
+    | LOCAL ID3
+    | TYPE ID3 COMMA3 type
+    | IDENT STRING3
+    | SIZE ID3 COMMA3 expression3
+    | LINE number3
+    | LOC number3*
+    | SECTION3 ID3 (COMMA3 STRING3 (COMMA3 AT3 ID3)?)?
+    | BYTE number3
+    | WORD number3
+    | SHORT number3
+    | LONG number3
+    | ASCII STRING3
+    | ASCIZ STRING3
+    | COMM ID3 (COMMA3 number3)*
+    | LCOMM ID3 (COMMA3 number3)*
+    | CFI_STARTPROC
+    | CFI_ENDPROC
+    ;
+
+number3
+    : DECIMAL3 
+    | HEXADECIMAL3
+    | ID3
+    ;
+type
+    : FUNCTION
+    ;
+
+expression3
+    : additiveExpr3
+    ;
+additiveExpr3
+    : primaryExpr3 ((PLUS3 | DASH3) primaryExpr3)*
+    ;
+primaryExpr3
+    : number3
+    | ID3
+    | DOT3
     ;

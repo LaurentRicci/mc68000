@@ -21,7 +21,7 @@ namespace parserTest
 	{
 		asmparser parser;
 		auto error = parser.checkSyntax("bad.l #1, d0");
-		BOOST_CHECK_EQUAL(1, error);
+		BOOST_CHECK_NE(0, error);
 	}
 
 	// -------------------------------

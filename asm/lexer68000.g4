@@ -3,9 +3,12 @@ lexer grammar lexer68000;
 
 SPACES  : [ \t]+                   -> mode(NORMAL);
 LABEL   : [a-zA-Z_] [a-zA-Z0-9_]*  -> mode(NORMAL);
-COMMENTLINE : '*' ~[\r\n]*         -> mode(NORMAL) ;
-
+COMMENTLINE : [*#] ~[\r\n]*        -> mode(NORMAL) ;
+ELFDIRECTIVE : [ \t]+'.'           -> mode(GCC) ;
+LOCALLABEL : '.L'[a-zA-Z0-9_]+     -> mode(NORMAL) ;
+//------------------------------------------------------
 mode NORMAL;
+//------------------------------------------------------
 
 //
 // Instructions
@@ -182,14 +185,15 @@ SIZELONG    options { caseInsensitive=true; } : '.l' ;
 //
 OCTAL       : '@' [0-7]+       ;
 DECIMAL     : '-'?[0-9]+       ;
-HEXADECIMAL : '$' [0-9a-fA-F]+ ;
+HEXADECIMAL : ('$' | '0x') [0-9a-fA-F]+ ;
 
 //
 // Registers
 //
-DREG : [dD][0-7] ;
-AREG : [aA][0-7] ;
-SP options  { caseInsensitive=true; } : 'sp'  ;
+DREG : '%'?[dD][0-7] ;
+AREG : '%'?[aA][0-7] ;
+SP options  { caseInsensitive=true; } : '%'? 'sp'  ;
+FP options  { caseInsensitive=true; } : '%'? 'fp' ;
 PC options  { caseInsensitive=true; } : 'pc'  ;
 CCR options { caseInsensitive=true; } : 'ccr' ;
 SR options  { caseInsensitive=true; } : 'sr'  ;
@@ -212,7 +216,7 @@ STRING
     ;
 
 COMMENT
-    : ';' ~[\r\n]* -> mode(NORMAL);
+    : [;] ~[\r\n]* -> mode(NORMAL);
 
 //
 // Punctuation
@@ -228,4 +232,45 @@ OPENPAREN   : '(' ;
 CLOSEPAREN  : ')' ;
 STAR        : '*' ;
 
+//------------------------------------------------------
+mode GCC;
+//------------------------------------------------------
 
+ALIGN options { caseInsensitive=true;     } : 'align';
+FILE     options  { caseInsensitive=true; } : 'file';
+GLOBL    options { caseInsensitive=true;  } : 'globl';
+IDENT    options { caseInsensitive=true;  } : 'ident';
+SIZE     options  { caseInsensitive=true; } : 'size' ;
+TEXT     options  { caseInsensitive=true; } : 'text';
+TYPE     options  { caseInsensitive=true; } : 'type';
+LINE     options  { caseInsensitive=true; } : 'line';
+LOC      options  { caseInsensitive=true; } : 'loc';
+SECTION3 options { caseInsensitive=true;  } : 'section';
+P2ALIGN  options { caseInsensitive=true;  } : 'p2align';
+EVEN     options { caseInsensitive=true;  } : 'even';
+LOCAL    options { caseInsensitive=true;  } : 'local';
+BYTE     options { caseInsensitive=true;  } : 'byte';
+WORD     options { caseInsensitive=true;  } : 'word';
+SHORT    options { caseInsensitive=true;  } : 'short';
+LONG     options { caseInsensitive=true;  } : 'long';
+ASCII    options { caseInsensitive=true;  } : 'ascii';
+ASCIZ    options { caseInsensitive=true;  } : 'asciz';
+COMM     options { caseInsensitive=true;  } : 'comm';
+LCOMM    options { caseInsensitive=true;  } : 'lcomm';
+CFI_STARTPROC options { caseInsensitive=true;  } : 'cfi_startproc' ;
+CFI_ENDPROC   options { caseInsensitive=true;  } : 'cfi_endproc' ;
+
+ID3     : [a-zA-Z.][a-zA-Z0-9._-]* ;
+DECIMAL3 : '-'? [0-9]+             ;
+HEXADECIMAL3 : ('$' | '0x') [0-9a-fA-F]+ ;
+STRING3 : '"' ( ~["\r\n] )* '"'   ;
+
+EOL3    : [\r\n]+ -> mode(DEFAULT_MODE);
+WS3     : [ \t]+  -> skip;
+COMMA3  : ',' ;
+DOT3	: '.' ;
+DASH3   : '-' ;
+PLUS3   : '+' ;
+AT3     : '@' ;
+
+FUNCTION options { caseInsensitive=true; } : '@function' ;

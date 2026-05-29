@@ -6,10 +6,10 @@ namespace addressing_mode
 {
 	BOOST_AUTO_TEST_SUITE(addressing_mode)
 
-		// ====================================================================================================
-		// Data register direct addressing mode
-		// ====================================================================================================
-		BOOST_AUTO_TEST_CASE(address_dReg)
+	// ====================================================================================================
+	// Data register direct addressing mode
+	// ====================================================================================================
+	BOOST_AUTO_TEST_CASE(address_dReg)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add d1, d0\n");
@@ -31,7 +31,19 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add sp, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'001'111, opcode);
 	}
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(address_SP2)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add %sp, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'001'111, opcode);
+    }
+    BOOST_AUTO_TEST_CASE(address_FP)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add %fp, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'001'110, opcode);
+    }
+    // ====================================================================================================
 	// Address register indirect addressing mode
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_indirect)
@@ -47,7 +59,21 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'010'111, opcode);
 	}
-	// ====================================================================================================
+
+    BOOST_AUTO_TEST_CASE(address_SP_indirect2)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (%sp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'010'111, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_FP_indirect)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (%fp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'010'110, opcode);
+    }
+    // ====================================================================================================
 	// Address register indirect with postincrement addressing mode
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_post)
@@ -63,7 +89,21 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add (SP)+, d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'011'111, opcode);
 	}
-	// ====================================================================================================
+
+    BOOST_AUTO_TEST_CASE(address_SP_post2)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (%sp)+, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'011'111, opcode);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_FP_post)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (%fp)+, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'011'110, opcode);
+    }
+    // ====================================================================================================
 	// Address register indirect with predecrement addressing mode
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_pre)
@@ -79,7 +119,14 @@ namespace addressing_mode
 		auto opcode = parser.parseText(" add -(SP), d0\n");
 		validate_hasValue<uint16_t>(0b1101'000'001'100'111, opcode);
 	}
-	// ====================================================================================================
+
+    BOOST_AUTO_TEST_CASE(address_FP_pre)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add -(%fp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'100'110, opcode);
+    }
+    // ====================================================================================================
 	// Address register indirect with displacement addressing mode
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_displacement)
@@ -101,7 +148,18 @@ namespace addressing_mode
 		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
-	BOOST_AUTO_TEST_CASE(address_aReg_displacement_error)
+
+    BOOST_AUTO_TEST_CASE(address_FP_displacement)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 4( SP), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'101'111, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(4, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_aReg_displacement_error)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add $4ffff(a1), d0\n");
@@ -131,7 +189,16 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(4, code[1]);
 	}
 
-	// ====================================================================================================
+    BOOST_AUTO_TEST_CASE(address_FP_displacement_new)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (4, %fp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'101'110, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(4, code[1]);
+    }
+    // ====================================================================================================
 	// Address register indirect with index addressing mode
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(address_aReg_indexD)
@@ -154,7 +221,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0b1'010'0'000'00000100, code[1]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_aReg_indexSP)
+    BOOST_AUTO_TEST_CASE(address_aReg_noOffset)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (a1, a2), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b1'010'0'000'00000000, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_aReg_indexSP)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add 4(a1, SP), d0\n");
@@ -164,7 +241,17 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0b1'111'0'000'00000100, code[1]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_aReg_index_new)
+    BOOST_AUTO_TEST_CASE(address_aReg_indexFP)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 4(a1, %fp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'110'001, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b1'110'0'000'00000100, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_aReg_index_new)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add (4, a1, d2), d0\n");
@@ -194,7 +281,27 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_aReg_index_error)
+    BOOST_AUTO_TEST_CASE(address_FP_index)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 4(%fp, d2), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'110'110, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_FP_index_new)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add (4, %fp, d2), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'110'110, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0'010'0'000'00000100, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_aReg_index_error)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add (420, a1, d2), d0\n");
@@ -255,6 +362,16 @@ namespace addressing_mode
 		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0x1234, code[1]);
 	}
+
+    BOOST_AUTO_TEST_CASE(address_absoluteWx)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 0x1234.W, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'111'000, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x1234, code[1]);
+    }
 
 	BOOST_AUTO_TEST_CASE(address_absoluteWDefault)
 	{
@@ -328,15 +445,25 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(42, code[1]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_pc_displacement_hexa)
-	{
-		asmparser parser;
-		auto opcode = parser.parseText(" add $2a(pc), d0\n");
-		validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
+    BOOST_AUTO_TEST_CASE(address_pc_displacement_hexa)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add $2a(pc), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
 
-		const auto& code = validate_codeSize(parser, 2);
-		BOOST_CHECK_EQUAL(0x2a, code[1]);
-	}
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x2a, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_pc_displacement_hexa2)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 0x2a(pc), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'111'010, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x2a, code[1]);
+    }
 
 	BOOST_AUTO_TEST_CASE(address_pc_displacement_error)
 	{
@@ -376,17 +503,28 @@ namespace addressing_mode
 		const auto& code = validate_codeSize(parser, 2);
 		BOOST_CHECK_EQUAL(0b1'010'0'000'00000100, code[1]);
 	}
-	BOOST_AUTO_TEST_CASE(address_pc_indexSP)
-	{
-		asmparser parser;
-		auto opcode = parser.parseText(" add 4(pc, SP), d0\n");
-		validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
 
-		const auto& code = validate_codeSize(parser, 2);
-		BOOST_CHECK_EQUAL(0b1'111'0'000'00000100, code[1]);
-	}
+    BOOST_AUTO_TEST_CASE(address_pc_indexSP)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 4(pc, SP), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
 
-	BOOST_AUTO_TEST_CASE(address_pc_index_error)
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b1'111'0'000'00000100, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_pc_indexFP)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add 4(pc, %fp), d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'001'111'011, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b1'110'0'000'00000100, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_pc_index_error)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add 421(pc, d2), d0\n");
@@ -462,7 +600,18 @@ namespace addressing_mode
 		BOOST_CHECK_EQUAL(0x5678, code[2]);
 	}
 
-	BOOST_AUTO_TEST_CASE(address_immediate_long_short)
+    BOOST_AUTO_TEST_CASE(address_immediate_long2)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText(" add.l #0x12345678, d0\n");
+        validate_hasValue<uint16_t>(0b1101'000'010'111'100, opcode);
+
+        const auto& code = validate_codeSize(parser, 3);
+        BOOST_CHECK_EQUAL(0x1234, code[1]);
+        BOOST_CHECK_EQUAL(0x5678, code[2]);
+    }
+
+    BOOST_AUTO_TEST_CASE(address_immediate_long_short)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText(" add.l #$1234, d0\n");
