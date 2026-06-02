@@ -43,6 +43,17 @@ void OSBios::trap(Cpu& cpu)
             cpu.setDRegister(0, ret);
             break;
         }
+        case 2:
+        {
+            uint32_t address = argLong(cpu, isSupervisor, 1);
+            void* buffer = cpu.mem.get<void*>(address);
+            uint16_t deviceNumber = argWord(cpu, isSupervisor, 3);
+            uint16_t sectorNumber = argWord(cpu, isSupervisor, 4);
+            uint16_t sectorCount = argWord(cpu, isSupervisor, 5);
+            uint32_t ret = diskWrite(buffer, deviceNumber, sectorNumber, sectorCount);
+            cpu.setDRegister(0, ret);
+            break;
+        }
     }
 }
 
@@ -75,6 +86,40 @@ uint32_t OSBios::diskRead(void* buffer, uint16_t deviceNumber, uint16_t sectorNu
     catch (const std::string& ex)
     {
         std::cerr << "diskRead error: " << ex << std::endl;
+        return 0;
+    }
+}
+
+uint32_t OSBios::diskWrite(void* buffer, uint16_t deviceNumber, uint16_t sectorNumber, uint16_t sectorCount)
+{
+    try
+    {
+        std::string deviceFile = getDiskFileName(deviceNumber);
+
+        BiosParameterBlock bpb = getBiosParameterBlock(deviceNumber);
+        uint32_t bytesPerSector = bpb.bytesPerSector;
+        uint32_t offset = sectorNumber * bytesPerSector;
+        uint32_t bytesToWrite = bytesPerSector * sectorCount;
+
+        std::ofstream f(deviceFile, std::ios::binary | std::ios::in | std::ios::out);
+        if (!f)
+        {
+            return 0;
+        }
+
+        f.seekp(offset);
+        f.write(reinterpret_cast<char*>(buffer), bytesToWrite);
+        f.flush();
+        return bytesToWrite;
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "diskWrite error: " << ex.what() << std::endl;
+        return 0;
+    }
+    catch (const std::string& ex)
+    {
+        std::cerr << "diskWrite error: " << ex << std::endl;
         return 0;
     }
 }

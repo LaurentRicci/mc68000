@@ -197,4 +197,144 @@ BOOST_AUTO_TEST_CASE(sector_read_no_disk)
     // Assert
     BOOST_CHECK_EQUAL(0, cpu.d0);
 }
+
+void prepare_disk(size_t size)
+{
+    // Arrange the configuration file
+    std::ofstream configFile("osbios.conf");
+    configFile << "disk1 = drivea.dsk" << std::endl;
+
+    // Arrange the disk file
+    std::ofstream disk("drivea.dsk", std::ios::binary);
+    BiosParameterBlock bpb(false);
+    disk.write(reinterpret_cast<char*>(&bpb), sizeof(BiosParameterBlock));
+
+    for (size_t i = sizeof(BiosParameterBlock); i < 512; i++)
+    {
+        disk.put(0x00);
+    }
+    for (size_t i = 512; i < size; i++)
+    {
+        disk.put(0x55);
+    }
+    disk.close();
+}
+
+BOOST_AUTO_TEST_CASE(sector_write)
+{
+    unsigned char code[] = {
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorCount
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorNumber
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) device
+    0x2f,0x3c, 0x00,0x00, 0x01, 0x00,   // move.l #256, -(sp)  buffer
+    0x3f,0x3c, 0x00,0x02,               // move.w #2, -(sp) diskwrite
+    0x4e,0x42,                          // trap   #2
+    0xdf,0xfc, 0x00, 0x00, 0x00, 0x0c,  // add.l  #12, sp
+    0xff,0xff };
+
+    // Arrange the disk
+    prepare_disk(1024); // 2 sectors
+
+    // Arrange the memory and CPU
+    Memory memory(1024, 0, code, sizeof(code));
+    uint8_t data1 = 0x5B;
+    uint8_t data2 = 0x6C;
+    int start = 256;
+    for (int i = start; i < start + 512; i+=2)
+    {
+        memory.set(i, data1);
+        memory.set(i + 1, data2);
+    }
+    Cpu cpu(memory);
+    OSBios bios;
+    bios.setup();
+    bios.registerTrapHandlers(&cpu);
+
+    // Act
+    cpu.reset();
+    cpu.start(0, 256, 128);
+
+    // Assert
+    BOOST_CHECK_EQUAL(512, cpu.d0);
+
+    char sector[512];
+    std::ifstream diskIn("drivea.dsk", std::ios::binary);
+
+    // Validate the first sector is unchanged
+    diskIn.read(sector, sizeof(sector));
+    BiosParameterBlock* pbpb = reinterpret_cast<BiosParameterBlock*>(sector);
+    BOOST_CHECK_EQUAL(pbpb->jump[0], 0);
+    BOOST_CHECK_EQUAL(pbpb->jump[1], 0);
+    BOOST_CHECK_EQUAL(pbpb->jump[2], 0);
+    BOOST_CHECK_EQUAL(pbpb->bytesPerSector, 512);
+    BOOST_CHECK_EQUAL(pbpb->volumeID, 12345678);
+    
+    // validate the second sector is updated with the pattern
+    diskIn.read(sector, sizeof(sector));
+    for (int i = 0; i < 512; i += 2)
+    {
+        uint8_t res1 = sector[i];
+        uint8_t res2 = sector[i + 1];
+        BOOST_CHECK_EQUAL(data1, res1);
+        BOOST_CHECK_EQUAL(data2, res2);
+    }
+    diskIn.close();
+}
+
+BOOST_AUTO_TEST_CASE(sector_write_read)
+{
+    unsigned char code[] = {
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorCount
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorNumber
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) device
+    0x2f,0x3c, 0x00,0x00, 0x01, 0x00,   // move.l #256, -(sp)  buffer
+    0x3f,0x3c, 0x00,0x02,               // move.w #2, -(sp) diskwrite
+    0x4e,0x42,                          // trap   #2
+    0xdf,0xfc, 0x00, 0x00, 0x00, 0x0c,  // add.l  #12, sp
+
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorCount
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) sectorNumber
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) device
+    0x2f,0x3c, 0x00,0x00, 0x03, 0x00,   // move.l #768, -(sp)  buffer
+    0x3f,0x3c, 0x00,0x01,               // move.w #1, -(sp) diskread
+    0x4e,0x42,                          // trap   #2
+    0xdf,0xfc, 0x00, 0x00, 0x00, 0x0c,  // add.l  #12, sp
+
+    0xff,0xff };
+
+    // Arrange the disk
+    prepare_disk(1024); // 2 sectors
+
+    // Arrange the memory and CPU
+    Memory memory(2048, 0, code, sizeof(code));
+    uint8_t data1 = 0x5B;
+    uint8_t data2 = 0x6C;
+    int start = 256;
+    for (int i = start; i < start + 512; i += 2)
+    {
+        data1 = i & 0xFF;
+        memory.set(i, data1);
+        memory.set(i + 1, data2);
+    }
+    Cpu cpu(memory);
+    OSBios bios;
+    bios.setup();
+    bios.registerTrapHandlers(&cpu);
+
+    // Act
+    cpu.reset();
+    cpu.start(0, 256, 128);
+
+    // Assert
+    BOOST_CHECK_EQUAL(512, cpu.d0);
+
+    // Validate the value read back is the same as the one written
+    const Memory& cpuMemory = cpu.mem;
+    for (int i = 0; i < 512; i++)
+    {
+        uint8_t dataWritten = cpuMemory.get<uint8_t>(256 + i);
+        uint8_t dataRead = cpuMemory.get<uint8_t>(768 + i);
+        BOOST_CHECK_EQUAL(dataWritten, dataRead);
+    }
+}
 BOOST_AUTO_TEST_SUITE_END()

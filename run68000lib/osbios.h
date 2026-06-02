@@ -25,6 +25,7 @@ namespace mc68000
     private:
         void trap(Cpu& cpu);
         uint32_t diskRead(void* buffer, uint16_t deviceNumber, uint16_t sectorNumber, uint16_t sectorCount);
+        uint32_t diskWrite(void* buffer, uint16_t deviceNumber, uint16_t sectorNumber, uint16_t sectorCount);
 
         std::string getDiskFileName(uint16_t deviceNumber);
         BiosParameterBlock getBiosParameterBlock(uint16_t deviceNumber);
