@@ -37,38 +37,33 @@ MSG3        DC.B    'press a key to stop',CR,LF
 *
 * ===== Display a zero-ended string pointed to by register A6
 *
-PRMESG      MOVE.B  (A6)+,D0        ;get the char.
-            BEQ     PRMRET          ;if it's zero, we're done
-            BSR     OUTC            ;else display it
+PRMESG      MOVE.B  (A6)+,D0        ; get the char.
+            BEQ     PRMRET          ; if it's zero, we're done
+            BSR     OUTC            ; else display it
             BRA     PRMESG
 PRMRET      RTS
 
 *
 * ===== Output character to the console from register D0
 *
-OUTC    MOVE.L  D1,-(SP)        ; preserve D1
-        MOVE.L  D0,D1           ; D1 contains the character to be displayed
-        MOVEQ   #10, D0         ; putCharacter
-        TRAP    #15             ;
-        MOVE.L  D1,D0           ; restore D0 to its initial value
-        MOVE.L (SP)+, D1        ; restore D1
-        RTS
+OUTC        MOVE.W  D0,-(SP)
+            MOVE.W  #10,-(SP)       ; putCharacter
+            TRAP    #15
+            ADDQ.L  #4,SP
+            RTS
+
 *
 * =====  Input a character from the console into register D0 
 *
-INC     MOVE.L  D1,-(SP)        ; preserve D1
-        MOVEQ   #1,D0           ; getCharacter
-        TRAP    #15             ; 
-        MOVE.L  D1,D0           ;
-        MOVE.L (SP)+, D1        ; restore D1
-        RTS
+INC         MOVE.W  #1,-(SP)        ; getCharacter
+            TRAP    #15
+            ADDQ.L  #2,SP
+            RTS
 *
 * =====  Check for a key press. If available return it in D0 else set Z to 1
 *
-KEYP    MOVE.L  D1,-(SP)
-        MOVEQ   #2,D0
-        TRAP    #15
-        MOVE.L  D1,D0
-        MOVE.L (SP)+,D1
-        TST.B   D0
-        RTS
+KEYP        MOVE.W  #2,-(SP)         ; keyPressed
+            TRAP    #15
+            ADDQ.L  #2,SP
+            TST.B   D0
+            RTS
