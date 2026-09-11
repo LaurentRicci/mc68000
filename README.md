@@ -45,8 +45,8 @@ cmake --build .
 
 To run the assembler unit tests
 ```
-bin/asm68000test -p         (on linux)
-bin\asm68000test.exe -p     (on windows)
+../bin/asm68000test -p         (on linux)
+..\bin\asm68000test.exe -p     (on windows)
 ```
 
 # Validating the overall solution
@@ -56,8 +56,8 @@ The whole approach will be:
 1. Compile the game
 ```
 cd asm/examples
-../../asm68000 -o -s game.68k        (on linux)
-..\..\asm68000.exe -o -s game.68k    (on windows)
+../../bin/asm68000 -o -s game.68k        (on linux)
+..\..\bin\asm68000.exe -o -s game.68k    (on windows)
 ```
 - The -o or --output argument is used to generate the binary.
 - The -s or --symbols argument is used to generate the symbol table to be used while debugging.

@@ -1,48 +1,56 @@
 start:   
-            move.b  #14,d0      ;Display instructions
-            lea     instrMsg,a1
+            pea     instrMsg
+            move.w  #14,-(sp)       ;display instructions
             trap    #15
+            addq.l   #6,sp
 
-            move.b  #8,d0
+            move.w  #8,-(sp)        ;get current time
             trap    #15
-            and.l   #$5FFFFF,d1     ;prevent overflow in divu
-            divu    #100,d1         ;time count / 100
-            swap    d1              ;swap upper and lower words of D1 to put remainder in low word
-             addq.w  #1,d1          ;d1.w contains number from 1 to 100
-            move    d1,d2           ;d2 = d1
+            addq.l  #2,sp
+
+            and.l   #$5FFFFF,d0     ;prevent overflow in divu
+            divu    #100,d0         ;time count / 100
+            swap    d0              ;swap upper and lower words of D0 to put remainder in low word
+            addq.w  #1,d0           ;d0.w contains number from 1 to 100
+            move    d0,d2           ;d2 contains the number to guess (d0 will be overwriten later)
 
 again:
-            move.b  #14,d0          ;Display 'enter guess' prompt
-            lea     enterMsg,a1
+            pea     enterMsg
+            move.w  #14,-(sp)       ;display 'enter guess' prompt
             trap    #15
+            addq.l   #6,sp
 
-            move.b  #4,d0           ;get user guess in D1.L
+            move.w  #4,-(sp)        ;get user guess in D0.L
             trap    #15
+            addq.l  #2,sp
 
-            cmp     #0,d1           ;if exit
+            cmp     #0,d0           ;if exit
             beq     end
 
-            cmp     d2,d1           ;compare the user guess in d1 to the number in d2
+            cmp     d2,d0           ;compare the user guess in d0 to the number in d2
             bhi     tooBig          ;if the guess is too big
             bcs     tooSmall        ;if the guess is too small
 
-            move.b  #14,d0          ;Display 'Good Guess' message
-            lea     goodMsg,a1
+            pea     goodMsg
+            move.w  #14,-(sp)       ;display 'Good Guess' message
             trap    #15
+            addq.l  #6,sp
 
             bra     start           ;goto start
 
 tooBig:
-            move.b  #14,d0          ;Display 'Too Big'
-            lea     bigMsg,a1
+            pea     bigMsg
+            move.w  #14,-(sp)       ;display 'Too Big'
             trap    #15
+            addq.l   #6,sp
 
             bra     again           ;guess again
 
 tooSmall:
-            move.b  #14,d0  ;Display 'Too Small'
-            lea     smallMsg,a1
+            pea     smallMsg
+            move.w  #14,-(sp)       ;display 'Too Small'
             trap    #15
+            addq.l   #6,sp
 
             bra     again           ;guess again
 end:

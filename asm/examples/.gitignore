@@ -2,4 +2,6 @@
 *.S68
 *.X68
 *.symbols
+*.sym
 *.lst
+*.bin

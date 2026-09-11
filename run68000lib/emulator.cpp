@@ -46,6 +46,7 @@ void Emulator::run()
     cpu.reset();
     if (bios == nullptr)
     {
+        fprintf(stderr,"bios not set");
         throw "bios not set";
     }
     bios->setup();
