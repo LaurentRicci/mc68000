@@ -282,7 +282,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				currentAddress += 2;
 			}
 		}
-        listing.setBinary(code().begin() + insertionStart, code().end(), size);
+		listing.setBinary(code().begin() + insertionStart, code().end(), size);
 		return 0;
 		break;
 	case 2: // long
@@ -322,8 +322,8 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				currentAddress += 4;
 			}
 		}
-        listing.setBinary(code().begin() + insertionStart, code().end(), size);
-        return 0;
+		listing.setBinary(code().begin() + insertionStart, code().end(), size);
+		return 0;
 		break;
 	}
 	return dcBytes.size();
@@ -424,11 +424,11 @@ any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 	}
 	else
 	{
-        if (!it->second.defined)
-        {
-            addError("support for external labels not implemented: " + label, ctx->children[0]);
-            //TODO
-        }
+		if (!it->second.defined)
+		{
+			addError("support for external labels not implemented: " + label, ctx->children[0]);
+			//TODO
+		}
 		target = it->second.offset;
 	}
 	return static_cast<int>(target);

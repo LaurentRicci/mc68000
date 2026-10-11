@@ -1411,6 +1411,27 @@ namespace instructionTest
 		auto opcode = parser.parseText("  lea d0, a0\n");
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
 	}
+
+	BOOST_AUTO_TEST_CASE(lea_pic)
+	{
+		// Arrange
+		asmparser parser;
+		parser.setGeneratePIC(true);
+
+		// Act
+		auto opcode = parser.parseText("  lea  target, a2\n nop\ntarget:\n");
+
+		// Assert no errors
+		auto errs = parser.getErrors();
+		BOOST_CHECK_EQUAL(0, errs.get().size());
+
+		// Assert correct code generated
+		const auto code = validate_codeSize(parser, 3);
+		BOOST_CHECK_EQUAL(0x45FA, code[0]);
+		BOOST_CHECK_EQUAL(0x0004, code[1]);
+		BOOST_CHECK_EQUAL(0x4e71, code[2]);
+	}
+
 	// ====================================================================================================
 	// LINK
 	// ====================================================================================================
@@ -1740,6 +1761,27 @@ namespace instructionTest
 		asmparser parser;
 		auto opcode = parser.parseText("  movem.w -(a3), d0-d4/d6/a2\n");
 		BOOST_CHECK_EQUAL(1, parser.getErrors().get().size());
+	}
+
+	BOOST_AUTO_TEST_CASE(movem_fromMemoryLabel)
+	{
+		// Arrange
+		asmparser parser;
+		parser.setGeneratePIC(true);
+
+		// Act
+		auto opcode = parser.parseText("  movem.w  target, d0-d4/d6/a2\n nop\ntarget:\n");
+
+		// Assert no errors
+		auto errs = parser.getErrors();
+		BOOST_CHECK_EQUAL(0, errs.get().size());
+
+		// Assert correct code generated
+		const auto code = validate_codeSize(parser, 4);
+		BOOST_CHECK_EQUAL(0x4cba, code[0]);
+		BOOST_CHECK_EQUAL(0x045f, code[1]);
+		BOOST_CHECK_EQUAL(0x0004, code[2]);
+		BOOST_CHECK_EQUAL(0x4e71, code[3]);
 	}
 	// ====================================================================================================
 	// MOVEP
