@@ -369,6 +369,12 @@ namespace noopcputest
         validateDecode(0b0111'101'0'0000'0110u, instructions::MOVEQ, L"MOVEQ"); // MOVEQ.L #6, D5
     }
 
+    BOOST_AUTO_TEST_CASE(moveusp)
+    {
+        validateDecode(0b0100'1110'0110'0'110u, instructions::MOVEUSP, L"MOVEUSP"); // MOVE A6, USP
+        validateDecode(0b0100'1110'0110'1'001u, instructions::MOVEUSP, L"MOVEUSP"); // MOVE USP, A1
+    }
+
     BOOST_AUTO_TEST_CASE(muls)
     {
         validateDecode(0b1100'101'111'010'011u, instructions::MULS, L"MULS"); // MULS.W D5, (A3)

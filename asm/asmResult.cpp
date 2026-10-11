@@ -47,7 +47,26 @@ bool asmResult::saveSymbols(const char* filename) const
     outputFile << "# Labels" << std::endl;
     for (const auto& [label, address] : labels)
     {
-        outputFile << label << " " << address << std::endl;
+        if (address.defined)
+        {
+            outputFile << label << " " << address.offset << std::endl;
+        }
+    }
+    outputFile << "# Exported Labels" << std::endl;
+    for (const auto& [label, address] : labels)
+    {
+        if (address.exported)
+        {
+            outputFile << label << " " << address.offset << std::endl;
+        }
+    }
+    outputFile << "# Imported Labels" << std::endl;
+    for (const auto& [label, address] : labels)
+    {
+        if (address.imported)
+        {
+            outputFile << label << " " << address.offset << std::endl;
+        }
     }
     // Save symbols
     outputFile << "# Symbols" << std::endl;

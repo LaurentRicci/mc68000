@@ -376,6 +376,16 @@ namespace elfTest
         BOOST_CHECK_EQUAL(0b11111010'00100000, code[1]); // bitmask for d0,d1,d2,d3,d4,d6,a2
     }
 
+    BOOST_AUTO_TEST_CASE(elf_movem_decimal)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("  movem.l #15360,-(%sp)\n"); // 15360 is 0011'1100'0000'0000 which is bitmask for a2,a3,a4,a5
+        validate_hasValue<uint16_t>(0b01001'0'001'1'100'111, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b00000000'00111100, code[1]); // bitmask for a2,a3,a4,a5
+    }
+
     BOOST_AUTO_TEST_CASE(elfmovem_fromMemoryRange)
     {
         asmparser parser;
@@ -398,6 +408,335 @@ namespace elfTest
 
         // Assert
         BOOST_CHECK_EQUAL(0, error);
+    }
+
+    BOOST_AUTO_TEST_CASE(elf_directive_import)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            "   .import  symbol\n";
+        asmparser parser;
+        // Act
+        auto error = parser.checkSyntax(sourceCode);
+        // Assert
+        BOOST_CHECK_EQUAL(0, error);
+    }
+
+    BOOST_AUTO_TEST_CASE(elf_directive_importmultiple)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            "   .import  symbol1, symbol2, symbol3\n";
+        asmparser parser;
+        // Act
+        auto error = parser.checkSyntax(sourceCode);
+        // Assert
+        BOOST_CHECK_EQUAL(0, error);
+    }
+
+    BOOST_AUTO_TEST_CASE(elf_directive_export)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST export directive\n"
+            "   .export  symbol\n";
+        asmparser parser;
+        // Act
+        auto error = parser.checkSyntax(sourceCode);
+        // Assert
+        BOOST_CHECK_EQUAL(0, error);
+    }
+
+    BOOST_AUTO_TEST_CASE(elf_directive_exportmultiple)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST export directive\n"
+            "   .export  symbol1, symbol2, symbol3\n";
+        asmparser parser;
+        // Act
+        auto error = parser.checkSyntax(sourceCode);
+        // Assert
+        BOOST_CHECK_EQUAL(0, error);
+    }
+
+    BOOST_AUTO_TEST_CASE(import_use_bsr)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            " .import  symbol\n"
+            "  bsr     symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x6100, code[0]); // bsr opcode
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+
+    }
+
+    BOOST_AUTO_TEST_CASE(import_use_jsr)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            " .import  symbol\n"
+            "  jsr     symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x4eba, code[0]); // jsr opcode
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(import_use_jmp)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            " .import  symbol\n"
+            "  jmp     symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0100'1110'11'111'010, code[0]); // jmp opcode
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(import_use_lea)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            " .import  symbol\n"
+            "  lea     symbol, a0\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0100'000'111'111'010, code[0]); // lea a0,opcode
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(import_use_bcs)
+    {
+        // Arrange
+        auto sourceCode =
+            "#TEST import directive\n"
+            " .import  symbol\n"
+            "  bcs     symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0110'0101'0000'0000, code[0]); // bcs opcode
+        BOOST_CHECK_EQUAL(0x0000, code[1]);
+    }
+
+    BOOST_AUTO_TEST_CASE(import_defined_after)
+    {
+        // Arrange
+        auto sourceCode =
+            " .import  symbol\n"
+            "symbol nop\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert one error
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(1, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(0, relocations.size());
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 1);
+        BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+    }
+
+    BOOST_AUTO_TEST_CASE(import_defined_before)
+    {
+        // Arrange
+        auto sourceCode =
+            "symbol nop\n"
+            " .import  symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert one error
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(1, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(0, relocations.size());
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 1);
+        BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+    }
+
+    BOOST_AUTO_TEST_CASE(export_defined_before)
+    {
+        // Arrange
+        auto sourceCode =
+            "symbol nop\n"
+            " .export  symbol\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        auto it = relocations.begin();
+        BOOST_CHECK_EQUAL("symbol", it->symbol);
+
+        // Assert coorect label defined
+        auto labels = parser.getLabels();
+        BOOST_CHECK_EQUAL(1, labels.size());
+        auto label = labels.find("symbol")->second;
+        BOOST_CHECK_EQUAL(false, label.imported);
+        BOOST_CHECK_EQUAL(true, label.defined);
+        BOOST_CHECK_EQUAL(true, label.exported);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 1);
+        BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+    }
+
+    BOOST_AUTO_TEST_CASE(export_defined_after)
+    {
+        // Arrange
+        auto sourceCode =
+            " .export  symbol\n"
+            "symbol nop\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        auto it = relocations.begin();
+        BOOST_CHECK_EQUAL("symbol", it->symbol);
+
+        // Assert coorect label defined
+        auto labels = parser.getLabels();
+        BOOST_CHECK_EQUAL(1, labels.size());
+        auto label = labels.find("symbol")->second;
+        BOOST_CHECK_EQUAL(false, label.imported);
+        BOOST_CHECK_EQUAL(true, label.defined);
+        BOOST_CHECK_EQUAL(true, label.exported);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 1);
+        BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+    }
+
+    BOOST_AUTO_TEST_CASE(export_not_defined)
+    {
+        // Arrange
+        auto sourceCode =
+            " .export  symbol\n"
+            " nop\n";
+
+        asmparser parser;
+        // Act
+        std::any result = parser.parseText(sourceCode);
+        // Assert one error
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(1, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        auto it = relocations.begin();
+        BOOST_CHECK_EQUAL("symbol", it->symbol);
+
+        // Assert label not defined
+        auto labels = parser.getLabels();
+        BOOST_CHECK_EQUAL(0, labels.size());
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 1);
+        BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
     }
 
     BOOST_AUTO_TEST_SUITE_END()

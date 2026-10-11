@@ -216,10 +216,10 @@ namespace parserTest
         for (auto it = result.labels.begin(); it != result.labels.end(); it++)
         {
             const std::string& label = it->first;
-            uint32_t address = it->second;
+            uint32_t address = it->second.offset;
 
             BOOST_CHECK(loadedCode.labels.find(label) != loadedCode.labels.end());
-            BOOST_CHECK_EQUAL(address, loadedCode.labels[label]);
+            BOOST_CHECK_EQUAL(address, loadedCode.labels[label].offset);
         }
     }
 

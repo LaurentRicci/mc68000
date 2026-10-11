@@ -400,7 +400,7 @@ namespace directiveTest
         auto& labels = parser.getLabels();
         BOOST_CHECK_EQUAL(1, labels.size());
 
-        auto buffer = std::any_cast<uint32_t>(labels.find("BUFFER")->second);
+        auto buffer = std::any_cast<uint32_t>(labels.find("BUFFER")->second.offset);
         auto bufpos = std::any_cast<int32_t>(symbols.find("BUFPOS")->second);
 
         BOOST_CHECK_EQUAL(2, buffer);

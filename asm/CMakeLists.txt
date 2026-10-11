@@ -98,6 +98,9 @@ add_library(asm68000lib
     listingGenerator.h
     listingGenerator.cpp
     errorListener.h
+    labelInfo.h
+    relocation.h
+    addressResult.h
     ${ANTLR_lexer_CXX_OUTPUTS}
     ${ANTLR_parser_CXX_OUTPUTS}
 )
@@ -110,6 +113,11 @@ target_include_directories(asm68000lib PRIVATE
 )
 
 target_compile_features(asm68000lib PRIVATE cxx_std_20)
+if (WIN32)
+    # Enable profiling and debugging information for MSVC
+    target_compile_options(asm68000lib PRIVATE /Zi)
+    target_link_options(asm68000lib PRIVATE /PROFILE)
+endif()
 
 # if you want to copy them to a different location and haven't specified
 # CMAKE_LIBRARY_OUTPUT_DIRECTORY

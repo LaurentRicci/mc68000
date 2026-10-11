@@ -5,6 +5,7 @@ add_library (run68000lib
 	"simplebios.cpp" "simplebios.h"
 	"ataribios.cpp" "atarixbios.cpp" "atarigemdos.cpp" "ataribios.h"
 	"osbios.cpp" "osbios.h" "biosparameterblock.h" "biosparameterblock.cpp"
+	"asm/file.c"
 	"ibios.h" "trapargs.h"
 	)
 target_include_directories(run68000lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -8,23 +8,23 @@ namespace mc68000
     public:
         void setup() override;
         void registerTrapHandlers(Cpu* cpu) override;
-        void handle(Cpu& cpu, uint16_t vector) override
+        bool handle(Cpu& cpu, uint16_t vector) override
         {
             switch (vector)
             {
             case 0:
-                trap0(cpu);
+                return trap0(cpu);
                 break;
             case 15:
-                trap15(cpu);
+                return trap15(cpu);
                 break;
             default:
                 throw "SimpleBios: unhandled trap vector";
             }
         }
     private:
-        static void trap15(Cpu&);
-        static void trap0(Cpu&);
+        static bool trap15(Cpu&);
+        static bool trap0(Cpu&);
 
         static int32_t getCharacter();
         static int32_t keyPressed();

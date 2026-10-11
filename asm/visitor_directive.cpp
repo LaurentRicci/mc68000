@@ -5,13 +5,13 @@ using namespace mc68000;
 
 any visitor::visitLine_directiveSection(parser68000::Line_directiveSectionContext* ctx)
 {
-    listing.startLine();
+	listing.startLine();
 
 	size = 1;
 	labelCtx = ctx->labelSection();
 	any result = visit(ctx->directiveSection());
 
-    listing.endLine();
+	listing.endLine();
 
 	return result;
 }
@@ -55,12 +55,13 @@ any visitor::visitDc(parser68000::DcContext* ctx)
 	}
 	return code().back();
 }
+
 any visitor::visitDirectiveSection(parser68000::DirectiveSectionContext* ctx)
 {
-    listing.setAddress(currentAddress);
-    listing.setInstruction(listing.sourceText(ctx));
+	listing.setAddress(currentAddress);
+	listing.setInstruction(listing.sourceText(ctx));
 
-    return parser68000BaseVisitor::visitDirectiveSection(ctx);
+	return parser68000BaseVisitor::visitDirectiveSection(ctx);
 }
 
 any visitor::visitEqu(parser68000::EquContext* ctx)
@@ -68,31 +69,31 @@ any visitor::visitEqu(parser68000::EquContext* ctx)
 	if (labelCtx->value.empty())
 	{
 		addError("Missing label in EQU directive", ctx);
-        return any();
+		return any();
 	}
-    listing.setLabel(labelCtx->value);
+	listing.setLabel(labelCtx->value);
 	any value = visit(ctx->expression());
 	if (pass == 0)
 	{
 		if (labels.find(labelCtx->value) != labels.end())
 		{
 			addPass0Error("Symbol name conflicts with label: " + labelCtx->value, ctx);
-            return any();
-        }
+			return any();
+		}
 		if (symbols.find(labelCtx->value) != symbols.end())
 		{
-            addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
-            return any();
-        }
+			addPass0Error("Duplicate symbol: " + labelCtx->value, ctx);
+			return any();
+		}
 	}
-    symbols[labelCtx->value] = value;
-    if (value.type() == typeid(int))
-    {
-        uint32_t val = any_cast<int>(value);
-        uint16_t opcode = val >> 16;
-        vector<uint16_t> extensions{ uint16_t(val & 0xffff) };
-        listing.setBinary(opcode, extensions);
-    }
+	symbols[labelCtx->value] = value;
+	if (value.type() == typeid(int))
+	{
+		uint32_t val = any_cast<int>(value);
+		uint16_t opcode = val >> 16;
+		vector<uint16_t> extensions{ uint16_t(val & 0xffff) };
+		listing.setBinary(opcode, extensions);
+	}
 
 	return any();
 }
@@ -102,7 +103,13 @@ any visitor::visitDs(parser68000::DsContext* ctx)
 	{
 		size = any_cast<uint16_t>(visit(ctx->size()));
 	}
-	uint32_t count = getAddressValue(ctx->address());
+	AddressResult addressResult = getAddressValue(ctx->address());
+	uint32_t count = addressResult.value;
+	if (!addressResult.isResolved)
+	{
+		addError("Invalid external address in DS directive: " + addressResult.relocation.symbol, ctx->address());
+		count = 1; // default to 1 to avoid further errors
+	}
 	if (count <= 0)
 	{
 		addError("Storage size should be a positive integer:" + to_string(count), ctx->address());
@@ -166,49 +173,49 @@ any visitor::visitOrg(parser68000::OrgContext* ctx)
 			codeBlock newBlock(address);
 			codeBlocks.push_back(newBlock);
 		}
-    	return any();
+		return any();
 	}
-    if (memoryStart != 0 || memoryEnd != 0)
-    {
-        // Validate that the origin is within the addressable memory
-        if (address < memoryStart || address > memoryEnd)
-        {
-            addError("ORG " + to_string(address) + " should be inside addressable space: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
-        }
-    }
-    return any();
+	if (memoryStart != 0 || memoryEnd != 0)
+	{
+		// Validate that the origin is within the addressable memory
+		if (address < memoryStart || address > memoryEnd)
+		{
+			addError("ORG " + to_string(address) + " should be inside addressable space: " + to_string(memoryStart) + " - " + to_string(memoryEnd), ctx);
+		}
+	}
+	return any();
 }
 /// <summary>
 /// MEMORY blockAddress COMMA blockAddress
 /// </summary>
 any visitor::visitMemory(parser68000::MemoryContext* ctx)
 {
-    uint32_t memStart = getAddressValue(ctx->blockAddress(0));
-    uint32_t memEnd = getAddressValue(ctx->blockAddress(1));
+	uint32_t memStart = getAddressValue(ctx->blockAddress(0));
+	uint32_t memEnd = getAddressValue(ctx->blockAddress(1));
 
-    if (pass != 0)
-    {
-        return any();
-    }
-    if (memEnd <= memStart)
-    {
-        addPass0Error("Invalid MEMORY range: " + to_string(memStart) + " - " + to_string(memEnd), ctx);
-        return any();
-    }
-    if (memoryStart != 0 || memoryEnd != 0)
-    {
-        addPass0Error("Multiple MEMORY directives are not allowed", ctx);
-        return any();
-    }
-    memoryStart = memStart;
-    memoryEnd = memEnd;
+	if (pass != 0)
+	{
+		return any();
+	}
+	if (memEnd <= memStart)
+	{
+		addPass0Error("Invalid MEMORY range: " + to_string(memStart) + " - " + to_string(memEnd), ctx);
+		return any();
+	}
+	if (memoryStart != 0 || memoryEnd != 0)
+	{
+		addPass0Error("Multiple MEMORY directives are not allowed", ctx);
+		return any();
+	}
+	memoryStart = memStart;
+	memoryEnd = memEnd;
 
-    return any();
+	return any();
 }
 
 any visitor::visitDataList(parser68000::DataListContext* ctx)
 {
-    size_t insertionStart = code().size(); // the index where the data will be inserted
+	size_t insertionStart = code().size(); // the index where the data will be inserted
 	size_t n = ctx->children.size();
 	switch (size)
 	{
@@ -236,7 +243,7 @@ any visitor::visitDataList(parser68000::DataListContext* ctx)
 				dcBytes.push_back(byte);
 			}
 		}
-        listing.setBinary(dcBytes.begin(), dcBytes.end());
+		listing.setBinary(dcBytes.begin(), dcBytes.end());
 		return dcBytes.size();
 		break;
 	case 1: // word
@@ -417,7 +424,12 @@ any visitor::visitDleIdentifier(parser68000::DleIdentifierContext* ctx)
 	}
 	else
 	{
-		target = it->second;
+        if (!it->second.defined)
+        {
+            addError("support for external labels not implemented: " + label, ctx->children[0]);
+            //TODO
+        }
+		target = it->second.offset;
 	}
 	return static_cast<int>(target);
 }

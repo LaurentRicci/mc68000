@@ -39,7 +39,7 @@ bool asmparser::parseFile(const char *filename, bool showTree)
 		auto s = tree->toStringTree(&parser);
 		std::cout << "Parse Tree: " << s << std::endl;
 	}
-	visitor v(result, listingFile);
+	visitor v(result, filename, listingFile, generatePIC);
     auto res = v.generateCode(tree);
 
     bool finalResult = true;
@@ -94,7 +94,7 @@ std::any asmparser::parseText(const char* text)
     auto errors = lexerErrorCount + parserErrorCount;
 	if (errors == 0)
 	{
-		visitor v(result, nullptr);
+        visitor v(result, "", listingFile, generatePIC);
 		auto result = v.generateCode(tree);
 		return result;
 	}

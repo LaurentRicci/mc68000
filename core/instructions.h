@@ -77,6 +77,7 @@ namespace mc68000
         static const unsigned short MOVEM = 67;
         static const unsigned short MOVEP = 68;
         static const unsigned short MOVEQ = 69;
+        static const unsigned short MOVEUSP = 104;
         static const unsigned short MULS = 70;
         static const unsigned short MULU = 71;
         static const unsigned short NBCD = 72;
@@ -188,6 +189,7 @@ namespace mc68000
             names[MOVEM] = L"MOVEM";
             names[MOVEP] = L"MOVEP";
             names[MOVEQ] = L"MOVEQ";
+            names[MOVEUSP] = L"MOVEUSP";
             names[MULS] = L"MULS";
             names[MULU] = L"MULU";
             names[NBCD] = L"NBCD";

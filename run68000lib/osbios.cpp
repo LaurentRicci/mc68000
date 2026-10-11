@@ -1,6 +1,15 @@
 #include "osbios.h"
 #include "trapargs.h"
+
+extern "C" uint16_t find_file_in_root(const char* filename);
+extern "C" void read_sector(uint32_t lba, uint8_t* buffer)
+{
+    mc68000::OSBios bios;
+    bios.diskRead(buffer, 1, lba, 1);
+}
 using namespace mc68000;
+
+std::unordered_map<std::string, std::string> OSBios::settings;
 
 void OSBios::setup()
 {
@@ -13,7 +22,7 @@ void OSBios::registerTrapHandlers(Cpu* cpu)
     cpu->registerTrapHandler(2, this);
 }
 
-void OSBios::trap(Cpu& cpu)
+bool OSBios::trap(Cpu& cpu)
 {
     // placeholder: just return a fixed value for testing
     cpu.setDRegister(0, 0x12ab34cd);
@@ -54,7 +63,18 @@ void OSBios::trap(Cpu& cpu)
             cpu.setDRegister(0, ret);
             break;
         }
+        case 3:
+        {
+            uint32_t result = find_file_in_root("TEST.TXT");
+            cpu.setDRegister(0, result);
+            break;
+        }
+        default:
+        {
+            return false;
+        }
     }
+    return true;
 }
 
 uint32_t OSBios::diskRead(void* buffer, uint16_t deviceNumber, uint16_t sectorNumber, uint16_t sectorCount)
@@ -73,9 +93,21 @@ uint32_t OSBios::diskRead(void* buffer, uint16_t deviceNumber, uint16_t sectorNu
         {
             return 0;
         }
-
+        f.seekg(0, std::ios::end);
+        std::streamsize fileSize = f.tellg();
+        if (offset + bytesToRead > fileSize)
+        {
+            std::cerr << "diskRead error: attempt to read beyond end of disk file " << deviceFile << std::endl;
+            std::cerr << "diskRead error: fileSize = " << fileSize << ", offset = " << offset << ", bytesToRead = " << bytesToRead << std::endl;
+            return 0;
+        }
         f.seekg(offset);
         f.read(reinterpret_cast<char*>(buffer), bytesToRead);
+        if (f.gcount() != bytesToRead)
+        {
+            std::cerr << "diskRead error: failed to read expected number of bytes from disk file " << deviceFile << std::endl;
+            return 0;
+        }
         return bytesToRead;
     }
     catch (const std::exception& ex)
@@ -153,6 +185,5 @@ BiosParameterBlock OSBios::getBiosParameterBlock(uint16_t deviceNumber)
         std::cerr << "getBiosParameterBlock error: failed to read BPB from disk file " << deviceFile << std::endl;
         throw std::string("failed to read bpb");
     }
-
     return bpb;
 }

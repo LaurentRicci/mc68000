@@ -751,7 +751,25 @@ namespace mc68000
 		return instructions::MOVEQ;
 	}
 
-	uint16_t DisAsm::muls(uint16_t opcode)
+    uint16_t DisAsm::moveusp(uint16_t opcode)
+    {
+        disassembly = "move ";
+        uint16_t reg = opcode & 0b111;
+        if (opcode & 0b1000)
+        {
+            disassembly += "usp,";
+            disassembly += dregisters[reg];
+        }
+        else
+        {
+            disassembly += dregisters[reg];
+            disassembly += ",usp";
+        }
+
+        return instructions::MOVEUSP;
+    }
+
+    uint16_t DisAsm::muls(uint16_t opcode)
 	{
 		return disassembleMulDiv("muls ", instructions::MULS, opcode);
 	}

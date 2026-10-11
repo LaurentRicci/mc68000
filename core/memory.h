@@ -174,6 +174,16 @@ namespace mc68000
 		{
 		}
 
+        void set(uint32_t address, const uint8_t* data, uint32_t dataSize)
+        {
+            verifyAddress(address, dataSize);
+            uint8_t* p8 = rawMemory + (address - baseAddress);
+            for (uint32_t i = 0; i < dataSize; i++)
+            {
+                *p8++ = *data++;
+            }
+        }
+
 		uint16_t getWord(uint32_t address)
 		{
 			uint8_t* p8 = rawMemory + (address - baseAddress);

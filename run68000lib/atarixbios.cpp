@@ -3,7 +3,7 @@
 
 using namespace mc68000;
 
-void AtariBios::xbios(Cpu& cpu)
+bool AtariBios::xbios(Cpu& cpu)
 {
     // see also https://freemint.github.io/tos.hyp/en/xbios_about.html
     enum XBios {
@@ -381,6 +381,7 @@ void AtariBios::xbios(Cpu& cpu)
         cpu.setDRegister(0, 0);
         break;
     }
+    return true;
 }
 // XBIOS methods
 void AtariBios::initmous(uint16_t mode, uint32_t param, uint32_t vector)

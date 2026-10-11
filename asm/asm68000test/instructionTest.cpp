@@ -1074,7 +1074,32 @@ namespace instructionTest
 		BOOST_CHECK_EQUAL(0x54c8, code[1]);
 		BOOST_CHECK_EQUAL(0xfffe, code[2]);
 	}
-	// ====================================================================================================
+
+    BOOST_AUTO_TEST_CASE(dbcc_imported_label)
+    {
+        // Arrange
+        asmparser parser;
+        parser.setGeneratePIC(true);
+
+        // Act
+        auto opcode = parser.parseText(" .import label\n dbcc d0,label\n");
+
+        // Assert no errors
+        auto errs = parser.getErrors();
+        BOOST_CHECK_EQUAL(0, errs.get().size());
+
+        // Assert correct relocation
+        auto relocations = parser.getRelocations();
+        BOOST_CHECK_EQUAL(1, relocations.size());
+        BOOST_CHECK_EQUAL("label", relocations[0].symbol);
+        BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+        // Assert correct code generated
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0b0101'0100'1100'1'000, code[0]);
+        BOOST_CHECK_EQUAL(0, code[1]);
+    }
+    // ====================================================================================================
 	// DIVS
 	// ====================================================================================================
 	BOOST_AUTO_TEST_CASE(divs_ok)
@@ -1320,7 +1345,44 @@ namespace instructionTest
 		BOOST_CHECK_EQUAL(0x0012, code[1]);
 		BOOST_CHECK_EQUAL(0x3456, code[2]);
 	}
-	BOOST_AUTO_TEST_CASE(jsr_failed)
+    BOOST_AUTO_TEST_CASE(jsr_labelText)
+    {
+        asmparser parser;
+        parser.setGeneratePIC(false);
+        auto opcode = parser.parseText("  jsr here\nhere:\n");
+        // The generated code should be using absolute addressing mode
+        validate_hasValue<uint16_t>(0b0100'1110'10'111'000, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x4, code[1]);
+    }
+    BOOST_AUTO_TEST_CASE(jsr_labelText_pic)
+    {
+        asmparser parser;
+        parser.setGeneratePIC(true);
+        auto opcode = parser.parseText("  jsr here\nhere:\n");
+        // The generated code should be using 2(PC) addressing mode
+        validate_hasValue<uint16_t>(0b0100'1110'10'111'010, opcode);
+
+        const auto& code = validate_codeSize(parser, 2);
+        BOOST_CHECK_EQUAL(0x2, code[1]);
+    }
+    BOOST_AUTO_TEST_CASE(jsr_labelFArAway)
+    {
+        asmparser parser;
+        auto opcode = parser.parseText("far EQU $12000\n  jsr far\n");
+        // Since generated code should be using absolute addressing mode this is fine
+        BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+    }
+    BOOST_AUTO_TEST_CASE(jsr_labelFArAway_pic)
+    {
+        asmparser parser;
+        parser.setGeneratePIC(true);
+        auto opcode = parser.parseText("far EQU $12000\n  jsr far\n");
+        // Position Independent Code only applies if a label is used
+        BOOST_CHECK_EQUAL(0, parser.getErrors().get().size());
+    }
+    BOOST_AUTO_TEST_CASE(jsr_failed)
 	{
 		asmparser parser;
 		auto opcode = parser.parseText("  jsr d3\n");

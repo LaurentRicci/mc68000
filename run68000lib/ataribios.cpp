@@ -26,7 +26,7 @@ void AtariBios::registerTrapHandlers(Cpu* cpu)
     cpu->registerTrapHandler(14, this);
 }
 
-void AtariBios::bios(Cpu& cpu)
+bool AtariBios::bios(Cpu& cpu)
 {
     // see also https://freemint.github.io/tos.hyp/en/About_the_BIOS.html
     enum Bios {
@@ -162,6 +162,7 @@ void AtariBios::bios(Cpu& cpu)
             }
             break;
     }
+    return true;
 }
 
 

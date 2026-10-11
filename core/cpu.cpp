@@ -1510,7 +1510,32 @@ namespace mc68000
 
 		return instructions::MOVEQ;
 	}
-	
+    ///<summary>
+    /// MOVEUSP:
+    /// </summary>
+    uint16_t Cpu::moveusp(uint16_t opcode)
+    {
+        if (sr.s)
+        {
+            bool fromUsp = opcode & 0b1000;
+            uint16_t reg = opcode & 0b0111;
+            if (fromUsp)
+            {
+                aRegisters[reg] = usp;
+            }
+            else
+            {
+                usp = aRegisters[reg];
+            }
+        }
+        else
+        {
+            handleException(Exceptions::PRIVILEGE_VIOLATION);
+        }
+
+        return instructions::MOVEUSP;
+    }
+
 	/// <summary>
 	/// MULS: Signed multiply
 	/// </summary>
@@ -1918,8 +1943,8 @@ namespace mc68000
 	{
 		if (sr.s)
 		{
-			statusRegister = readAt<uint16_t>(0b011'111, false);
-			pc = readAt<uint32_t>(0b011'111, false);
+            statusRegister = readAt<uint16_t>(0b011'111, false);
+            pc = readAt<uint32_t>(0b011'111, false);
 		}
 		else
 		{

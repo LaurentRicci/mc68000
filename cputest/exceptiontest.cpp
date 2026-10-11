@@ -51,28 +51,27 @@ BOOST_AUTO_TEST_CASE(illegal)
 void validateRte(bool supervisorMode)
 {
 	unsigned char code[] = {
-	0x00, 0x00, 0x00, 0x00,             // reset - SSP
-	0x00, 0x00, 0x00, 0x00,             // reset - PC
-	0x00, 0x00, 0x00, 0x00,             // Bus error
-	0x00, 0x00, 0x00, 0x00,             // Address error
-	0x00, 0x00, 0x00, 0x00,             // Illegal Instruction
-	0x00, 0x00, 0x00, 0x00,             // Integer Divide by Zero
-	0x00, 0x00, 0x00, 0x00,             // CHK Instruction
-	0x00, 0x00, 0x00, 0x00,             // TRAPV Instruction
-	0x00, 0x00, 0x00, 0x32,             // Privilege Violation
+	0x00, 0x00, 0x00, 0x00,             // 0  reset - SSP
+	0x00, 0x00, 0x00, 0x00,             // 4  reset - PC
+	0x00, 0x00, 0x00, 0x00,             // 8  Bus error
+	0x00, 0x00, 0x00, 0x00,             // 12 Address error
+	0x00, 0x00, 0x00, 0x00,             // 16 Illegal Instruction
+	0x00, 0x00, 0x00, 0x00,             // 20 Integer Divide by Zero
+	0x00, 0x00, 0x00, 0x00,             // 24 CHK Instruction
+	0x00, 0x00, 0x00, 0x00,             // 28 TRAPV Instruction
+	0x00, 0x00, 0x00, 0x32,             // 32 Privilege Violation
 
-	0x70, 0x2a,                         // moveq.l #42, d0
-	0x48, 0x7a, 0x00, 0x06,             // pea next(pc)
-	0x42, 0x67,                         // clr.w -(a7)
-	0x4e, 0x73,                         // rte
+	0x70, 0x2a,                         // 36 moveq.l #42, d0
+	0x48, 0x7a, 0x00, 0x06,             // 38 pea next(pc)
+	0x42, 0x67,                         // 42 clr.w -(a7)
+	0x4e, 0x73,                         // 44 rte
 	                                    // next:
-	0x70, 0x15,                         // moveq.l #21, d0 
-	0x4e, 0x40,                         // trap #0 
+	0x70, 0x15,                         // 46 moveq.l #21, d0 
+	0x4e, 0x40,                         // 48 trap #0 
 
 	                                    // VIOLATION:
-	0x70, 0x08,                         // moveq.l #8, d0 
-	0x4e, 0x40,                         // trap #0 
-
+	0x70, 0x08,                         // 50 moveq.l #8, d0 
+	0x4e, 0x40,                         // 52 trap #0 
 	0xff, 0xff, 0xff, 0xff              // 
 	                                    // ds.l 16
 	                                    // STACK:
@@ -85,7 +84,7 @@ void validateRte(bool supervisorMode)
 	// Act
 	cpu.reset();
 	cpu.setSupervisorMode(supervisorMode);
-	cpu.start(0x24, 0x74, 0x74);
+	cpu.start(36, 0x74, 0x74);
 
 	// Assert
 	if (supervisorMode)

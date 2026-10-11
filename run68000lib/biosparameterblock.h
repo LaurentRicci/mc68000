@@ -4,6 +4,7 @@
 
 namespace mc68000
 {
+    #pragma pack(push, 1) // Ensure no padding is added by the compiler
     struct BiosParameterBlock
     {
         uint8_t  jump[3];              // 0x00: Jump instruction
@@ -32,6 +33,32 @@ namespace mc68000
         BiosParameterBlock(bool isHighDensity);
         BiosParameterBlock(const BiosParameterBlock& other) = default;
 
-    };
+        uint16_t swap(uint16_t value) const
+        {
+            return (value >> 8) | (value << 8);
+        }
 
+        uint32_t swap(uint32_t value) const
+        {
+            return ((value >> 24) & 0x000000FF) |
+                   ((value >> 8) & 0x0000FF00) |
+                   ((value << 8) & 0x00FF0000) |
+                   ((value << 24) & 0xFF000000);
+        }
+
+        void convert()
+        {
+            bytesPerSector = swap(bytesPerSector);
+            reservedSectors = swap(reservedSectors);
+            rootEntryCount = swap(rootEntryCount);
+            totalSectors16 = swap(totalSectors16);
+            sectorsPerFAT = swap(sectorsPerFAT);
+            sectorsPerTrack = swap(sectorsPerTrack);
+            numHeads = swap(numHeads);
+            hiddenSectors = swap(hiddenSectors);
+            totalSectors32 = swap(totalSectors32);
+            volumeID = swap(volumeID);
+        }
+    };
+    #pragma pack(pop)
 }

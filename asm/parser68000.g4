@@ -529,6 +529,7 @@ address returns [std::any value]
     : number     { $value = $number.value; }
     | ID2        { $value = $ID2.text; }
     | STAR	     { $value = '*'; }
+    | LOCLBL2    { $value = $LOCLBL2.text; }
     ;
     
 addressingMode
@@ -658,35 +659,37 @@ blockAddress returns [std::any value]
 elfLine : ELFDIRECTIVE elfDirective ;
 
 elfDirective
-    : FILE STRING3
-    | TEXT
-    | ALIGN number3
-    | P2ALIGN number3
-    | EVEN
-    | GLOBL ID3
-    | LOCAL ID3
-    | TYPE ID3 COMMA3 type
-    | IDENT STRING3
-    | SIZE ID3 COMMA3 expression3
-    | LINE number3
-    | LOC number3*
-    | SECTION3 ID3 (COMMA3 STRING3 (COMMA3 AT3 ID3)?)?
-    | BYTE number3
-    | WORD number3
-    | SHORT number3
-    | LONG number3
-    | ASCII STRING3
-    | ASCIZ STRING3
-    | COMM ID3 (COMMA3 number3)*
-    | LCOMM ID3 (COMMA3 number3)*
-    | CFI_STARTPROC
-    | CFI_ENDPROC
+    : FILE STRING3      #elfIgnore
+    | TEXT  #elfIgnore
+    | ALIGN number3  #elfIgnore
+    | P2ALIGN number3  #elfIgnore
+    | EVEN  #elfIgnore
+    | GLOBL ID3  #elfIgnore
+    | LOCAL ID3  #elfIgnore
+    | TYPE ID3 COMMA3 type  #elfIgnore
+    | IDENT STRING3  #elfIgnore
+    | SIZE ID3 COMMA3 expression3  #elfIgnore
+    | LINE number3  #elfIgnore
+    | LOC number3*  #elfIgnore
+    | SECTION3 ID3 (COMMA3 STRING3 (COMMA3 AT3 ID3)?)?  #elfIgnore
+    | BYTE number3  #elfIgnore
+    | WORD number3  #elfIgnore
+    | SHORT number3  #elfIgnore
+    | LONG number3  #elfIgnore
+    | ASCII STRING3  #elfIgnore
+    | ASCIZ STRING3  #elfIgnore
+    | COMM ID3 (COMMA3 number3)*  #elfIgnore
+    | LCOMM ID3 (COMMA3 number3)*  #elfIgnore
+    | CFI_STARTPROC  #elfIgnore
+    | CFI_ENDPROC  #elfIgnore
+    | EXPORT ID3 (COMMA3 ID3)*      #elfExport
+    | IMPORT ID3 (COMMA3 ID3)*      #elfImport
     ;
 
 number3
     : DECIMAL3 
     | HEXADECIMAL3
-    | ID3
+    | ID3   
     ;
 type
     : FUNCTION

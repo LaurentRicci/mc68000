@@ -203,6 +203,7 @@ USP options { caseInsensitive=true; } : 'usp' ;
 // Identifiers
 //
 ID2  : [a-zA-Z_] [a-zA-Z0-9_]* ;
+LOCLBL2 : '.L'[a-zA-Z0-9_]+ ;
 
 //
 // Strings
@@ -259,8 +260,10 @@ COMM     options { caseInsensitive=true;  } : 'comm';
 LCOMM    options { caseInsensitive=true;  } : 'lcomm';
 CFI_STARTPROC options { caseInsensitive=true;  } : 'cfi_startproc' ;
 CFI_ENDPROC   options { caseInsensitive=true;  } : 'cfi_endproc' ;
+EXPORT  options { caseInsensitive=true;  } : 'export';
+IMPORT  options { caseInsensitive=true;  } : 'import';
 
-ID3     : [a-zA-Z.][a-zA-Z0-9._-]* ;
+ID3     : [a-zA-Z._][a-zA-Z0-9._-]* ;
 DECIMAL3 : '-'? [0-9]+             ;
 HEXADECIMAL3 : ('$' | '0x') [0-9a-fA-F]+ ;
 STRING3 : '"' ( ~["\r\n] )* '"'   ;

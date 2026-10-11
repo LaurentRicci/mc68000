@@ -9,18 +9,18 @@ namespace mc68000
     public:
         void setup() override;
         void registerTrapHandlers(Cpu* cpu) override;
-        void handle(Cpu& cpu, uint16_t vector) override
+        bool handle(Cpu& cpu, uint16_t vector) override
         {
             switch (vector)
             {
             case 1:
-                bios(cpu);
+                return bios(cpu);
                 break;
             case 13:
-                xbios(cpu);
+                return xbios(cpu);
                 break;
             case 14:
-                gemdos(cpu);
+                return gemdos(cpu);
                 break;
             default:
                 throw "AtariBios: unhandled trap vector";
@@ -29,9 +29,9 @@ namespace mc68000
     private:
         std::unordered_map<std::string, std::string> settings;
     private:
-        static void bios(Cpu& cpu);
-        static void xbios(Cpu& cpu);
-        static void gemdos(Cpu& cpu);
+        static bool bios(Cpu& cpu);
+        static bool xbios(Cpu& cpu);
+        static bool gemdos(Cpu& cpu);
 
         // BIOS methods
         static void getmpb(uint32_t buffer);

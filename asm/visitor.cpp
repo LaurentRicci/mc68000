@@ -77,7 +77,18 @@ any visitor::visitLabelSection(parser68000::LabelSectionContext* ctx)
 		}
 		else
 		{
-			addPass0Error("Duplicate label: " + ctx->value, ctx);
+            auto it = labels.find(ctx->value);
+            auto info = it->second;
+
+            if (info.imported)
+            {
+                addPass0Error("The label " + ctx->value + "is already declared imported", ctx);
+
+            }
+            else
+            {
+                addPass0Error("Duplicate label: " + ctx->value, ctx);
+            }
 		}
 	}
     listing.setLabel(ctx->value);
@@ -521,39 +532,61 @@ any visitor::visitBcc(parser68000::BccContext* ctx)
 {
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 
-	uint32_t target = getAddressValue(ctx->address());
-	any address = visit(ctx->children[1]);
+	AddressResult target = getAddressValue(ctx->address());
+    if (target.isResolved)
+    {
+        any address = visit(ctx->children[1]);
 
-	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
-	if (offset > 0x7fff || offset < -0x8000)
-	{
-		addError("Address doesn't fit on in one word: " + std::to_string(offset), ctx->children[1]);
-		offset = 0x100; // to force 2 words for the instruction 
-	}
-	uint16_t opcode = 0;
+        int32_t offset = target.value - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
+        if (offset > 0x7fff || offset < -0x8000)
+        {
+            addError("Address doesn't fit on in one word: " + std::to_string(offset), ctx->children[1]);
+            offset = 0x100; // to force 2 words for the instruction 
+        }
+        uint16_t opcode = 0;
 
-	if (address.type() == typeid(string)) // label
-	{
-		// During the 1st pass we don't know the actual offset yet so we have to reserve two words for the instruction
-		uint16_t offset16 = (uint16_t)(offset & 0xffff);
-		opcode = 0b0110'0000'0000'0000 | (condition << 8);
-		extensionsList.push_back(offset16); // Add the offset as an extension
-	}
-	else
-	{
-		if (offset >= -128 && offset <= 127) // offset fits in one byte
-		{
-			uint16_t offset8 = (uint16_t)(offset & 0xff);
-			opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
-		}
-		else
-		{
-			uint16_t offset16 = (uint16_t)(offset & 0xffff);
-			opcode = 0b0110'0000'0000'0000 | (condition << 8);
-			extensionsList.push_back(offset16); // Add the offset as an extension
-		}
-	}
-	return finalize_instruction(opcode);
+        if (address.type() == typeid(string)) // label
+        {
+            // During the 1st pass we don't know the actual offset yet so we have to reserve two words for the instruction
+            uint16_t offset16 = (uint16_t)(offset & 0xffff);
+            opcode = 0b0110'0000'0000'0000 | (condition << 8);
+            extensionsList.push_back(offset16); // Add the offset as an extension
+        }
+        else
+        {
+            if (offset >= -128 && offset <= 127) // offset fits in one byte
+            {
+                uint16_t offset8 = (uint16_t)(offset & 0xff);
+                opcode = 0b0110'0000'0000'0000 | (condition << 8) | offset8;
+            }
+            else
+            {
+                uint16_t offset16 = (uint16_t)(offset & 0xffff);
+                opcode = 0b0110'0000'0000'0000 | (condition << 8);
+                extensionsList.push_back(offset16); // Add the offset as an extension
+            }
+        }
+        return finalize_instruction(opcode);
+    }
+    else
+    {
+        if (pass != 0)
+        {
+            // the address is external, we need to generate a relocation entry for it
+            Relocation r;
+            r.offset = currentAddress + 2;   // l’extension est après l’opcode
+            r.symbol = target.relocation.symbol;
+            r.addend = 0;
+            r.type = RelocationType::PCREL_16;
+            relocations.push_back(r);
+        }
+        // since the address is external, we don't know the actual offset yet so we have to reserve two words for the instruction
+        uint16_t offset16 = 0;
+        uint16_t opcode = 0b0110'0000'0000'0000 | (condition << 8);
+        extensionsList.push_back(offset16); // Add the offset as an extension
+        return finalize_instruction(opcode);
+    }
+
 }
 
 /// <summary>
@@ -733,16 +766,36 @@ any visitor::visitDbcc(parser68000::DbccContext* ctx)
 	uint16_t condition = any_cast<uint16_t>(visit(ctx->children[0]));
 	uint16_t dReg = any_cast<uint16_t>(visit(ctx->children[1])) & 0b111;
 
-	uint32_t target = getAddressValue(ctx->address());
-	int32_t offset = target - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
-	if (offset > 0x7fff || offset < -0x8000) 
-	{
-		addError("Address doesn't fit in one word: " + std::to_string(offset), ctx->children[3]);
-		offset = 0x100;
-	}
-	uint16_t opcode = 0b0101'0000'11001'000 | (condition << 8) | dReg ;
-	extensionsList.push_back((uint16_t)(offset & 0xffff));
-	return finalize_instruction(opcode);
+	AddressResult target = getAddressValue(ctx->address());
+    if (target.isResolved)
+    {
+	    int32_t offset = target.value - currentAddress - 2; // -2 because the next instruction will be at currentAddress + 2
+	    if (offset > 0x7fff || offset < -0x8000) 
+	    {
+		    addError("Address doesn't fit in one word: " + std::to_string(offset), ctx->children[3]);
+		    offset = 0x100;
+	    }
+	    uint16_t opcode = 0b0101'0000'11001'000 | (condition << 8) | dReg ;
+	    extensionsList.push_back((uint16_t)(offset & 0xffff));
+	    return finalize_instruction(opcode);
+    }
+    else
+    {
+        if (pass != 0)
+        {
+            // the address is external, we need to generate a relocation entry for it
+            Relocation r;
+            r.offset = currentAddress + 2;   // l’extension est après l’opcode
+            r.symbol = target.relocation.symbol;
+            r.addend = 0;
+            r.type = RelocationType::PCREL_16;
+            relocations.push_back(r);
+        }
+        uint16_t offset16 = 0;
+        uint16_t opcode = 0b0101'0000'11001'000 | (condition << 8) | dReg;
+        extensionsList.push_back(offset16); // Add the offset as an extension
+        return finalize_instruction(opcode);
+    }
 }
 
 any visitor::visitDiv(tree::ParseTree* ctx, bool isSigned)
@@ -877,10 +930,10 @@ any visitor::visitIllegal(parser68000::IllegalContext* ctx)
 /// </summary>
 any visitor::visitJmp(parser68000::JmpContext* ctx)
 {
-	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
+	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->addressingMode()));
 	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
 	{
-		addError("Invalid addressing mode: ", ctx->children[1]);
+		addError("Invalid addressing mode: ", ctx->addressingMode());
 	}
 	uint16_t opcode = 0b0100'1110'11'000'000 | effectiveAddress;
 	return finalize_instruction(opcode);
@@ -891,13 +944,13 @@ any visitor::visitJmp(parser68000::JmpContext* ctx)
 /// </summary>
 any visitor::visitJsr(parser68000::JsrContext* ctx)
 {
-	uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->children[1]));
-	if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
-	{
-		addError("Invalid addressing mode: ", ctx->children[1]);
-	}
-	uint16_t opcode = 0b0100'1110'10'000'000 | effectiveAddress;
-	return finalize_instruction(opcode);
+    uint16_t effectiveAddress = any_cast<uint16_t>(visit(ctx->addressingMode()));
+    if (!isValidAddressingMode(effectiveAddress, 0b001001'111110))
+    {
+        addError("Invalid addressing mode: ", ctx->addressingMode());
+    }
+    uint16_t opcode = 0b0100'1110'10'000'000 | effectiveAddress;
+    return finalize_instruction(opcode);
 }
 
 any visitor::visitMul(tree::ParseTree* ctx, bool isSigned)
@@ -1601,10 +1654,24 @@ any visitor::visitRegisterListMotorola(parser68000::RegisterListMotorolaContext*
 }
 any visitor::visitRegisterListGcc(parser68000::RegisterListGccContext* ctx)
 {
-    uint32_t value = any_cast<uint32_t>(visit(ctx->children[1]));
+    any anyValue = visit(ctx->number());
+    uint32_t value;
+    if (anyValue.type() == typeid(uint32_t))
+    {
+        value = any_cast<uint32_t>(anyValue);
+    }
+    else if (anyValue.type() == typeid(int32_t))
+    {
+        value = (uint32_t)any_cast<int32_t>(anyValue);
+    }
+    else
+    {
+        addError("Invalid register list value type", ctx->number());
+        value = 0;
+    }
     if (value > 0xffff)
     {
-        addError("Register list value too large: " + std::to_string(value), ctx->children[1]);
+        addError("Register list value too large: " + std::to_string(value), ctx->number());
         value &= 0xffff;
     }
     uint16_t regList = (uint16_t)value;
@@ -1828,53 +1895,113 @@ any visitor::visitARegisterIndirectIndexNew(parser68000::ARegisterIndirectIndexN
 /// <param name="size">The size of the absolute address (0 = not provided, 1 = word, 2 = long)</param>
 any visitor::visitAbsoluteSize(parser68000::AddressContext* ctx, int size)
 {
-	uint32_t target = getAddressValue(ctx);
+    // TODO : Add a flag to indicate whether we are generating position independent code or not
+    // The code below assumes that we are generating position absolute code for local symbols, 
+    // and position independent code for external symbols in which case we need to generate a relocation entry
+    // The code should be modified to handle the case where we are generating position independent code for local symbols as well
 
-	switch (size)
-	{
-		case 0: // size wasn't provided
-			if (target > 0x7fff && target < 0xffff8000)
-			{
-				// The address doesn't fit in one word so we need to use long
-				uint16_t displacementHigh = (uint16_t)(target >> 16);
-				uint16_t displacementLow = (uint16_t)(target & 0xffff);
-				extensionsList.push_back(displacementHigh);
-				extensionsList.push_back(displacementLow);
+	AddressResult addressResult = getAddressValue(ctx);
+    bool canDoPIC;
+    if (ctx->number() != nullptr)
+    {
+        canDoPIC = false;
+    }
+    else if (ctx->value.type() == typeid(std::string))
+    {
+        std::string value = any_cast<std::string>(ctx->value);
+        if (symbols.find(value) != symbols.end())
+            canDoPIC = false;
+        else
+            canDoPIC = true;
+    }
+    else 
+    {
+        canDoPIC = true;
+    }
 
-				return (uint16_t)(0b111'001);
-			}
-			else
-			{
-				uint16_t displacement16 = (uint16_t)(target & 0xffff);
-				extensionsList.push_back(displacement16);
-				return (uint16_t)(0b111'000);
-			}
-			break;
-		case 1: // size is word
-			{
-				if (target > 0x7fff && target < 0xffff8000)
-				{
-					addError("Address doesn't fit on in one word: " , ctx->children[0]);
-				}
-				uint16_t displacement16 = (uint16_t)(target & 0xffff);
-				extensionsList.push_back(displacement16);
-				return (uint16_t)(0b111'000);
-			}
-		break;
-			case 2: // size is long
-			{
-				uint16_t displacementHigh = (uint16_t)(target >> 16);
-				uint16_t displacementLow = (uint16_t)(target & 0xffff);
-				extensionsList.push_back(displacementHigh);
-				extensionsList.push_back(displacementLow);
+    if (addressResult.isResolved)
+    {
+        uint32_t target = addressResult.value;
+        if (generatePIC && canDoPIC)
+        {
+            // we are generating position independent code for a local label, or * 
+            int32_t offset = target - currentAddress - 2;
 
-				return (uint16_t)(0b111'001);
-			}
-			break;
-		default:
-			assert(!"we shouldnot be there");
-			break;
-	}
+            if ((pass == 1) && (offset < -0x8000 || offset > 0x7FFF))
+            {
+                addError("Cannot generate position independent code; Address doesn't fit on in one word. ", ctx->children[1]);
+            }
+
+            extensionsList.push_back((uint16_t)(offset & 0xFFFF));
+            return (uint16_t)(0b111'010);
+        }
+        else
+        {
+            // We use absolute addressing mode
+            switch (size)
+            {
+            case 0: // size wasn't provided
+                if (target > 0x7fff && target < 0xffff8000)
+                {
+                    // The address doesn't fit in one word so we need to use long
+                    uint16_t displacementHigh = (uint16_t)(target >> 16);
+                    uint16_t displacementLow = (uint16_t)(target & 0xffff);
+                    extensionsList.push_back(displacementHigh);
+                    extensionsList.push_back(displacementLow);
+
+                    return (uint16_t)(0b111'001);
+                }
+                else
+                {
+                    uint16_t displacement16 = (uint16_t)(target & 0xffff);
+                    extensionsList.push_back(displacement16);
+                    return (uint16_t)(0b111'000);
+                }
+                break;
+            case 1: // size is word
+            {
+                if (target > 0x7fff && target < 0xffff8000)
+                {
+                    addError("Address doesn't fit on in one word: ", ctx->children[0]);
+                }
+                uint16_t displacement16 = (uint16_t)(target & 0xffff);
+                extensionsList.push_back(displacement16);
+                return (uint16_t)(0b111'000);
+            }
+            break;
+            case 2: // size is long
+            {
+                uint16_t displacementHigh = (uint16_t)(target >> 16);
+                uint16_t displacementLow = (uint16_t)(target & 0xffff);
+                extensionsList.push_back(displacementHigh);
+                extensionsList.push_back(displacementLow);
+
+                return (uint16_t)(0b111'001);
+            }
+            break;
+            default:
+                assert(!"we shouldnot be there");
+                break;
+            }
+        }
+    }
+    else
+    {
+        if (pass != 0)
+        {
+            // the address is external, we need to generate a relocation entry for it
+            Relocation r;
+            r.offset = currentAddress + 2;   // the extension is after the opcode
+            r.symbol = addressResult.relocation.symbol;
+            r.addend = 0;
+            r.type = RelocationType::PCREL_16;
+            relocations.push_back(r);
+        }
+        uint16_t displacement16 = 0;
+        extensionsList.push_back(displacement16);
+        return (uint16_t)(0b111'010);
+
+    }
 	return (uint16_t)(0b111'000);
 }
 /// <summary>
@@ -1997,11 +2124,12 @@ int32_t visitor::getDisplacementValue(tree::ParseTree* pDisplacement)
 /// Resolves and returns the value of an address context, handling labels, symbols, and direct values.
 /// </summary>
 /// <param name="ctx">Pointer to a parser68000::AddressContext object representing the parsed address expression.</param>
-/// <returns>The resolved address value as a uint32_t. Returns 0 or a default value if errors are encountered (e.g., undefined label, invalid type, or negative address).</returns>
-uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
+/// <returns>An AddressResult containing either the resolved address value as a uint32_t if the address is local, or a Relocation if the address is external.
+/// Returns 0 or a default value if errors are encountered (e.g., undefined label, invalid type, or negative address).</returns>
+AddressResult visitor::getAddressValue(parser68000::AddressContext* ctx)
 {
 	any address = visit(ctx);
-	uint32_t target;
+	AddressResult result;
 	if (address.type() == typeid(std::string))
 	{
 		std::string label = any_cast<std::string>(address);
@@ -2012,7 +2140,8 @@ uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 			if (it->second.type() != typeid(int32_t))
 			{
 				addError("Argument is not an number: " + label, ctx);
-				target = 0;
+                result.isResolved = true;
+                result.value = 0;
 			}
 			else
 			{
@@ -2022,7 +2151,8 @@ uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 					addError("Address cannot be negative: " + label, ctx);
 					value = 0;
 				}
-				target = static_cast<uint32_t>(value);
+                result.isResolved = true;
+				result.value = static_cast<uint32_t>(value);
 			}
 		}
 		else
@@ -2036,11 +2166,31 @@ uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 				{
 					addError("Label not found: " + label, ctx);
 				}
-				target = 0;
+				result.isResolved = true;
+				result.value = 0;
 			}
 			else
 			{
-				target = it->second;
+                if (it->second.defined)
+                {
+                    result.isResolved = true;
+                    result.value = it->second.offset;
+                }
+                else if (it->second.imported)
+                {
+                    // TODO implement support for external symbols
+                    //addWarning("support for external labels is not implemented yet: " + label, ctx);
+
+                    needExternalReference = true;
+                    result.isResolved = false;
+                    result.relocation = Relocation(label);
+                }
+                else
+                {
+                    addError("Exported label not found: " + label, ctx);
+                    result.isResolved = true;
+                    result.value = 0;
+                }
 			}
 		}
 	}
@@ -2049,17 +2199,20 @@ uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 		char c = any_cast<char>(address);
 		if (c == '*')
 		{
-			target = this->currentAddress;
+            result.isResolved = true;
+            result.value = this->currentAddress;
 		}
 		else
 		{
 			addError("Syntax error; * expected", ctx);
-			target = 0xabcd;
+            result.isResolved = true;
+            result.value = 0xabcd;
 		}
 	}
 	else if (address.type() == typeid(uint32_t))
 	{
-		target = any_cast<uint32_t>(address);
+        result.isResolved = true;
+        result.value = any_cast<uint32_t>(address);
 	}
 	else
 	{
@@ -2069,9 +2222,10 @@ uint32_t visitor::getAddressValue(parser68000::AddressContext* ctx)
 			addError("Address cannot be negative: " + std::to_string(value), ctx);
 			value = 0;
 		}
-		target = static_cast<uint32_t>(value);
+        result.isResolved = true;
+        result.value = static_cast<uint32_t>(value);
 	}
-	return target;
+	return result;
 }
 /// <summary>
 /// Retrieves the integer value represented by an address context, resolving symbols, labels, or direct values as needed.
@@ -2114,14 +2268,19 @@ int32_t visitor::getIntegerValue(parser68000::AddressContext* ctx)
 			}
 			else
 			{
-				if (it->second > INT32_MAX)
+                if (!it->second.defined)
+                {
+                    addError("support for external labels is not implemented yet: " + label, ctx);
+                    // TODO
+                }
+                else if (it->second.offset > INT32_MAX)
 				{
 					addError("Label value too large for integer: " + label, ctx);
 					target = INT32_MAX;
 				}
 				else
 				{
-					target = static_cast<int32_t>(it->second);
+					target = static_cast<int32_t>(it->second.offset);
 				}
 			}
 		}
@@ -2184,6 +2343,75 @@ any visitor::visitAdRegisterSize(parser68000::AdRegisterSizeContext* ctx)
 	return adRegister;
 }
 
+any visitor::visitElfIgnore(parser68000::ElfIgnoreContext* ctx)
+{
+    return true;
+}
+
+/// <summary>
+/// EXPORT ID3 (COMMA3 ID3)*
+/// </summary>
+any visitor::visitElfExport(parser68000::ElfExportContext* ctx)
+{
+    if (pass == 1)
+    {
+        for (auto id : ctx->ID3())
+        {
+            std::string name = id->getText();
+            if (symbols.find(name) != symbols.end())
+            {
+                addPass0Error("Exported label name conflicts with symbol: " + name, ctx);
+            }
+            else
+            {
+                if (labels.find(name) != labels.end())
+                {
+                    auto it = labels.find(name);
+                    it->second.exported = true;
+                }
+                else
+                {
+                    addError("Exported label not found: " + name, ctx);
+                }
+                Relocation relocation(name);
+                relocations.push_back(relocation);
+            }
+        }
+    }
+    return any();
+}
+/// <summary>
+/// IMPORT ID3 (COMMA3 ID3)*
+/// </summary>
+any visitor::visitElfImport(parser68000::ElfImportContext* ctx)
+{
+    if (pass == 0)
+    {
+        for (auto id : ctx->ID3())
+        {
+            std::string name = id->getText();
+            if (symbols.find(name) != symbols.end())
+            {
+                addPass0Error("Imported label name conflicts with symbol: " + name, ctx);
+            }
+            else if (labels.find(name) != labels.end())
+            {
+                addPass0Error("Duplicate label: " + name, ctx);
+            }
+            else
+            {
+                labelInfo info;
+                info.imported = true;
+                info.defined = false;
+                info.exported = false;
+
+                labels[name] = info;
+            }
+        }
+    }
+    return any();
+}
+
 bool visitor::isValidAddressingMode(unsigned short effectiveAddress, unsigned short acceptable)
 {
 	static const unsigned masks[] = {
@@ -2214,17 +2442,17 @@ void visitor::addError(const std::string& message, tree::ParseTree* ctx)
 		{
 			size_t line = prc->getStart()->getLine();
 			size_t col = prc->getStart()->getCharPositionInLine();
-            errorList.add(message, line, col);
+            errorList.add(message, filename, line, col);
         } 
 		else if (auto* tni = dynamic_cast<antlr4::tree::TerminalNodeImpl*>(ctx))
 		{
 			size_t line = tni->symbol->getLine();
 			size_t col = tni->symbol->getCharPositionInLine();
-			errorList.add(message, line, col);
+			errorList.add(message, filename, line, col);
 		}
 		else
 		{
-			errorList.add(message, 0, 0);
+			errorList.add(message, filename, 0, 0);
 		}
     }
 }
@@ -2235,11 +2463,11 @@ void visitor::addPass0Error(const std::string& message, tree::ParseTree* ctx)
 	{
 		size_t line = prc->getStart()->getLine();
 		size_t col = prc->getStart()->getCharPositionInLine();
-		errorList.add(message, line, col);
+		errorList.add(message, filename, line, col);
 	}
 	else
 	{
-		errorList.add(message, 0, 0);
+		errorList.add(message, filename, 0, 0);
 	}
 }
 

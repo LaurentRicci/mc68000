@@ -82,10 +82,13 @@ You can also debug the code by using the -d or --debug option and optionally spe
 # A basic interpreter
 The asm/examples folder contains an adaptation of the **Tiny BASIC for the Motorola MC6000** as it was introduced in the *Dr Dobb's Toolbook of 68000 Programming*. 
 The codehas been slightly adjusted to account for the difference in the environment in particular the basic IO routines. 
-You can run it from the asm/examples folder by doing
+You can compile and run it from the asm/examples folder by doing
 ```
-../../bin/run68000 tiny.bin           (on linux)
-..\..\bin\run68000.exe tiny.bin       (on windows)
+../../bin/asm68000 -o -s tinybasic.68k
+../../bin/run68000 tinybasic.bin           (on linux)
+
+..\..\bin\asm68000.exe -o -s tinybasic.68k
+..\..\bin\run68000.exe tinybasic.bin       (on windows)
 ```
 
 

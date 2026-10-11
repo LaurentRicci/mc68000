@@ -1,0 +1,19 @@
+    .export PRMESG,OUTC
+    .import external1,external2
+*
+* ===== Display a zero-ended string pointed to by register A6
+*
+PRMESG      MOVE.B  (A6)+,D0        ; get the char.
+            BEQ     PRMRET          ; if it's zero, we're done
+            BSR     OUTC            ; else display it
+            BRA     PRMESG
+PRMRET      RTS
+
+*
+* ===== Output character to the console from register D0
+*
+OUTC        MOVE.W  D0,-(SP)
+            MOVE.W  #10,-(SP)       ; putCharacter
+            TRAP    #15
+            ADDQ.L  #4,SP
+            RTS

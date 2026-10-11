@@ -486,13 +486,13 @@ FR2     BSR     EXPR          ;found it, get the step value
         BRA     FR4
 FR3     MOVEQ   #1,D0         ;not found, step defaults to 1
 FR4     MOVE.L  D0,LOPINC     ;save that too
-FRS     MOVE.L  CURRNT, LOPLN ;save address of current line number 
+FR5     MOVE.L  CURRNT, LOPLN ;save address of current line number 
         MOVE.L  A0, LOPPT     ;and text pointer
         MOVE.L  SP,A6         ;dig into the stack to find 'LOPVAR'
         BRA     FR7
 FR6     ADDA.L  #20,A6        ;look at next stack frame
 FR7     MOVE.L  (A6),D0       ;is it zero?
-        BEQ     FRS           ;if so, we're done
+        BEQ     FR8           ;if so, we're done
         CMP.L   LOPVAR, D0    ;same as current LOPVAR?
         BNE     FR6           ;nope, look some more
         MOVE.L  SP,A2         ;Else remove 5 long words from... 

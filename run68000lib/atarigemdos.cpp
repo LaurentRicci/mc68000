@@ -3,7 +3,7 @@
 
 using namespace mc68000;
 
-void AtariBios::gemdos(Cpu& cpu)
+bool AtariBios::gemdos(Cpu& cpu)
 {
     //cf https://freemint.github.io/tos.hyp/en/gemdos_functions.html
     enum GemDos {
@@ -311,6 +311,7 @@ void AtariBios::gemdos(Cpu& cpu)
         cpu.setDRegister(0, 0);
         break;
     }
+    return true;
 }
 
 // GEMDOS helper implementations (placeholders)

@@ -8,7 +8,7 @@
 
 int usage()
 {
-    std::cout << "Usage: asm68000 [options] <sourcefile>" << std::endl;
+    std::cout << "Usage: asm68000 [options] <sourcefile>+" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  -h, --help    Show this help message" << std::endl;
     std::cout << "  -t, --tree    Show parse tree" << std::endl;
@@ -34,22 +34,55 @@ int main(int argc, const char * argv[])
         std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
         return 1;
     }
-
-    const char* lastArgument = argv[argc - 1];
-    if (strcmp(lastArgument, "-h") == 0 || strcmp(lastArgument, "--help") == 0)
+    if (strcmp(argv[argc-1], "-h") == 0 || strcmp(argv[argc-1], "--help") == 0)
     {
         return usage();
     }
-    if (lastArgument[0] == '-')
+    if (argv[argc - 1][0] == '-')
+    {
+        std::cerr << "Invalid arguments. Use -h or --help for usage information." << std::endl;
+        return 1;
+    }
+
+    int arg = 1;
+    bool endOfOptions = false;
+    while (!endOfOptions && arg < argc-1)
+    {
+        if (argv[arg][0] == '-')
+        {
+            if (strcmp(argv[arg], "-h") == 0 || strcmp(argv[arg], "--help") == 0)
+            {
+                return usage();
+            }
+            // if the argument is an option that require a parameter we skip the parameter if provided
+            if ((strcmp(argv[arg], "-o") == 0 || strcmp(argv[arg], "--output") == 0) ||
+                (strcmp(argv[arg], "-s") == 0 || strcmp(argv[arg], "--symbols") == 0) ||
+                (strcmp(argv[arg], "-l") == 0 || strcmp(argv[arg], "--listing") == 0))
+            {
+                if ((arg + 1 < argc-1) && (argv[arg + 1][0] != '-'))
+                {
+                    arg++;
+                }
+            }
+            arg++;
+        }
+        else
+        {
+            endOfOptions = true;
+        }
+    }
+
+    if (arg == argc)
     {
         std::cerr << "No source file specified. Use -h or --help for usage information." << std::endl;
         return 1;
     }
+    const char* lastArgument = argv[arg];
     filename = lastArgument;
     std::filesystem::path sourceFilename(filename);
     std::string basename = sourceFilename.replace_extension().string();
 
-	for (int i=1; i<argc-1; i++)
+	for (int i=1; i<arg; i++)
 	{
 		if (argv[i][0] == '-')
 		{
@@ -139,6 +172,10 @@ int main(int argc, const char * argv[])
 		std::cout << "Failed to parse file: " << filename << std::endl;
 		return 1;
 	}
+    else
+    {
+        std::cout << "Successfully parsed file: " << filename << std::endl;
+    }
 	if (saveBinary && !parser.saveBinary(binaryFilename.c_str()))
 	{
 		std::cerr << "error saving binary file: " << binaryFilename << std::endl;

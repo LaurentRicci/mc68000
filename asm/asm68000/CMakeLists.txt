@@ -11,4 +11,9 @@ add_executable (asm68000
 target_include_directories(asm68000 PRIVATE "..")
 target_compile_features(asm68000 PRIVATE cxx_std_20)
 target_link_libraries(asm68000 PUBLIC asm68000lib)
+if (WIN32)
+    # Enable profiling and debugging information for MSVC
+    target_compile_options(asm68000 PRIVATE /Zi)
+    target_link_options(asm68000 PRIVATE /PROFILE)
+endif()
 

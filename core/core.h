@@ -374,6 +374,15 @@ namespace mc68000
 			}
 		}
 
+        // MOVE USP
+        for (unsigned direction = 0; direction <= 1; direction++)
+        {
+            for (unsigned reg = 0; reg <= 7; reg++)
+            {
+                handlers[0b0100'1110'0110'0000u + (direction << 3) + reg] = &T::moveusp;
+            }
+        }
+        
 		// MOVE TO CCR
 		for (unsigned ea = 0; ea <= 0b111'111u; ea++)
 		{

@@ -4,6 +4,9 @@
 #include "asmResult.h"
 #include "errors.h"
 #include "listingGenerator.h"
+#include "labelInfo.h"
+#include "relocation.h"
+#include "addressResult.h"
 
 using namespace antlr4;
 using namespace std;
@@ -11,29 +14,28 @@ using namespace std;
 class visitor : public parser68000BaseVisitor
 {
 public: 
-    visitor(asmResult& code68000, const char* filename)
-      : codeBlocks(code68000.code), start(code68000.start),
+    visitor(asmResult& code68000, const char* sourceFilename, const char* listingFilename, bool generatePIC)
+      : filename(sourceFilename), codeBlocks(code68000.code), start(code68000.start),
         memoryStart(code68000.memoryStart), memoryEnd(code68000.memoryEnd),
         labels(code68000.labels), symbols(code68000.symbols), errorList(code68000.errors),
-        listing(filename)
+        relocations(code68000.relocations),
+        listing(listingFilename),
+        generatePIC(generatePIC)
     {
     }
     ~visitor() override = default;
     any generateCode(tree::ParseTree* tree);
 
 private:
+    std::string filename;                                   // the name of the file being parsed
     vector<codeBlock>& codeBlocks;                          // the assembly code as a results of the parsing
     uint32_t& start;                                        // the start address of the program
     uint32_t& memoryStart;                                  // the begining of the address space
-    uint32_t& memoryEnd;                                    // the end of teh address space
-map<string, uint32_t>& labels;                              // the labels found in the code label -> index
+    uint32_t& memoryEnd;                                    // the end of the address space
+    map<string, labelInfo>& labels;                         // the labels found in the code label -> index
     map<string, any>& symbols;                              // the symbol table (from the EQU directive)
+    vector<Relocation>& relocations;                        // list of place where external symbols are referenced
     mc68000::errors& errorList;                             // the list of errors found during the parsing
-
-    vector<uint16_t>& code()                                // the code in the current code block being processed
-    { 
-        return codeBlocks.back().code; 
-    }
 
     vector<uint16_t> extensionsList;                        // the list of extra words for the addressing mode
     int pass = 0;                                           // the current pass (0 = first pass, 1 = second pass)
@@ -42,9 +44,16 @@ map<string, uint32_t>& labels;                              // the labels found 
 
 	vector<uint8_t> dcBytes;                                // the data in the dc section
 	bool incompleteBinary = false;                          // true if the last instruction was a dc.b with an odd number of bytes
+    bool needExternalReference = false;                     // true if the code has reference to external symbols
+    bool generatePIC = false;                               // true if the generated code should be position independent (PIC)
+
     parser68000::LabelSectionContext* labelCtx = nullptr;   // the current label section
 
-    listingGenerator listing;                                        // the listing file generator
+    listingGenerator listing;                               // the listing file generator
+    vector<uint16_t>& code()                                // the code in the current code block being processed
+    { 
+        return codeBlocks.back().code; 
+    }
 private:
     any visitProg(parser68000::ProgContext* ctx) override;
     any visitLine_instructionSection(parser68000::Line_instructionSectionContext* ctx) override;
@@ -314,8 +323,15 @@ private:
     any visitShiftRegister(tree::ParseTree* ctx, uint16_t code);
     any visitShiftImmediate(tree::ParseTree* ctx, uint16_t code);
     any visitShiftAddressingMode(tree::ParseTree* ctx, uint16_t code);
-	uint32_t getAddressValue(parser68000::AddressContext* ctx);
+    AddressResult getAddressValue(parser68000::AddressContext* ctx);
     uint32_t getAddressValue(parser68000::BlockAddressContext* ctx);
     int32_t  getIntegerValue(parser68000::AddressContext* ctx);
     int32_t  getDisplacementValue(tree::ParseTree* pDisplacement);
+    // ====================================================================================================
+    // Elf support
+    // ====================================================================================================
+    any visitElfIgnore(parser68000::ElfIgnoreContext* ctx) override;
+    any visitElfExport(parser68000::ElfExportContext* ctx) override;
+    any visitElfImport(parser68000::ElfImportContext* ctx) override;
+
 };

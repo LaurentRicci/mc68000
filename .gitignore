@@ -387,6 +387,8 @@ build-vs2022/
 build-vs2026/
 hardware/
 basic.bas
+lib/
+asm/lib/
 *.vcxproj
 *.vcxproj.filters
 *.lib

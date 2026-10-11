@@ -1,10 +1,12 @@
 #include <boost/test/unit_test.hpp>
+#include "fileCleanup.h"
 #include "cpu.h"
 #include "simplebios.h"
 #include "ataribios.h"
 #include "trapargs.h"
 
 using namespace mc68000;
+static const char* configFileName = "ataribios.conf";
 
 BOOST_AUTO_TEST_SUITE(bios)
 
@@ -123,7 +125,8 @@ BOOST_AUTO_TEST_CASE(bios_arg_multiple)
 BOOST_AUTO_TEST_CASE(settings_one)
 {
     // Arrange
-    std::ofstream configFile("ataribios.conf");
+    FileCleanup configFileCleanup(configFileName);
+    std::ofstream configFile(configFileName);
     configFile << "key1 = value1" << std::endl;
 
     std::unordered_map<std::string, std::string> settings;
@@ -140,7 +143,8 @@ BOOST_AUTO_TEST_CASE(settings_one)
 BOOST_AUTO_TEST_CASE(settings_empty_line)
 {
     // Arrange
-    std::ofstream configFile("ataribios.conf");
+    FileCleanup configFileCleanup(configFileName);
+    std::ofstream configFile(configFileName);
     configFile << "key1 = value1" << std::endl;
     configFile << " " << std::endl;
     configFile << "key2 = value2" << std::endl;
@@ -159,7 +163,8 @@ BOOST_AUTO_TEST_CASE(settings_empty_line)
 BOOST_AUTO_TEST_CASE(settings_comment_lines)
 {
     // Arrange
-    std::ofstream configFile("ataribios.conf");
+    FileCleanup configFileCleanup(configFileName);
+    std::ofstream configFile(configFileName);
     configFile << "key1 = value1  # this is a comment" << std::endl;
     configFile << "  # this line should be ignored " << std::endl;
     configFile << "key2 = value2" << std::endl;

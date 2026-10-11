@@ -1131,10 +1131,10 @@ namespace mc68000
 	{
 		try
 		{
-            ssp -= 2;
-            localMemory.set<uint16_t>(ssp, sr);
             ssp -= 4;
             localMemory.set<uint32_t>(ssp, pc);
+            ssp -= 2;
+            localMemory.set<uint16_t>(ssp, sr);
 			statusRegister.t = 0;
 			statusRegister.s = 1;
 			usp = aRegisters[7];
@@ -1152,14 +1152,17 @@ namespace mc68000
                 if (trapHandlers[vector - Exceptions::TRAP] != nullptr)
                 {
                     // external handler exists so call it
-                    trapHandlers[vector - Exceptions::TRAP]->handle(*this, vector - Exceptions::TRAP);
-                    // then return to the instruction after the TRAP
-                    pc = localMemory.get<uint32_t>(ssp);
-                    ssp += 4;
-                    statusRegister = localMemory.get<uint16_t>(ssp);
-                    ssp += 2;
-                    aRegisters[7] = usp;
-                    return;
+                    if (trapHandlers[vector - Exceptions::TRAP]->handle(*this, vector - Exceptions::TRAP))
+                    {
+                        // The trap has been handled, then return to the instruction after the TRAP
+                        statusRegister = localMemory.get<uint16_t>(ssp);
+                        ssp += 2;
+                        pc = localMemory.get<uint32_t>(ssp);
+                        ssp += 4;
+                        aRegisters[7] = usp;
+                        return;
+                    }
+                    // The trap has not been handled, then continue with the default handling
                 }
             }
             // other exceptions and traps not handled externally

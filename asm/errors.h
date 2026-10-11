@@ -9,13 +9,13 @@ namespace mc68000
 	{
 	public:
 		// Constructor
-		error(const std::string& message, size_t line, size_t column)
-			: message(message), line(line), column(column)
+		error(const std::string& message, const std::string& file, size_t line, size_t column)
+			: message(message), file(file), line(line), column(column)
 		{
 		}
 		std::string toString() const
 		{
-			return "Line " + std::to_string(line) + ", Column " + std::to_string(column) + ": " + message;
+			return "File " + file + ", Line " + std::to_string(line) + ", Column " + std::to_string(column) + ": " + message;
 		}
 		std::tuple<size_t, size_t> getPosition() const
 		{
@@ -25,6 +25,7 @@ namespace mc68000
 		std::string message;    // Error message
 		size_t line;            // Line number where the error occurred
 		size_t column;          // Column number where the error occurred
+        std::string file;       // File name where the error occurred
 	};
 
 	class errors
@@ -33,9 +34,9 @@ namespace mc68000
 		// Constructor
 		errors() = default;
 		// Add an error message
-		void add(const std::string& message, size_t line, size_t column)
+		void add(const std::string& message, const std::string& file, size_t line, size_t column)
 		{
-			error_messages.push_back(error(message, line, column));
+			error_messages.push_back(error(message, file, line, column));
 		}
 		// Get all error messages
 		const std::vector<error>& get() const

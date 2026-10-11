@@ -341,7 +341,12 @@ namespace mc68000
 		return instructions::MOVEQ;
 	}
 
-	uint16_t NoOpCpu::muls(uint16_t)
+    uint16_t NoOpCpu::moveusp(uint16_t)
+    {
+        return instructions::MOVEUSP;
+    }
+
+    uint16_t NoOpCpu::muls(uint16_t)
 	{
 		return instructions::MULS;
 	}

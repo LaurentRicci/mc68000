@@ -384,7 +384,37 @@ BOOST_AUTO_TEST_CASE(trapv)
 			BOOST_CHECK_EQUAL(0, cpu.d1);
 		});
 }
+BOOST_AUTO_TEST_CASE(trap)
+{
+    unsigned char code1[] = {
+        0x70, 0x2a,             // moveq #42,d0
+        0x4e, 0x73,             // rte
+        0xff, 0xff
+    };
+    unsigned char code2[] = {
+        0x70, 0x15,             // moveq #21,d0
+        0x4e, 0x40,             // trap #0
+        0xff, 0xff
+    };
 
+    const uint32_t trapAddress = 512;
+    const uint32_t codeAddress = 1024;
+
+    // Arrange
+    Memory memory(2048, 0);
+    memory.set(0x80, trapAddress);            // The trap #1 vector is at 0x80 and point to the trap code
+    memory.set(trapAddress, code1, sizeof(code1));
+    memory.set(codeAddress, code2, sizeof(code2));
+    Cpu cpu(memory);
+
+    // ACT
+    cpu.reset();
+    cpu.start(codeAddress, codeAddress + 256, codeAddress + 128);
+
+    // Assert
+    BOOST_CHECK_EQUAL(42, cpu.d0);
+
+}
 // ===================================================
 // TST tests
 // ===================================================

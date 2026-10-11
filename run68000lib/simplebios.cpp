@@ -26,11 +26,12 @@ void SimpleBios::registerTrapHandlers(Cpu* cpu)
     cpu->registerTrapHandler(15, this);
 }
 
-void SimpleBios::trap0(Cpu& cpu)
+bool SimpleBios::trap0(Cpu& cpu)
 {
+    return true; // just return, no actual handling for now
 }
 
-void SimpleBios::trap15(Cpu& cpu)
+bool SimpleBios::trap15(Cpu& cpu)
 {
     bool isSupervisor = callerIsSupervisor(cpu);
     uint16_t func = argWord(cpu, isSupervisor, 0);
@@ -110,6 +111,7 @@ void SimpleBios::trap15(Cpu& cpu)
         default:
             break;
     }
+    return true;
 }
 int32_t SimpleBios::getCharacter()
 {
