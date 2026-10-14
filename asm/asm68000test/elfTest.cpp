@@ -138,6 +138,36 @@ namespace elfTest
 		BOOST_CHECK_EQUAL(0, error);
 	}
 
+	// =========================
+    // directive .extern
+    // =========================
+    BOOST_AUTO_TEST_CASE(elf_directive_extern)
+	{
+	    // Arrange
+	    auto sourceCode = "#TEST extern directive\n"
+	                      " .extern  symbol\n"
+	                      "  bsr     symbol\n";
+
+	    asmparser parser;
+	    // Act
+	    std::any result = parser.parseText(sourceCode);
+	    // Assert no errors
+	    auto errs = parser.getErrors();
+	    BOOST_CHECK_EQUAL(0, errs.get().size());
+
+	    // Assert correct relocation
+	    auto relocations = parser.getRelocations();
+	    BOOST_CHECK_EQUAL(1, relocations.size());
+	    BOOST_CHECK_EQUAL("symbol", relocations[0].symbol);
+	    BOOST_CHECK_EQUAL(RelocationType::PCREL_16, relocations[0].type);
+
+	    // Assert correct code generated
+	    const auto &code = validate_codeSize(parser, 2);
+	    BOOST_CHECK_EQUAL(0x6100, code[0]); // bsr opcode
+	    BOOST_CHECK_EQUAL(0x0000, code[1]);
+    }
+
+
 	BOOST_AUTO_TEST_CASE(elf_directive_globlmultiple)
 	{
 		// Arrange
@@ -505,7 +535,7 @@ namespace elfTest
 
     }
 
-    BOOST_AUTO_TEST_CASE(import_use_jsr)
+	BOOST_AUTO_TEST_CASE(import_use_jsr)
     {
         // Arrange
         auto sourceCode =
@@ -754,7 +784,8 @@ namespace elfTest
         BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
     }
 
-	    BOOST_AUTO_TEST_CASE(globl) {
+	BOOST_AUTO_TEST_CASE(globl)
+	{
 	    // Arrange
 	    auto sourceCode = "symbol nop\n"
 	                      " .globl  symbol\n";

@@ -684,6 +684,7 @@ elfDirective
     | CFI_ENDPROC                   #elfIgnore
     | EXPORT ID3 (COMMA3 ID3)*      #elfExport
     | IMPORT ID3 (COMMA3 ID3)*      #elfImport
+    | EXTERN ID3 (COMMA3 ID3)*      #elfImport
     ;
 
 number3
