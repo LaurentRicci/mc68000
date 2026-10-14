@@ -659,29 +659,29 @@ blockAddress returns [std::any value]
 elfLine : ELFDIRECTIVE elfDirective ;
 
 elfDirective
-    : FILE STRING3      #elfIgnore
-    | TEXT  #elfIgnore
-    | ALIGN number3  #elfIgnore
-    | P2ALIGN number3  #elfIgnore
-    | EVEN  #elfIgnore
-    | GLOBL ID3  #elfIgnore
-    | LOCAL ID3  #elfIgnore
-    | TYPE ID3 COMMA3 type  #elfIgnore
-    | IDENT STRING3  #elfIgnore
-    | SIZE ID3 COMMA3 expression3  #elfIgnore
-    | LINE number3  #elfIgnore
-    | LOC number3*  #elfIgnore
+    : FILE STRING3					#elfIgnore
+    | TEXT							#elfIgnore
+    | ALIGN number3					#elfIgnore
+    | P2ALIGN number3				#elfIgnore
+    | EVEN							#elfIgnore
+    | GLOBL ID3 (COMMA3 ID3)*		#elfExport
+    | LOCAL ID3						#elfIgnore
+    | TYPE ID3 COMMA3 type			#elfIgnore
+    | IDENT STRING3					#elfIgnore
+    | SIZE ID3 COMMA3 expression3	#elfIgnore
+    | LINE number3					#elfIgnore
+    | LOC number3*					#elfIgnore
     | SECTION3 ID3 (COMMA3 STRING3 (COMMA3 AT3 ID3)?)?  #elfIgnore
-    | BYTE number3  #elfIgnore
-    | WORD number3  #elfIgnore
-    | SHORT number3  #elfIgnore
-    | LONG number3  #elfIgnore
-    | ASCII STRING3  #elfIgnore
-    | ASCIZ STRING3  #elfIgnore
-    | COMM ID3 (COMMA3 number3)*  #elfIgnore
-    | LCOMM ID3 (COMMA3 number3)*  #elfIgnore
-    | CFI_STARTPROC  #elfIgnore
-    | CFI_ENDPROC  #elfIgnore
+    | BYTE number3                  #elfIgnore
+    | WORD number3                  #elfIgnore
+    | SHORT number3                 #elfIgnore
+    | LONG number3                  #elfIgnore
+    | ASCII STRING3                 #elfIgnore
+    | ASCIZ STRING3                 #elfIgnore
+    | COMM ID3 (COMMA3 number3)*    #elfIgnore
+    | LCOMM ID3 (COMMA3 number3)*   #elfIgnore
+    | CFI_STARTPROC                 #elfIgnore
+    | CFI_ENDPROC                   #elfIgnore
     | EXPORT ID3 (COMMA3 ID3)*      #elfExport
     | IMPORT ID3 (COMMA3 ID3)*      #elfImport
     ;

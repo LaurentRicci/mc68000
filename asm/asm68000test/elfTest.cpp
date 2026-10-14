@@ -122,19 +122,34 @@ namespace elfTest
         BOOST_CHECK_NE(0, error);
     }
 
+	// =========================
+	// directive .globl
+	// =========================
+	BOOST_AUTO_TEST_CASE(elf_directive_globl)
+	{
+		// Arrange
+		auto sourceCode =
+			"#TEST globl directive\n"
+			"   .globl  symbol\n";
+		asmparser parser;
+		// Act
+		auto error = parser.checkSyntax(sourceCode);
+		// Assert
+		BOOST_CHECK_EQUAL(0, error);
+	}
 
-    BOOST_AUTO_TEST_CASE(elf_directive_globl)
-    {
-        // Arrange
-        auto sourceCode =
-            "#TEST globl directive\n"
-            "   .globl  add\n";
-        asmparser parser;
-        // Act
-        auto error = parser.checkSyntax(sourceCode);
-        // Assert
-        BOOST_CHECK_EQUAL(0, error);
-    }
+	BOOST_AUTO_TEST_CASE(elf_directive_globlmultiple)
+	{
+		// Arrange
+		auto sourceCode =
+			"#TEST globl directive\n"
+			"   .globl  symbol1, symbol2, symbol3\n";
+		asmparser parser;
+		// Act
+		auto error = parser.checkSyntax(sourceCode);
+		// Assert
+		BOOST_CHECK_EQUAL(0, error);
+	}
 
     BOOST_AUTO_TEST_CASE(elf_directive_globl_bad)
     {
@@ -462,7 +477,7 @@ namespace elfTest
         BOOST_CHECK_EQUAL(0, error);
     }
 
-    BOOST_AUTO_TEST_CASE(import_use_bsr)
+	BOOST_AUTO_TEST_CASE(import_use_bsr)
     {
         // Arrange
         auto sourceCode =
@@ -737,6 +752,37 @@ namespace elfTest
         // Assert correct code generated
         const auto& code = validate_codeSize(parser, 1);
         BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
+    }
+
+	    BOOST_AUTO_TEST_CASE(globl) {
+	    // Arrange
+	    auto sourceCode = "symbol nop\n"
+	                      " .globl  symbol\n";
+
+	    asmparser parser;
+	    // Act
+	    std::any result = parser.parseText(sourceCode);
+	    // Assert no errors
+	    auto errs = parser.getErrors();
+	    BOOST_CHECK_EQUAL(0, errs.get().size());
+
+	    // Assert correct relocation
+	    auto relocations = parser.getRelocations();
+	    BOOST_CHECK_EQUAL(1, relocations.size());
+	    auto it = relocations.begin();
+	    BOOST_CHECK_EQUAL("symbol", it->symbol);
+
+	    // Assert coorect label defined
+	    auto labels = parser.getLabels();
+	    BOOST_CHECK_EQUAL(1, labels.size());
+	    auto label = labels.find("symbol")->second;
+	    BOOST_CHECK_EQUAL(false, label.imported);
+	    BOOST_CHECK_EQUAL(true, label.defined);
+	    BOOST_CHECK_EQUAL(true, label.exported);
+
+	    // Assert correct code generated
+	    const auto &code = validate_codeSize(parser, 1);
+	    BOOST_CHECK_EQUAL(0x4e71, code[0]); // nop
     }
 
     BOOST_AUTO_TEST_SUITE_END()
