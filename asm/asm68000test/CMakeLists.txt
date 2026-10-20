@@ -7,7 +7,7 @@ cmake_minimum_required (VERSION 3.28)
 add_executable (asm68000test 
 	"instructionTest.cpp"  "module.cpp" "addressingModeTest.cpp" "directiveTest.cpp" "parserTest.cpp"
 	"elfTest.cpp"
-	"../asmparser.h" "util.h")
+	"../asmparser.h" "util.h" "fileCleanup.h")
 
 target_include_directories(asm68000test PUBLIC ${Boost_INCLUDE_DIRS}) 
 target_include_directories(asm68000test PRIVATE "..")

@@ -1,6 +1,34 @@
+BasedOnStyle: LLVM
+
+# --- Indentation ---
 UseTab: ForIndentation
 TabWidth: 4
 IndentWidth: 4
+
+# --- Brace style (Allman) ---
+BreakBeforeBraces: Allman
+
 BraceWrapping:
   AfterFunction: true
   AfterControlStatement: true
+  AfterClass: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterExternBlock: true
+  BeforeElse: true
+  BeforeCatch: true
+
+AllowShortIfStatementsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+
+# --- Comment alignment ---
+# ClangFormat aligns comments using spaces automatically
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 4
+
+# --- Optional: keep code readable ---
+ColumnLimit: 0
+
+# --- Pointer and reference alignment ---
+PointerAlignment: Left
+ReferenceAlignment: Left

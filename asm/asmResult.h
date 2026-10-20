@@ -43,5 +43,8 @@ public:
 private:
 	asmResult(const asmResult&)            = delete;
 	asmResult& operator=(const asmResult&) = delete;
+
+	bool saveExportedSymbols(std::ofstream& outputFile) const;
+	bool loadExportedSymbols(std::ifstream& inputFile) const;
 };
 

@@ -1,8 +1,16 @@
+#include <fstream>
+#include <sstream>
+
 #include <boost/test/unit_test.hpp>
 #include "asmparser.h"
 #include "util.h"
+#include "fileCleanup.h"
+
 namespace parserTest
 {
+	static const char* binaryFileName = "test.bin";
+	static const char* symbolsFileName = "symbols.txt";
+
 	BOOST_AUTO_TEST_SUITE(parserTest)
 
 	BOOST_AUTO_TEST_CASE(start)
@@ -147,6 +155,8 @@ namespace parserTest
 
 	BOOST_AUTO_TEST_CASE(code_save)
 	{
+		FileCleanup binaryFileCleanup(binaryFileName);
+
 		asmparser parser;
 		parser.parseText(" org $1000\nstart: nop\n lea $4242,a0\n end start\n");
 		validate_noErrors(parser);
@@ -155,11 +165,11 @@ namespace parserTest
 		BOOST_CHECK_EQUAL(0x1000, result.start);
 		BOOST_CHECK_EQUAL(3, result.code.front().code.size());
 
-		bool saved = result.saveBinary("test.bin");
+		bool saved = result.saveBinary(binaryFileName);
 		BOOST_CHECK(saved);
 
 		asmResult loadedCode;
-		bool loaded = loadedCode.loadBinary("test.bin");
+		bool loaded = loadedCode.loadBinary(binaryFileName);
 		BOOST_CHECK(loaded);
 		BOOST_CHECK_EQUAL(result.code.front().origin, loadedCode.code.front().origin);
 		BOOST_CHECK_EQUAL(result.start, loadedCode.start);
@@ -171,6 +181,8 @@ namespace parserTest
 	}
     BOOST_AUTO_TEST_CASE(code_memory)
     {
+		FileCleanup binaryFileCleanup(binaryFileName);
+
         asmparser parser;
         parser.parseText(" memory $100,$300\n org $120\nstart: nop\n lea $4242,a0\n end start\n");
         validate_noErrors(parser);
@@ -181,11 +193,11 @@ namespace parserTest
         BOOST_CHECK_EQUAL(0x120, result.code.front().origin);
         BOOST_CHECK_EQUAL(3, result.code.front().code.size());
 
-        bool saved = result.saveBinary("test.bin");
+        bool saved = result.saveBinary(binaryFileName);
         BOOST_CHECK(saved);
 
         asmResult loadedCode;
-        bool loaded = loadedCode.loadBinary("test.bin");
+        bool loaded = loadedCode.loadBinary(binaryFileName);
         BOOST_CHECK(loaded);
         BOOST_CHECK_EQUAL(result.start, loadedCode.start);
         BOOST_CHECK_EQUAL(result.memoryStart, loadedCode.memoryStart);
@@ -200,17 +212,19 @@ namespace parserTest
 	
     BOOST_AUTO_TEST_CASE(symbol_save)
     {
+		FileCleanup binaryFileCleanup(symbolsFileName);
+
         asmparser parser;
         parser.parseText(" org $1000\nstart: nop\n bsr finish\nfinish: nop\n end start\n");
         validate_noErrors(parser);
         const asmResult& result = parser.getCode68000();
         BOOST_CHECK_EQUAL(2, result.labels.size());
 
-        bool saved = result.saveSymbols("symbols.txt");
+        bool saved = result.saveSymbols(symbolsFileName);
         BOOST_CHECK(saved);
 
         asmResult loadedCode;
-        bool loaded = loadedCode.loadSymbols("symbols.txt");
+        bool loaded = loadedCode.loadSymbols(symbolsFileName);
         BOOST_CHECK(loaded);
         BOOST_CHECK_EQUAL(result.labels.size(), loadedCode.labels.size());
         for (auto it = result.labels.begin(); it != result.labels.end(); it++)
@@ -221,6 +235,77 @@ namespace parserTest
             BOOST_CHECK(loadedCode.labels.find(label) != loadedCode.labels.end());
             BOOST_CHECK_EQUAL(address, loadedCode.labels[label].offset);
         }
+    }
+
+    void checkExportedSymbol(std::ifstream& binaryFile, const std::string& expectedLabel, uint32_t expectedAddress)
+    {
+	    uint32_t labelSize;
+	    binaryFile.read(reinterpret_cast<char*>(&labelSize), sizeof(uint32_t));
+	    BOOST_CHECK_EQUAL(expectedLabel.size(), labelSize);
+
+	    char label[256];
+	    binaryFile.read(reinterpret_cast<char*>(label), labelSize);
+	    label[labelSize] = '\0';
+	    BOOST_CHECK_EQUAL(expectedLabel, std::string(label));
+
+	    uint32_t labelAddress;
+	    binaryFile.read(reinterpret_cast<char*>(&labelAddress), sizeof(uint32_t));
+	    BOOST_CHECK_EQUAL(expectedAddress, labelAddress);
+    }
+
+	BOOST_AUTO_TEST_CASE(exportbinary_1label)
+    {
+		FileCleanup binaryFileCleanup(binaryFileName);
+
+        asmparser parser;
+        parser.parseText(" org $1000\nstart: nop\n bsr finish\nfinish: nop\n end start\n .export start\n");
+        validate_noErrors(parser);
+        const asmResult& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(2, result.labels.size());
+
+        bool saved = result.saveBinary(binaryFileName);
+        BOOST_CHECK(saved);
+
+		// open the binary file and seek to the exported symbols section
+		std::ifstream binaryFile(binaryFileName, std::ios::binary);
+	    uint32_t codeSize = result.code[0].code.size() * sizeof(uint16_t);    // 8
+	    uint32_t offset = 28 + codeSize;
+	    binaryFile.seekg(offset, std::ios::beg);
+
+		// now read the exported symbols
+	    uint32_t exportedCount;
+	    binaryFile.read(reinterpret_cast<char*>(&exportedCount), sizeof(uint32_t));
+	    BOOST_CHECK_EQUAL(1, exportedCount);
+
+		checkExportedSymbol(binaryFile, "start", 0x1000);
+    }
+
+	BOOST_AUTO_TEST_CASE(exportbinary_2labels)
+    {
+		FileCleanup binaryFileCleanup(binaryFileName);
+
+        asmparser parser;
+        parser.parseText("start: nop\n bsr finish\nfinish: nop\n end start\n .export start,finish\n");
+        validate_noErrors(parser);
+        const asmResult& result = parser.getCode68000();
+        BOOST_CHECK_EQUAL(2, result.labels.size());
+
+        bool saved = result.saveBinary(binaryFileName);
+        BOOST_CHECK(saved);
+
+		// open the binary file and seek to the exported symbols section
+		std::ifstream binaryFile(binaryFileName, std::ios::binary);
+	    uint32_t codeSize = result.code[0].code.size() * sizeof(uint16_t);    // 8
+	    uint32_t offset = 28 + codeSize;
+	    binaryFile.seekg(offset, std::ios::beg);
+
+		// now read the exported symbols
+	    uint32_t exportedCount;
+	    binaryFile.read(reinterpret_cast<char*>(&exportedCount), sizeof(uint32_t));
+	    BOOST_CHECK_EQUAL(2, exportedCount);
+
+	    checkExportedSymbol(binaryFile, "finish", 0x6);
+		checkExportedSymbol(binaryFile, "start", 0x0);
     }
 
 	BOOST_AUTO_TEST_SUITE_END()
