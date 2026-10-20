@@ -14,8 +14,22 @@ steps:
 - script: |
     sudo apt-get update
     sudo apt-get install -y libboost-all-dev
-    gcc --version
-    ls /usr/bin
+
+    echo "=== GCC ==="
+    which gcc || true
+    which gcc-12 || true
+    which gcc-13 || true
+    which gcc-14 || true
+
+    gcc --version || true
+    g++ --version || true
+
+    echo "=== OS ==="
+    lsb_release -a || true
+
+    echo "=== Compilers ==="
+    ls /usr/bin/gcc*
+    ls /usr/bin/g++*
 - task: CMake@1
   displayName: Checking CMake version
   inputs:
@@ -25,7 +39,7 @@ steps:
   displayName: Preparing emulator makefile
   inputs:
     workingDirectory: '.'
-    cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
+    cmakeArgs: '-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .'
 - task: CMake@1
   displayName: Building emulator
   inputs:
@@ -59,7 +73,7 @@ steps:
   displayName: Preparing asm makefile
   inputs:
     workingDirectory: 'asm'
-    cmakeArgs: '-DCMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 .'
+    cmakeArgs: '-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .'
 - task: CMake@1
   displayName: Building asm project
   inputs:
